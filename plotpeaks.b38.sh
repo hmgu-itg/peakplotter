@@ -31,10 +31,10 @@ b37=0
 
 if [[ $1 == "b37" ]]; then
 	shift
-	echo "\n\nBuild 37 requested.\n\n"
+	echo -e "\n\nBuild 37 requested.\n\n"
 	b37=1
 else
-	echo "\n\nBuild 38 requested.\n\n"
+	echo -e "\n\nBuild 38 requested.\n\n"
 fi
 
 declare -a files=($(echo $files | tr ',' ' '))
