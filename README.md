@@ -27,7 +27,7 @@ REFFLAT="/nfs/team144/software/locuszoom-1.2/data/database/refFlat.txt"
 RECOMB="/nfs/team144/software/locuszoom-1.2/data/database/recomb-rate.txt"
 ```
 
-to reflect your LocusZoom install path. For example, if `/path/to/locuszoom` is your locuszoom install path, then the path to the binaries will be `/path/to/locuszoom/bin`, and the `REFFLAT` and RECOMB above should be set to `/path/to/locuszoom/data/database/refFlat.txt` and `/path/to/locuszoom/data/database/recomb-rate.txt`.
+to reflect your LocusZoom install path. For example, if `/path/to/locuszoom` is your locuszoom install path, then the path to the binaries will be `/path/to/locuszoom/bin`, and the `REFFLAT` and `RECOMB` above should be set to `/path/to/locuszoom/data/database/refFlat.txt` and `/path/to/locuszoom/data/database/recomb-rate.txt`.
 
 ## Syntax
 
@@ -45,3 +45,6 @@ to reflect your LocusZoom install path. For example, if `/path/to/locuszoom` is 
 * **afcol_name** : name of the column for chromosomal position.
 * **bed_file** : BED file base name. This should contain the genotypes for at least all the variants in the **assoc_file**, but it can contain more. Please note that this is the base name, without the `.bed/.bim/.fam` extension.
 * **region_flank (optional)** flanking size in base pairs for drawing plots (defaults to 500kb, i.e. 1Mbp plots) around lead SNPs.
+
+## Troubleshooting
+At the moment PeakPlotter does not handle errors very well. In particular, it doesn't catch errors thrown by Plink and doesn't stop if something goes wrong at some point in the pipeline. This is work in progress, if you want to report a bug, keep your logs and email [the author](mailto:ag15@sanger.ac.uk).
