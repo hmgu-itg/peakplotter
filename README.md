@@ -6,9 +6,10 @@ PeakPlotter takes away the annoying task of running regional association plots a
 In order to run PeakPlotter you need to have working copies of the following tools installed:
 * Plink 1.9 or newer ([available here](https://www.cog-genomics.org/plink2/index))
 * LocusZoom Standalone 1.3 or newer ([available here](http://genome.sph.umich.edu/wiki/LocusZoom_Standalone))
+* BedTools ([available here](http://bedtools.readthedocs.io/en/latest/))
 
 ## Installation
-Hopefully, PeakPlotter should work quasi out-of-the-box. It **needs LocusZoom and Plink to be in your path**, since it calls `plink` and `locuszoom` directly from inside the script. This is done like:
+Hopefully, PeakPlotter should work quasi out-of-the-box. It **needs LocusZoom, BedTools and Plink to be in your path**, since it calls `plink`, `bedtools` and `locuszoom` directly from inside the script. This is done like:
 
 ```bash
 export PATH=/path/to/locuszoom:/path/to/plink:$PATH
@@ -28,6 +29,13 @@ RECOMB="/nfs/team144/software/locuszoom-1.2/data/database/recomb-rate.txt"
 ```
 
 to reflect your LocusZoom install path. For example, if `/path/to/locuszoom` is your locuszoom install path, then the path to the binaries will be `/path/to/locuszoom/bin`, and the `REFFLAT` and `RECOMB` above should be set to `/path/to/locuszoom/data/database/refFlat.txt` and `/path/to/locuszoom/data/database/recomb-rate.txt`.
+
+### Python libraries
+You will need the following Python libraries in order to run the program: `pandas, numpy, bokeh, urllib2, json, requests, asr`.
+Most of these packages are available in large Python bundles such as Anaconda. For those that are missing, or if you prefer to use your own Python environment, you can test the presence of a module and install it if it is missing:
+```bash
+python -c "import bokeh" || pip install bokeh
+```
 
 ## Syntax
 
