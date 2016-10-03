@@ -46,5 +46,11 @@ to reflect your LocusZoom install path. For example, if `/path/to/locuszoom` is 
 * **bed_file** : BED file base name. This should contain the genotypes for at least all the variants in the **assoc_file**, but it can contain more. Please note that this is the base name, without the `.bed/.bim/.fam` extension.
 * **region_flank (optional)** flanking size in base pairs for drawing plots (defaults to 500kb, i.e. 1Mbp plots) around lead SNPs.
 
+## Genome build
+At the moment, PeakPlotter is compatible with GRCh37(hg19) and GRCh38. It defaults to the latter, and can be forced to run on b37 by **prefixing all arguments** by `b37`, as in :
+```bash
+./plotpeaks.sh b37 [signif] [assoc_file] [...]
+``` 
+
 ## Troubleshooting
 At the moment PeakPlotter does not handle errors very well. In particular, it doesn't catch errors thrown by Plink and doesn't stop if something goes wrong at some point in the pipeline. This is work in progress, if you want to report a bug, keep your logs and email [the author](mailto:ag15@sanger.ac.uk).
