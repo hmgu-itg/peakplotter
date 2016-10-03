@@ -1,4 +1,15 @@
 #!/bin/bash
+
+b37=0
+
+if [[ $1 == "b37" ]]; then
+	shift
+	echo -e "\n\nBuild 37 requested.\n\n"
+	b37=1
+else
+	echo -e "\n\nBuild 38 requested.\n\n"
+fi
+
 signif=$1
 assocfile=$2
 chrcol=$3
@@ -27,15 +38,7 @@ echo $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11}
 echo
 echo
 
-b37=0
 
-if [[ $1 == "b37" ]]; then
-	shift
-	echo -e "\n\nBuild 37 requested.\n\n"
-	b37=1
-else
-	echo -e "\n\nBuild 38 requested.\n\n"
-fi
 
 declare -a files=($(echo $files | tr ',' ' '))
 declare -a ids=($(seq 0 $(($(echo ${10} | tr ',' '\n'| wc -l)-1)) | tr '\n' ' '))
