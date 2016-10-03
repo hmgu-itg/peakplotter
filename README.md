@@ -60,5 +60,9 @@ At the moment, PeakPlotter is compatible with GRCh37(hg19) and GRCh38. It defaul
 ./plotpeaks.sh b37 [signif] [assoc_file] [...]
 ``` 
 
+## Output
+
+Curently, the script outputs results in the current directory. More precisely, it appends extensions to the association results filename, so it is generally good to assume that PeakPlotter is not very good at handling relative, or even absolute paths. It is therefore safest to work in the same directory as the association results file. Paths to the bed file are insensitive to this issue and can be located wherever you want.
+
 ## Troubleshooting
 At the moment PeakPlotter does not handle errors very well. In particular, it doesn't catch errors thrown by Plink and doesn't stop if something goes wrong at some point in the pipeline. This is work in progress, if you want to report a bug, keep your logs and email [the author](mailto:ag15@sanger.ac.uk).
