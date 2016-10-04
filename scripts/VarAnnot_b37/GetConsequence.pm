@@ -61,6 +61,7 @@ sub Consequence {
             while ($fail_count < 20) {
                 sleep(5);
                 print STDERR "[Warning] Downloading data from the Ensembl server failed. Trying again.\n";
+                print STDERR "(Query was $URL)\n";
                 my $http     = HTTP::Tiny->new();
                 my $response = $http->get($URL,{});
                 $fail_count++;

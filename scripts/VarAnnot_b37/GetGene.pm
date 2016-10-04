@@ -223,7 +223,7 @@ sub bedParse {
     }
 
     my @fields = split("\t", $lines[$index]);
-
+    print STDERR "\n\nLine 226 at GetGene.pm : ", join(",", @fields), "\n\n";
     $distance = $fields[8] if $fields[8] =~ /\d+/;
 
     my @gene_features = split(";",$fields[7]);

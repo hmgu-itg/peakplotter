@@ -141,7 +141,7 @@ a2coli=$(grep -w $a2col <(paste <(seq 1 $($cat $assocfile | head -n1 | tr '\t' '
 				if [ $sensible_start -lt 1 ]
 				then
 				    sensible_start=1
-				    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start \n\n\n"
+				    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start : $curpeak_c $curpeak_ps (1)\n\n\n"
 				fi
 				plink --memory 15000 --bfile ${files[$id]} --chr $curpeak_c --from-bp $sensible_start --to-bp $(($curpeak_ps+$flank_bp)) --out $id --make-bed				
 				awk 'OFS="\t"{if($2!~/:/ && $2!~/rs/){$2="chr"$1":"$4}print}' $id.bim | tr ';' '_'> t
@@ -188,7 +188,7 @@ a2coli=$(grep -w $a2col <(paste <(seq 1 $($cat $assocfile | head -n1 | tr '\t' '
 				if [ $sensible_start -le 0 ]
 				then
 				    sensible_start=1
-				    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start \n\n\n"
+				    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start  : $curpeak_c $curpeak_ps (2)\n\n\n"
 				fi
 
 			echo locuszoom --metal ../peakdata --refsnp "$refsnp" --markercol "$rscol" --pvalcol "$pvalcol" --db ../$curpeak_c.$curpeak_ps.db --prefix $curpeak_c.$curpeak_ps.500kb --plotonly showAnnot=T showRefsnpAnnot=T annotPch="21,24,24,25,22,22,8,7" rfrows=20 geneFontSize=.4 --ld ../$curpeak_c.$curpeak_ps.ld --start=$sensible_start --end=$(($curpeak_ps+$flank_bp)) --chr=$curpeak_c showRecomb=T --delim \' \'
@@ -340,7 +340,7 @@ do
 				if [ $sensible_start -le 0 ]
 				then
 				    sensible_start=1
-				    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start \n\n\n"
+				    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start  : $curpeak_c $curpeak_ps (3)\n\n\n"
 				fi
 
 echo plink --bfile ${files[$id]} --chr $curpeak_c --from-bp $sensible_start --to-bp $(($curpeak_ps+$flank_bp)) --out $id --make-bed
@@ -394,7 +394,7 @@ echo
 				if [ $sensible_start -le 0 ]
 				then
 				    sensible_start=1
-				    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start \n\n\n"
+				    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start  : $curpeak_c $curpeak_ps (4)\n\n\n"
 				fi
 
 echo locuszoom --metal peakdata --refsnp "$refsnp" --markercol "$rscol" --pvalcol "$pvalcol" --db $curpeak_c.$curpeak_ps.db --prefix $curpeak_c.$curpeak_ps.500kb --plotonly showAnnot=T showRefsnpAnnot=T annotPch="21,24,24,25,22,22,8,7" rfrows=20 geneFontSize=.4 --ld merged.ld --start=$sensible_start --end=$(($curpeak_ps+$flank_bp)) --chr=$curpeak_c showRecomb=T --delim ' '
@@ -409,12 +409,12 @@ join --header -1 $rscoli -2 1 <(cat <(head -n1 peakdata) <(sort -k$rscoli,$rscol
 ## Beware rsid is now number one and the columns are messed up.
 cat=cat
 assocfile=peakdata.ld
-chrcoli=$(grep -w $chrcol <(paste <(seq 1 $(cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <(cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
-pscoli=$(grep -w $pscol <(paste <(seq 1 $(cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <(cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
-rscoli=$(grep -w $rscol <(paste <(seq 1 $(cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <(cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
-a1coli=$(grep -w $a1col <(paste <(seq 1 $(cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <(cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
-a2coli=$(grep -w $a2col <(paste <(seq 1 $(cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <(cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
-pvalcoli=$(grep -w $pvalcol <(paste <(seq 1 $(cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <(cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
+chrcoli=$(grep -w $chrcol <(paste <(seq 1 $($cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <($cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
+pscoli=$(grep -w $pscol <(paste <(seq 1 $($cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <($cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
+rscoli=$(grep -w $rscol <(paste <(seq 1 $($cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <($cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
+a1coli=$(grep -w $a1col <(paste <(seq 1 $($cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <($cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
+a2coli=$(grep -w $a2col <(paste <(seq 1 $($cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <($cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
+pvalcoli=$(grep -w $pvalcol <(paste <(seq 1 $($cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <($cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
 #cat <(echo $(head -n1 peakdata.ld) id gene consequence) <(join -1 3 -2 1 -a 1 <(sort -k3,3 peakdata.ld) <(~ag15/scripts/getrsid.pl <(awk '$NF>0.1' peakdata.ld | tail -n+2 | cut -f2-5 -d' ' )| sort -k1,1) | grep -v MARKER)| awk '{if(NF<22){$21="NA";$22="NA";$23="NA"}if(NR>1){un=$1;deux=$2;trois=$3;$1=deux;$2=trois;$3=un;}print}' > peakdata.ld.annotated
 expnumcol=$(($(head -n1 peakdata.ld | tr ' ' '\n' | wc -l)+3))
 
@@ -441,14 +441,25 @@ fi
 
 for i in `ls *.bak`
 do
+	echo "Back-plotting file $i."
 	snp=$(echo $i | sed 's/peakdata.//;s/.bak//')
-	chr=$(echo $snp | sed 's/chr//;s/\:.*//')
+	#chr=$(echo $snp | sed 's/chr//;s/\:.*//')
+	#chr=$(cut -f$chrcoli -d ' ' $i | sort -u | grep -vw 'chr' | head -1 | sed 's/chr//')
+	mem=$assocfile
+	assocfile=$i
+			chrcoli=$(grep -w $chrcol <(paste <(seq 1 $(cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <(cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
+			pscoli=$(grep -w $pscol <(paste <(seq 1 $(cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <(cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
+	assocfile=$mem
 	pos=$(echo $snp | sed 's/.*\://')
+	posa=$(grep $pos $i | cut -f$pscoli -d' ')
+	chr=$(grep $pos $i | cut -f$chrcoli -d' ')
+	echo "snp $snp chr $chr pos $posa"
+	pos=$posa
 	sensible_start=$(($pos-$flank_bp))
 	if [ $sensible_start -le 0 ]
 	then
 	    sensible_start=1
-	    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start \n\n\n"
+	    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start  : $curpeak_c $curpeak_ps $pos $snp $chr (5)\n\n\n"
 	fi
 	if [ -z "$b37" ]
 	then
