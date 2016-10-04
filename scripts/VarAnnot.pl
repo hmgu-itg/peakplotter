@@ -1,11 +1,11 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
 use Data::Dumper;
+use FindBin;
+use lib "$FindBin::Bin/VarAnnot_b37";
 
-# Before loading custom packages, we have to add package folder to the @inc:
-use lib "/nfs/team144/ds26/FunctionalAnnotation/20150505_new_tool/packages";
 
 use BasicInformation ;
 use GWAStest ;

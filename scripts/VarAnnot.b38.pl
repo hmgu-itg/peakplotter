@@ -1,11 +1,11 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
 use Data::Dumper;
 
-# Before loading custom packages, we have to add package folder to the @inc:
-use lib "/nfs/team144/ds26/FunctionalAnnotation/20160907_GRCh38_copy/packages";
+use FindBin;
+use lib "$FindBin::Bin/VarAnnot_b38";
 
 # this version is adjusted for GRCh38 build!
 print STDERR "\n[Warning] This verion of the variant annotation tool has been adjusted to GRCh38!\n\n";

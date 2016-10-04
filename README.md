@@ -8,6 +8,19 @@ In order to run PeakPlotter you need to have working copies of the following too
 * LocusZoom Standalone 1.3 or newer ([available here](http://genome.sph.umich.edu/wiki/LocusZoom_Standalone))
 * BedTools ([available here](http://bedtools.readthedocs.io/en/latest/))
 
+### Sanger users
+In order to run PeakPlotter on the Sanger servers, please paste the following in your terminal:
+
+```bash
+. /software/hgi/etc/profile.hgi
+module add $(module avail 2>&1 | grep '/plink/' | grep latest | sed 's/.latest.//')
+module add $(module avail 2>&1 | grep '/bedtools/' | grep latest | sed 's/.latest.//')
+module add $(module avail 2>&1 | grep '/perl/' | grep latest | sed 's/.latest.//')
+export PERL5LIB=/nfs/users/nfs_a/ag15/perlmod/lib/site_perl/5.20.1:$PERL5LIB
+export PATH=/nfs/team144/software/locuszoom-1.3/locuszoom/bin:$PATH
+source /nfs/team144/jupyter_p27/bin/activate
+```
+
 ## Installation
 Hopefully, PeakPlotter should work quasi out-of-the-box. It **needs LocusZoom, BedTools and Plink to be in your path**, since it calls `plink`, `bedtools` and `locuszoom` directly from inside the script. This is done like:
 
