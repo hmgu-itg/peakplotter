@@ -59,11 +59,11 @@ python -c "import bokeh" || pip install bokeh
 * **assoc_file** is the association file. It can be gzipped, provided that it bears the `.gz` extension. Its first line must be a header, coherent with the name arguments below.
 * **chrcol_name** : name of the column for chromosome names.
 * **poscol_name** : name of the column for chromosomal position.
-* **idcol_name** : name of the column for chromosomal position.
-* **pvalcol_name** : name of the column for chromosomal position.
-* **allele1col_name** : name of the column for chromosomal position.
-* **allele0col_name** : name of the column for chromosomal position.
-* **afcol_name** : name of the column for chromosomal position.
+* **idcol_name** : name of the column for unique SNP ids (RS-id or chr:pos).
+* **pvalcol_name** : name of the column for p-values.
+* **allele1col_name** : name of the column for reference or major allele (used for predicting consequence).
+* **allele0col_name** : name of the column for alternate or minor allele.
+* **afcol_name** : name of the column for non-reference or minor allele frequency.
 * **bed_file** : BED file base name. This should contain the genotypes for at least all the variants in the **assoc_file**, but it can contain more. Please note that this is the base name, without the `.bed/.bim/.fam` extension.
 * **region_flank (optional)** flanking size in base pairs for drawing plots (defaults to 500kb, i.e. 1Mbp plots) around lead SNPs.
 
