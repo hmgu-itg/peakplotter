@@ -25,9 +25,14 @@ filelist=$files
 
 ## LOCUSZOOM DATA PATHS
 ## (N.B. LZ path has to be in PATH)
-REFFLAT="/nfs/team144/software/locuszoom-1.2/data/database/refFlat.txt"
-RECOMB="/nfs/team144/software/locuszoom-1.2/data/database/recomb-rate.txt"
-
+if [ -z "$b37" ]
+	then
+	REFFLAT="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/refFlat.b38.txt"
+	RECOMB="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/recomb-rate_GRCh38.txt"
+else
+        REFFLAT="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/refFlat.txt"
+        RECOMB="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/recomb-rate.txt"	
+fi
 ## SELF DIR
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo Running from $(pwd), executable in $DIR.
@@ -470,4 +475,4 @@ do
 	/nfs/team144/software/locuszoom-1.3/locuszoom/bin/locuszoom --metal $i --refsnp "$snp" --markercol "$rscol" --pvalcol "$pvalcol" --db $chr.$pos.db --prefix $chr.$pos.500kb --plotonly showAnnot=T showRefsnpAnnot=T annotPch="21,24,24,25,22,22,8,7" rfrows=20 geneFontSize=.4 --ld $chr.$pos.ld --start=$sensible_start --end=$(($pos+$flank_bp)) --chr=$chr showRecomb=T --delim ' '
 
 done
-rm cp* merge* peak* 0.* *.db *signal* *.line *.ld 
+whilerm cp* merge* peak* 0.* *.db *signal* *.line *.ld 
