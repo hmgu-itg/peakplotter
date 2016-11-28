@@ -239,9 +239,9 @@ a2coli=$(grep -w $a2col <(paste <(seq 1 $($cat $assocfile | head -n1 | tr '\t' '
 
 			if [ -z "$b37" ]
 			then
-				$DIR/scripts/interactive_manh.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol"
+				$DIR/scripts/interactive_manh.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 			else
-				$DIR/scripts/interactive_manh.b37.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol"
+				$DIR/scripts/interactive_manh.b37.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 			fi
 				
 			assocfile=$mem
@@ -439,9 +439,9 @@ join --header -a 1 -1 $(($expnumcol-2)) -2 1 <(cat <(head -n1 peakdata.ld.annota
 
 if [ -z "$b37" ]
 then
-	$DIR/scripts/interactive_manh.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol"
+	$DIR/scripts/interactive_manh.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 else
-	$DIR/scripts/interactive_manh.b37.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol"
+	$DIR/scripts/interactive_manh.b37.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 fi
 
 for i in `ls *.bak`
@@ -468,11 +468,11 @@ do
 	fi
 	if [ -z "$b37" ]
 	then
-		$DIR/scripts/interactive_manh.py $chr.$pos.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol"
+		$DIR/scripts/interactive_manh.py $chr.$pos.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 	else
-		$DIR/scripts/interactive_manh.b37.py $chr.$pos.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol"
+		$DIR/scripts/interactive_manh.b37.py $chr.$pos.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 	fi
 	/nfs/team144/software/locuszoom-1.3/locuszoom/bin/locuszoom --metal $i --refsnp "$snp" --markercol "$rscol" --pvalcol "$pvalcol" --db $chr.$pos.db --prefix $chr.$pos.500kb --plotonly showAnnot=T showRefsnpAnnot=T annotPch="21,24,24,25,22,22,8,7" rfrows=20 geneFontSize=.4 --ld $chr.$pos.ld --start=$sensible_start --end=$(($pos+$flank_bp)) --chr=$chr showRecomb=T --delim ' '
 
 done
-whilerm cp* merge* peak* 0.* *.db *signal* *.line *.ld 
+#rm cp* merge* peak* 0.* *.db *signal* *.line *.ld 

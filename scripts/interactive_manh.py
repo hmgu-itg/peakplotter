@@ -16,6 +16,8 @@ logging.basicConfig()
 file=sys.argv[1]
 outfile=file+".html"
 
+chrcol=sys.argv[6]
+pscol=sys.argv[3]
 
 pd.options.mode.chained_assignment = None  
 d=pd.read_csv(file, sep=",",index_col=False)
@@ -65,7 +67,8 @@ e['col']= np.asarray(collol.ix[e['col']]).flatten()
 e['logp']=-np.log10(e[sys.argv[2]])
 
 print("Query1:Genes")
-url = 'http://rest.ensembl.org/overlap/region/human/'+str(e['chr'][0])+':'+str(e['ps'].min())+'-'+str(e['ps'].max())+'?feature=gene;content-type=application/json'
+url = 'http://rest.ensembl.org/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=gene;content-type=application/json'
+#url = 'http://rest.ensembl.org/overlap/region/human/'+str(e['chr'][0])+':'+str(e['ps'].min())+'-'+str(e['ps'].max())+'?feature=gene;content-type=application/json'
 print("Querying Ensembl with region "+url)
 response = urllib2.urlopen(url).read()
 jData = json.loads(response)
@@ -73,7 +76,8 @@ d=pd.DataFrame(jData)
 
 
 print("Query2:GWASCAT")
-url = 'http://rest.ensembl.org/overlap/region/human/'+str(e['chr'][0])+':'+str(e['ps'].min())+'-'+str(e['ps'].max())+'?feature=variation;content-type=application/json;variant_set=ph_nhgri'
+#url = 'http://rest.ensembl.org/overlap/region/human/'+str(e['chr'][0])+':'+str(e['ps'].min())+'-'+str(e['ps'].max())+'?feature=variation;content-type=application/json;variant_set=ph_nhgri'
+url = 'http://grch37.rest.ensembl.org/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=variation;content-type=application/json;variant_set=ph_nhgri;
 print("Querying Ensembl with region "+url)
 response = urllib2.urlopen(url).read()
 jData = json.loads(response)
