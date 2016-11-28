@@ -239,9 +239,13 @@ a2coli=$(grep -w $a2col <(paste <(seq 1 $($cat $assocfile | head -n1 | tr '\t' '
 
 			if [ -z "$b37" ]
 			then
+				echo $DIR/scripts/interactive_manh.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 				$DIR/scripts/interactive_manh.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
+				echo interactive plot call done
 			else
+                                echo $DIR/scripts/interactive_manh.b37.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 				$DIR/scripts/interactive_manh.b37.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
+				echo interactive plot call done
 			fi
 				
 			assocfile=$mem
@@ -439,9 +443,13 @@ join --header -a 1 -1 $(($expnumcol-2)) -2 1 <(cat <(head -n1 peakdata.ld.annota
 
 if [ -z "$b37" ]
 then
+	echo         $DIR/scripts/interactive_manh.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 	$DIR/scripts/interactive_manh.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
+	echo Plot call done
 else
+        echo $DIR/scripts/interactive_manh.b37.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
 	$DIR/scripts/interactive_manh.b37.py $curpeak_c.$curpeak_ps.peakdata.ld.annotated.assoc "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol"
+	echo Plot call done
 fi
 
 for i in `ls *.bak`

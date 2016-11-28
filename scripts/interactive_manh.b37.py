@@ -74,34 +74,30 @@ d=pd.DataFrame(jData)
 
 
 print("Query2:GWASCAT")
-url = 'http://grch37.rest.ensembl.org/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=variation;content-type=application/json;variant_set=ph_nhgri'
+url = 'http://grch37.rest.ensembl.org/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=variation;content-type=application/json;;variant_set=ph_nhgri'
 print("Querying Ensembl with region "+url)
 response = urllib2.urlopen(url).read()
 jData = json.loads(response)
 cat=pd.DataFrame(jData)
-
+#print(cat)
 print("Query2:GWASCAT (POST)")
 
 header=pd.DataFrame()
-header['ids']=cat['id']
+if not cat.empty:
+	header['ids']=cat['id']
+	data = header.to_dict(orient="list")
 
-data = header.to_dict(orient="list")
+	server = "http://grch37.rest.ensembl.org"
+	ext = "/variation/homo_sapiens?phenotypes=1"
+	headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
+	r = requests.post(server+ext, headers=headers, data=json.dumps(data))
+	decoded = r.json()
+	s=repr(decoded)
 
-
-
-
-server = "http://grch37.rest.ensembl.org"
-ext = "/variation/homo_sapiens?phenotypes=1"
-headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
-r = requests.post(server+ext, headers=headers, data=json.dumps(data))
-decoded = r.json()
-s=repr(decoded)
-#print(s)
-for rsid in decoded:
-	p.ray(x=decoded[rsid]['mappings'][0]['end'], color="firebrick", length=0, angle=90, angle_units="deg")
-	label = Label(x=decoded[rsid]['mappings'][0]['end'], y=e['logp'].max(), text=decoded[rsid]['phenotypes'][0]['trait'], angle=90, angle_units="deg", text_align="right", text_color="firebrick", text_font_size="11", text_font_style="italic")
-	p.add_layout(label)
-#df=pd.DataFrame(decoded).transpose()
+	for rsid in decoded:
+		p.ray(x=decoded[rsid]['mappings'][0]['end'], color="firebrick", length=0, angle=90, angle_units="deg")
+		label = Label(x=decoded[rsid]['mappings'][0]['end'], y=e['logp'].max(), text=decoded[rsid]['phenotypes'][0]['trait'], angle=90, angle_units="deg", text_align="right", text_color="firebrick", text_font_size="11", text_font_style="italic")
+		p.add_layout(label)
 
 
 
