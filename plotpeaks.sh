@@ -475,4 +475,4 @@ do
 	/nfs/team144/software/locuszoom-1.3/locuszoom/bin/locuszoom --metal $i --refsnp "$snp" --markercol "$rscol" --pvalcol "$pvalcol" --db $chr.$pos.db --prefix $chr.$pos.500kb --plotonly showAnnot=T showRefsnpAnnot=T annotPch="21,24,24,25,22,22,8,7" rfrows=20 geneFontSize=.4 --ld $chr.$pos.ld --start=$sensible_start --end=$(($pos+$flank_bp)) --chr=$chr showRecomb=T --delim ' '
 
 done
-#rm cp* merge* peak* 0.* *.db *signal* *.line *.ld 
+rm cp* merge* peak* 0.* *.db *signal* *.line *.ld 
