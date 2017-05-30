@@ -74,10 +74,10 @@ response = urllib2.urlopen(url).read()
 jData = json.loads(response)
 d=pd.DataFrame(jData)
 
-
+#print(e);
 print("Query2:GWASCAT")
 #url = 'http://rest.ensembl.org/overlap/region/human/'+str(e['chr'][0])+':'+str(e['ps'].min())+'-'+str(e['ps'].max())+'?feature=variation;content-type=application/json;variant_set=ph_nhgri'
-url = 'http://grch37.rest.ensembl.org/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=variation;content-type=application/json;variant_set=ph_nhgri;
+url = 'http://grch37.rest.ensembl.org/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=variation;content-type=application/json;variant_set=ph_nhgri';
 print("Querying Ensembl with region "+url)
 response = urllib2.urlopen(url).read()
 jData = json.loads(response)
@@ -86,7 +86,10 @@ cat=pd.DataFrame(jData)
 print("Query2:GWASCAT (POST)")
 
 header=pd.DataFrame()
-header['ids']=cat['id']
+if 'id' in cat:
+	header['ids']=cat['id']
+else:
+	header['ids']=np.nan
 
 data = header.to_dict(orient="list")
 

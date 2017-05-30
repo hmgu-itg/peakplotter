@@ -26,6 +26,7 @@ my $window = 500000;
 while (my $line = <>){
 
     $line =~ s/\s//g; # Removing any whitespace
+	print("Received line $line");
     $input_lines->{$.}->{"input"} = $line;
 }
 

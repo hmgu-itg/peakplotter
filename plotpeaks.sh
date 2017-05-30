@@ -8,6 +8,7 @@ if [[ $1 == "b37" ]]; then
 	b37=1
 else
 	echo -e "\n\nBuild 38 requested.\n\n"
+	b37=""
 fi
 
 signif=$1
@@ -114,8 +115,10 @@ a2coli=$(grep -w $a2col <(paste <(seq 1 $($cat $assocfile | head -n1 | tr '\t' '
 			echo "chr"${curpeak_c}:${curpeak_ps}-${curpeak_ps}_${curpeak_a1}_${curpeak_a2}
 			if [ -z "$b37" ]
 			then
+				echo  VarAnnot b38 called
 				$DIR/scripts/VarAnnot.b38.pl <(echo "chr"${curpeak_c}:${curpeak_ps}-${curpeak_ps}_${curpeak_a1}_${curpeak_a2}) > $curpeak_c.$curpeak_ps.line
 			else
+                                echo VarAnnot b37
 				$DIR/scripts/VarAnnot.pl <(echo "chr"${curpeak_c}:${curpeak_ps}-${curpeak_ps}_${curpeak_a1}_${curpeak_a2}) > $curpeak_c.$curpeak_ps.line
 			fi
 
@@ -221,13 +224,13 @@ a2coli=$(grep -w $a2col <(paste <(seq 1 $($cat $assocfile | head -n1 | tr '\t' '
 			a2coli=$(grep -w $a2col <(paste <(seq 1 $(cat $assocfile | head -n1 | tr ' ' '\n'| wc -l)) <(cat $assocfile | head -n1 | tr ' ' '\n')) | cut -f1)
 			#cat <(echo $(head -n1 peakdata.ld) id gene consequence) <(join -1 3 -2 1 -a 1 <(sort -k3,3 peakdata.ld) <(~ag15/scripts/getrsid.pl <(awk '$NF>0.1' peakdata.ld | tail -n+2 | cut -f2-5 -d' ' )| sort -k1,1) | grep -v MARKER)| awk '{if(NF<22){$21="NA";$22="NA";$23="NA"}if(NR>1){un=$1;deux=$2;trois=$3;$1=deux;$2=trois;$3=un;}print}' > peakdata.ld.annotated
 			expnumcol=$(($(head -n1 peakdata.ld | tr ' ' '\n' | wc -l)+3))
-			echo JOIN2
+			echo JOIN2 $expnumcol 
 			if [ -z "$b37" ]
 			then
-				join -a 1 -1 $pscoli -2 1 --header <(cat <(head -n1 peakdata.ld) <(tail -n+2 peakdata.ld | sort -k$pscoli,$pscoli)) <( cat <(echo $pscol id gene consequence) <($DIR/scripts/getrsid.b38.pl <(awk '$NF>0.1' peakdata.ld | tail -n+2 | awk -v chr=$chrcoli -v ps=$pscoli -v a1=$a1coli -v a2=$a2coli '{print $chr,$ps,$a1,$a2}') | sort -k1,1))  |awk -v en=$expnumcol '{if(NF<en){$(en-2)="NA";$(en-1)="NA";$en="NA"}print}'> peakdata.ld.annotated
+				join -a 1 -1 $pscoli -2 1 --header <(cat <(head -n1 peakdata.ld) <(tail -n+2 peakdata.ld | sort -k$pscoli,$pscoli)) <( cat <(echo $pscol id gene consequence) <($DIR/scripts/getrsid.b38.pl <(awk '$NF>0.1' peakdata.ld | tail -n+2 | awk -v chr=$chrcoli -v ps=$pscoli -v a1=$a1coli -v a2=$a2coli '$a1!=$a2{print $chr,$ps,".",$a1,$a2}') | sort -k1,1))  |awk -v en=$expnumcol '{if(NF<en){$(en-2)="NA";$(en-1)="NA";$en="NA"}print}'> peakdata.ld.annotated
 				$DIR/scripts/get_phenotype.b38.pl <(cut -f$(($expnumcol-2)) -d' ' peakdata.ld.annotated | grep -v -e NA -e novel -e id) | sed 's/ /&/g'| sed 's/\t/\t"/;s/$/"/' > phenotypes
 			else
-				join -a 1 -1 $pscoli -2 1 --header <(cat <(head -n1 peakdata.ld) <(tail -n+2 peakdata.ld | sort -k$pscoli,$pscoli)) <( cat <(echo $pscol id gene consequence) <($DIR/scripts/getrsid.b38.pl b37 <(awk '$NF>0.1' peakdata.ld | tail -n+2 | awk -v chr=$chrcoli -v ps=$pscoli -v a1=$a1coli -v a2=$a2coli '{print $chr,$ps,$a1,$a2}') | sort -k1,1))  |awk -v en=$expnumcol '{if(NF<en){$(en-2)="NA";$(en-1)="NA";$en="NA"}print}'> peakdata.ld.annotated
+				join -a 1 -1 $pscoli -2 1 --header <(cat <(head -n1 peakdata.ld) <(tail -n+2 peakdata.ld | sort -k$pscoli,$pscoli)) <( cat <(echo $pscol id gene consequence) <($DIR/scripts/getrsid.b38.pl b37 <(awk '$NF>0.1' peakdata.ld | tail -n+2 | awk -v chr=$chrcoli -v ps=$pscoli -v a1=$a1coli -v a2=$a2coli '$a1!=$a2{print $chr,$ps,".",$a1,$a2}') | sort -k1,1))  |awk -v en=$expnumcol '{if(NF<en){$(en-2)="NA";$(en-1)="NA";$en="NA"}print}'> peakdata.ld.annotated
 				$DIR/scripts/get_phenotype.b38.pl b37 <(cut -f$(($expnumcol-2)) -d' ' peakdata.ld.annotated | grep -v -e NA -e novel -e id) | sed 's/ /&/g'| sed 's/\t/\t"/;s/$/"/' > phenotypes
 			fi
 
@@ -312,8 +315,10 @@ echo -e "Fetching info from Ensembl..."
 echo "chr"${curpeak_c}:${curpeak_ps}-${curpeak_ps}_${curpeak_a1}_${curpeak_a2}
 			if [ -z "$b37" ]
 			then
+				echo VarAnnot b38
 				$DIR/scripts/VarAnnot.b38.pl <(echo "chr"${curpeak_c}:${curpeak_ps}-${curpeak_ps}_${curpeak_a1}_${curpeak_a2}) > $curpeak_c.$curpeak_ps.line
 			else
+				echo VarAnnot b37
 				$DIR/scripts/VarAnnot.pl <(echo "chr"${curpeak_c}:${curpeak_ps}-${curpeak_ps}_${curpeak_a1}_${curpeak_a2}) > $curpeak_c.$curpeak_ps.line
 			fi
 #$DIR/scripts/VarAnnot.b38.pl <(echo "chr"${curpeak_c}:${curpeak_ps}-${curpeak_ps}_${curpeak_a1}_${curpeak_a2}) > $curpeak_c.$curpeak_ps.line
@@ -430,10 +435,10 @@ expnumcol=$(($(head -n1 peakdata.ld | tr ' ' '\n' | wc -l)+3))
 
 if [ -z "$b37" ]
 then
-	join -a 1 -1 $pscoli -2 1 --header <(cat <(head -n1 peakdata.ld) <(tail -n+2 peakdata.ld | sort -k$pscoli,$pscoli)) <( cat <(echo $pscol id gene consequence) <($DIR/scripts/getrsid.b38.pl <(awk '$NF>0.1' peakdata.ld | tail -n+2 | awk -v chr=$chrcoli -v ps=$pscoli -v a1=$a1coli -v a2=$a2coli '{print $chr,$ps,$a1,$a2}') | sort -k1,1))  |awk -v en=$expnumcol '{if(NF<en){$(en-2)="NA";$(en-1)="NA";$en="NA"}print}'> peakdata.ld.annotated
+	join -a 1 -1 $pscoli -2 1 --header <(cat <(head -n1 peakdata.ld) <(tail -n+2 peakdata.ld | sort -k$pscoli,$pscoli)) <( cat <(echo $pscol id gene consequence) <($DIR/scripts/getrsid.b38.pl <(awk '$NF>0.1' peakdata.ld | tail -n+2 | awk -v chr=$chrcoli -v ps=$pscoli -v a1=$a1coli -v a2=$a2coli '$a1!=$a2{print $chr,$ps,".",$a1,$a2}') | sort -k1,1))  |awk -v en=$expnumcol '{if(NF<en){$(en-2)="NA";$(en-1)="NA";$en="NA"}print}'> peakdata.ld.annotated
 	$DIR/scripts/get_phenotype.b38.pl <(cut -f$(($expnumcol-2)) -d' ' peakdata.ld.annotated | grep -v -e NA -e novel -e id) | sed 's/ /&/g'| sed 's/\t/\t"/;s/$/"/' > phenotypes
 else
-	join -a 1 -1 $pscoli -2 1 --header <(cat <(head -n1 peakdata.ld) <(tail -n+2 peakdata.ld | sort -k$pscoli,$pscoli)) <( cat <(echo $pscol id gene consequence) <($DIR/scripts/getrsid.b38.pl b37 <(awk '$NF>0.1' peakdata.ld | tail -n+2 | awk -v chr=$chrcoli -v ps=$pscoli -v a1=$a1coli -v a2=$a2coli '{print $chr,$ps,$a1,$a2}') | sort -k1,1))  |awk -v en=$expnumcol '{if(NF<en){$(en-2)="NA";$(en-1)="NA";$en="NA"}print}'> peakdata.ld.annotated
+	join -a 1 -1 $pscoli -2 1 --header <(cat <(head -n1 peakdata.ld) <(tail -n+2 peakdata.ld | sort -k$pscoli,$pscoli)) <( cat <(echo $pscol id gene consequence) <($DIR/scripts/getrsid.b38.pl b37 <(awk '$NF>0.1' peakdata.ld | tail -n+2 | awk -v chr=$chrcoli -v ps=$pscoli -v a1=$a1coli -v a2=$a2coli '$a1!=$a2{print $chr,$ps,".",$a1,$a2}') | sort -k1,1))  |awk -v en=$expnumcol '{if(NF<en){$(en-2)="NA";$(en-1)="NA";$en="NA"}print}'> peakdata.ld.annotated
 	$DIR/scripts/get_phenotype.b38.pl b37 <(cut -f$(($expnumcol-2)) -d' ' peakdata.ld.annotated | grep -v -e NA -e novel -e id) | sed 's/ /&/g'| sed 's/\t/\t"/;s/$/"/' > phenotypes
 fi
 

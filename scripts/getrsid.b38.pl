@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
  
@@ -43,8 +43,12 @@ my $response = $http->request('POST', $server.$ext, {
 });
 
 
-die "Failed!\n" unless $response->{success};
- 
+#print STDERR Dumper($response) unless $response->{success};
+if(! $response->{success}){
+print STDERR "Received String:\n$string\nend\n";
+print STDERR Dumper($response);
+die("Catastrophic failure\n");
+} 
  
 use JSON;
 use Data::Dumper;
@@ -55,6 +59,7 @@ foreach my $input (@$hash){
 	my $gene=defined( $input->{'transcript_consequences'}->[0]->{'gene_symbol'} )?$input->{'transcript_consequences'}->[0]->{'gene_symbol'}:"none";
 	my $consequence=defined($input->{'most_severe_consequence'})?$input->{'most_severe_consequence'}:"none";
 	print join ("\t", $input->{'end'}, $id ,$gene,$consequence   ), "\n";
+	print STDERR join(" ", $id, $input->{'end'}), "\n";
 }
 
 }

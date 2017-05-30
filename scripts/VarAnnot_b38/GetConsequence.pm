@@ -46,13 +46,12 @@ sub Consequence {
         my $query_string = sprintf("%s:%s-%s:1/%s", $variants{$variant}->{"chr"}, $variants{$variant}->{"start"}, $variants{$variant}->{"end"}, $variants{$variant}->{"alt"});
         $query_string = sprintf("%s:%s-%s:1/%s", $variants{$variant}->{"chr"}, $variants{$variant}->{"end"}, $variants{$variant}->{"start"}, $variants{$variant}->{"alt"}) if $variants{$variant}->{"start"} > $variants{$variant}->{"end"};
 
-        my $URL = "http://rest.ensembl.org/vep/human/region/$query_string";
+        my $URL = "http://rest.ensembl.org/vep/human/region/$query_string"."?content-type=application/json";
         my $http = HTTP::Tiny->new();
+	if($variants{$variant}->{"alt"} eq $variants{$variant}->{"ref"}){next}
 
         # Processing returned data:
-        my $response = $http->get($URL,{
-            headers => { 'Content-type' => 'application/json' }
-        });
+        my $response = $http->get($URL,{});
 
         # This short loop was added to make the code more robuts. We don't want it to crash any time,
         # there is some problem with downloading the data.
@@ -60,7 +59,7 @@ sub Consequence {
         unless ($response->{success}){
             while ($fail_count < 20) {
                 sleep(5);
-                print STDERR "[Warning] Downloading data from the Ensembl server failed. Trying again.\n";
+                print STDERR "[Warning] Downloading data from the Ensembl server failed (request was $URL). Trying again.\n";
                 my $http     = HTTP::Tiny->new();
                 my $response = $http->get($URL,{});
                 $fail_count++;
