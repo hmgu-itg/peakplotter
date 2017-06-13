@@ -8,8 +8,8 @@ from bokeh.models import *
 import pandas as pd
 import numpy as np
 import logging
-import json, requests, asr
-import urllib2
+import json, requests
+from urllib.request import urlopen
 from bokeh.io import gridplot, output_file, show
 
 logging.basicConfig()
@@ -42,10 +42,10 @@ e['col']=pd.cut(e['ld'], 9, labels=range(1,10))
 from bokeh.palettes import Spectral10
 collol = pd.DataFrame({'pal':Spectral10})
 
-e['assoc']=e['assoc'].astype(basestring)
+e['assoc']=e['assoc'].astype(str)
 
 
-e['col_assoc']=e['assoc'].astype(basestring)
+e['col_assoc']=e['assoc'].astype(str)
 
 #e['col_assoc'].astype(basestring)
 
@@ -68,7 +68,7 @@ e['logp']=-np.log10(e[sys.argv[2]])
 print("Query1:Genes")
 url = 'http://grch37.rest.ensembl.org/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=gene;content-type=application/json'
 print("Querying Ensembl with region "+url)
-response = urllib2.urlopen(url).read()
+response = urlopen(url).read().decode('utf-8')
 jData = json.loads(response)
 d=pd.DataFrame(jData)
 
@@ -76,7 +76,7 @@ d=pd.DataFrame(jData)
 print("Query2:GWASCAT")
 url = 'http://grch37.rest.ensembl.org/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=variation;content-type=application/json;;variant_set=ph_nhgri'
 print("Querying Ensembl with region "+url)
-response = urllib2.urlopen(url).read()
+response = urlopen(url).read().decode('utf-8')
 jData = json.loads(response)
 cat=pd.DataFrame(jData)
 #print(cat)
@@ -95,9 +95,10 @@ if not cat.empty:
 	s=repr(decoded)
 
 	for rsid in decoded:
-		p.ray(x=decoded[rsid]['mappings'][0]['end'], color="firebrick", length=0, angle=90, angle_units="deg")
+		s=Span(location=decoded[rsid]['mappings'][0]['end'], line_color="firebrick", dimension='height')
 		label = Label(x=decoded[rsid]['mappings'][0]['end'], y=e['logp'].max(), text=decoded[rsid]['phenotypes'][0]['trait'], angle=90, angle_units="deg", text_align="right", text_color="firebrick", text_font_size="11", text_font_style="italic")
 		p.add_layout(label)
+		p.add_layout(s)
 
 
 

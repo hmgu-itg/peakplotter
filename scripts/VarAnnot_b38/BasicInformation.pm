@@ -112,14 +112,14 @@ sub pos_finder_rs {
     unless ($response->{success}){
         while ($fail_count < 20) {
             sleep(5);
-            print STDERR "[Warning] Downloading data from the Ensembl server failed. Trying again.\n";
+            print STDERR "[Warning] Downloading data from the Ensembl server failed ($URL). Trying again.\n";
             my $http     = HTTP::Tiny->new();
             my $response = $http->get($URL,{});
             $fail_count++;
         }
 
         # If more than 20 fails accumulated, we proceed to the next variant.
-        print STDERR "[Warning] Downloading data from the Ensembl server failed. variant: $rsid. URL: $URL\n";
+        print STDERR "[Warning] Downloading data from the Ensembl server failed ($URL). variant: $rsid. URL: $URL\n";
         next;
     }
 
@@ -196,10 +196,10 @@ sub _getRefAllele {
      # If we are looking at an insertion, the start-end values are a bit messed:
     my $URL = '';
     if ($end < $start) {
-        $URL = sprintf("http://rest.ensembl.org/sequence/region/human/%s\:%s..%s?feature=variation", $chr, $end, $start);
+        $URL = sprintf("http://rest.ensembl.org/sequence/region/human/%s\:%s..%s:1?content-type=text/plain", $chr, $end, $start);
     }
     else {
-        $URL = sprintf("http://rest.ensembl.org/sequence/region/human/%s\:%s..%s?feature=variation", $chr, $start, $end);
+        $URL = sprintf("http://rest.ensembl.org/sequence/region/human/%s\:%s..%s:1?content-type=text/plain", $chr, $start, $end);
     }
 
     my $http = HTTP::Tiny->new();
@@ -214,7 +214,7 @@ sub _getRefAllele {
     unless ($response->{success}){
         while ($fail_count < 3) {
             sleep(5);
-            print STDERR "[Warning] Downloading data from the Ensembl server failed. Trying again.\n";
+            print STDERR "[Warning] Downloading data from the Ensembl server failed ($URL). Trying again.\n";
             my $http     = HTTP::Tiny->new();
             my $response = $http->get($URL,{});
             $fail_count++;
@@ -276,7 +276,7 @@ sub rs_finder {
     unless ($response->{success}){
         while ($fail_count < 3) {
             sleep(5);
-            print STDERR "\n\t[Warning] Downloading data from the Ensembl server failed. Trying again.";
+            print STDERR "\n\t[Warning] Downloading data from the Ensembl server failed ($URL). Trying again.";
             my $http     = HTTP::Tiny->new();
             my $response = $http->get($URL,{});
             $fail_count++;

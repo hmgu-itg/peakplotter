@@ -36,7 +36,7 @@ my $response = $http->request('POST', $server.$ext, {
   content => '{ "ids" : ['.$loll.' ] }',
 });
  
-die "Failed!\n" unless $response->{success};
+die "Failed! ($server.$ext)\n" unless $response->{success};
  
  use JSON;
 use Data::Dumper;

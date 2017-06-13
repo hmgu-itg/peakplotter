@@ -73,7 +73,7 @@ sub Protein {
         unless ($response->{success}){
             while ($fail_count < 20) {
                 sleep(5);
-                print STDERR "[Warning] Downloading data from the Ensembl server failed. Trying again.\n";
+                print STDERR "[Warning] Downloading data from the Ensembl server failed ($URL). Trying again.\n";
                 my $http     = HTTP::Tiny->new();
                 my $response = $http->get($URL,{});
                 $fail_count++;
@@ -164,7 +164,7 @@ sub _getUniPortID {
     unless ($response->{success}){
         while ($fail_count < 20) {
             sleep(5);
-            print STDERR "[Warning] Downloading data from the Ensembl server failed. Trying again.\n";
+            print STDERR "[Warning] Downloading data from the Ensembl server failed ($URL). Trying again.\n";
             my $http     = HTTP::Tiny->new();
             my $response = $http->get($URL,{});
             $fail_count++;
@@ -201,7 +201,7 @@ sub _getUniPortID {
     unless ($response->{success}){
         while ($fail_count < 20) {
             sleep(5);
-            print STDERR "[Warning] Downloading data from the Ensembl server failed. Trying again.\n";
+            print STDERR "[Warning] Downloading data from the Ensembl server failed ($URL). Trying again.\n";
             my $http     = HTTP::Tiny->new();
             my $response = $http->get($URL,{});
             $fail_count++;
@@ -261,7 +261,7 @@ sub _UniProtData {
     unless ($response->{success}){
         while ($fail_count < 20) {
             sleep(5);
-            print STDERR "[Warning] Downloading data from the Ensembl server failed. Trying again.\n";
+            print STDERR "[Warning] Downloading data from the Ensembl server failed ($URL). Trying again.\n";
             my $http     = HTTP::Tiny->new();
             my $response = $http->get($URL,{});
             $fail_count++;
