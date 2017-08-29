@@ -86,7 +86,7 @@ e=get_csq_novel_variants(e, chrcol, pscol, a1col, a2col)
 
 
 # Below gets the genes > d
-url = server+'/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=gene;content-type=application/json'
+url = server+'/overlap/region/human/'+str(e[chrcol][0])+':'+str(int(e[pscol].min()))+'-'+str(int(e[pscol].max()))+'?feature=gene;content-type=application/json'
 info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
 response = urlopen(url).read().decode('utf-8')
 jData = json.loads(response)
