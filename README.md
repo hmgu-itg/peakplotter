@@ -56,7 +56,7 @@ python -c "import bokeh" || pip install bokeh
 ./plotpeaks.sh [signif] [assoc_file] [chrcol_name] [poscol_name] [idcol_name] [pvalcol_name] [allele1col_name] [allele0col_name] [afcol_name] [bed_file]
 ```
 * **signif** is the significance level above which to declare a variant significant. Scientific notation (such as `5e-8`) is fine.
-* **assoc_file** is the association file. It can be gzipped, provided that it bears the `.gz` extension. Its first line must be a header, coherent with the name arguments below. It must be **tab-separated**.
+* **assoc_file** is the association file. It can be gzipped, provided that it bears the `.gz` extension. Its first line must be a header, coherent with the name arguments below. It must be **tab-separated**, **bgzipped** and **tabixed** (`tabix` is available as part of `bcftools`).
 * **chrcol_name** : name of the column for chromosome names.
 * **poscol_name** : name of the column for chromosomal position.
 * **idcol_name** : name of the column for unique SNP ids (RS-id or chr:pos).
@@ -64,7 +64,7 @@ python -c "import bokeh" || pip install bokeh
 * **allele1col_name** : name of the column for reference or major allele (used for predicting consequence).
 * **allele0col_name** : name of the column for alternate or minor allele.
 * **afcol_name** : name of the column for non-reference or minor allele frequency.
-* **bed_file** : BED file base name. This should contain the genotypes for at least all the variants in the **assoc_file**, but it can contain more. Please note that this is the base name, without the `.bed/.bim/.fam` extension.
+* **plink_base** : Binary PLINK (.bed/.bim/.fam) file base name. This should contain the genotypes for at least all the variants in the **assoc_file**, but it can contain more. Please note that this is the base name, without the `.bed/.bim/.fam` extension.
 * **region_flank (optional)** flanking size in base pairs for drawing plots (defaults to 500kb, i.e. 1Mbp plots) around lead SNPs.
 
 ## Genome build
