@@ -18,7 +18,7 @@ module add $(module avail 2>&1 | grep '/bedtools/' | grep latest | sed 's/.lates
 module add $(module avail 2>&1 | grep '/perl/' | grep latest | sed 's/.latest.//')
 export PERL5LIB=/nfs/users/nfs_a/ag15/perlmod/lib/site_perl/5.20.1:$PERL5LIB
 export PATH=/nfs/team144/software/locuszoom-1.3/locuszoom/bin:$PATH
-source /nfs/team144/jupyter_p27/bin/activate
+source /nfs/team144/jupyter/bin/activate
 ```
 
 ## Installation
