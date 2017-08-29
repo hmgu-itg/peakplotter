@@ -91,8 +91,10 @@ info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
 response = urlopen(url).read().decode('utf-8')
 jData = json.loads(response)
 d=pd.DataFrame(jData)
-
-
+e['gene']=""
+for index, row in d.iterrows():
+    e.loc[(e['ps']>row['start']) & (e['ps']<row['end']), 'gene']=e.loc[(e['ps']>row['start']) & (e['ps']<row['end']), 'gene']+";"+row['external_name']
+e['gene']=e['gene'].str.replace(r'^\;', '')
 
 ff=ff.loc[ff['ensembl_assoc']!="none",]
 for index, row in ff.iterrows():
