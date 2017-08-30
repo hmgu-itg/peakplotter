@@ -48,7 +48,7 @@ def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col):
 	novelsnps=e.loc[(e['ensembl_rs']=="novel") & (e['ld']>0.1) & (e['ensembl_consequence']!='double allele'),]
 	if novelsnps.empty:
 		return e
-	novelsnps['query']=novelsnps[chrcol].astype(str)+" "+novelsnps[pscol].astype(str)+" . "+novelsnps[a1col].astype(str)+" "+novelsnps[a2col].astype(str)+" . . ."
+	novelsnps['query']=novelsnps[chrcol].astype(str)+" "+str(int(novelsnps[pscol]))+" . "+novelsnps[a1col].astype(str)+" "+novelsnps[a2col].astype(str)+" . . ."
 	request='{ "variants" : ["'+'", "'.join(novelsnps['query'])+'" ] }'
 	ext = "/vep/homo_sapiens/region"
 	headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
