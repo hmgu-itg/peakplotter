@@ -10,7 +10,8 @@ import numpy as np
 import logging
 import json, requests, asr
 from urllib.request import urlopen
-from bokeh.io import gridplot, output_file, show
+from bokeh.io import output_file, show
+from bokeh.layouts import gridplot
 import helper_functions
 from helper_functions import *
 
