@@ -44,7 +44,11 @@ p = figure(tools=[hover, 'box_zoom,wheel_zoom,reset,tap'], width=1500)
 #e=d.query('ps > 33400000 and ps<33900000')
 #print(d)
 d.replace(r'\s+', np.nan, regex=True)
+if (pscol != "ps"):
+   d['ps']=d[pscol] 
 
+
+#d.rename(columns={pscol:'ps'}, inplace=True)
 e=d
 
 # LD colouring
@@ -60,10 +64,12 @@ e['logp']=-np.log10(e[sys.argv[2]])
 server = "https://rest.ensembl.org" if build=="b38" else "http://grch37.rest.ensembl.org";
 helper_functions.server=server;
 ff=get_rsid_in_region(str(e[chrcol][0]), str(e[pscol].min()), str(e[pscol].max()))
+print(ff.head())
 ff.columns=['ensembl_consequence', 'ensembl_rs', 'ps', 'ensembl_assoc']
 ff['ensembl_assoc'].fillna("none", inplace=True)
 ff=ff.groupby(ff['ps']).apply(lambda x: pd.Series({'ensembl_consequence' : ";".join(x['ensembl_consequence'].unique()), 'ensembl_rs' : ";".join(x['ensembl_rs'].unique()), 'ensembl_assoc' : ";".join(set(x['ensembl_assoc']))})).reset_index()
 
+print(e.head())
 
 # Merge dataframes, drop signals that are not present in the dataset
 emax=pd.merge(e, ff, on='ps', how='outer')
