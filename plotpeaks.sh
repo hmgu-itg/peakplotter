@@ -84,8 +84,17 @@ $cat $assocfile | awk -v p=$pvalcoli -v signif=$signif '$p<signif'| sort -k${chr
 cat <($cat $assocfile | head -1) signals | sponge signals
 echo $DIR/peakit.py signals $pvalcol $chrcol $pscol
 $DIR/peakit.py signals $pvalcol $chrcol $pscol | sort -k1,1n -k2,2n | bedtools merge -i - > peaked
-cat peaked |  while read chr start end; do 
 
+numpeaks=$(cat peaked | wc -l)
+
+current=1
+
+#cat peaked |  while read chr start end; do
+
+while [ "$numpeaks" -ge "$current" ]; do
+read chr start end <<< $(head -n $current peaked | tail -1)
+echo "Treating peak $chr $start $end (peak $current / $numpeaks )"
+current=$(( $current + 1 ))
 curpeak_c=$chr
 curpeak_ps=$start
 # For each signal:
@@ -182,4 +191,10 @@ join --header -1 $rscoli -2 1 <(cat <(head -n1 peakdata.header) <(tail -n+2 peak
 echo "Done with peak $chr $start $end."
 done
 
-rm cp* merge* peak* 0.* *.db *signal* *.line  
+#rm merge* peak* 0.* *.db *signal* 
+
+if [ -a cp* ] ; then rm cp*; fi
+if [ -a *.line ] ; then rm *.line; fi
+
+
+

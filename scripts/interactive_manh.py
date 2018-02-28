@@ -114,6 +114,8 @@ for index, row in ff.iterrows():
 
 
 
+e.to_csv(file+".csv", index=False)
+
 e=ColumnDataSource(e)
 server = "http://ensembl.org" if build=="b38" else "http://grch37.ensembl.org";
 url = server+"/Homo_sapiens/Variation/Explore?v=@ensembl_rs"
@@ -139,4 +141,4 @@ p2.add_layout(labels)
 p2.xaxis.visible = False
 q=gridplot([[p], [p2]])
 save(q)
-
+info("End of script")
