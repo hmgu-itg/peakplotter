@@ -10,7 +10,8 @@ import numpy as np
 import logging
 import json, requests, asr
 from urllib.request import urlopen
-from bokeh.io import gridplot, output_file, show
+from bokeh.io import output_file, show
+from bokeh.layouts import gridplot
 import helper_functions
 from helper_functions import *
 
@@ -43,7 +44,11 @@ p = figure(tools=[hover, 'box_zoom,wheel_zoom,reset,tap'], width=1500)
 #e=d.query('ps > 33400000 and ps<33900000')
 #print(d)
 d.replace(r'\s+', np.nan, regex=True)
+if (pscol != "ps"):
+   d['ps']=d[pscol] 
 
+
+#d.rename(columns={pscol:'ps'}, inplace=True)
 e=d
 
 # LD colouring
@@ -59,10 +64,12 @@ e['logp']=-np.log10(e[sys.argv[2]])
 server = "https://rest.ensembl.org" if build=="b38" else "http://grch37.rest.ensembl.org";
 helper_functions.server=server;
 ff=get_rsid_in_region(str(e[chrcol][0]), str(e[pscol].min()), str(e[pscol].max()))
+print(ff.head())
 ff.columns=['ensembl_consequence', 'ensembl_rs', 'ps', 'ensembl_assoc']
 ff['ensembl_assoc'].fillna("none", inplace=True)
 ff=ff.groupby(ff['ps']).apply(lambda x: pd.Series({'ensembl_consequence' : ";".join(x['ensembl_consequence'].unique()), 'ensembl_rs' : ";".join(x['ensembl_rs'].unique()), 'ensembl_assoc' : ";".join(set(x['ensembl_assoc']))})).reset_index()
 
+print(e.head())
 
 # Merge dataframes, drop signals that are not present in the dataset
 emax=pd.merge(e, ff, on='ps', how='outer')
@@ -86,7 +93,7 @@ e=get_csq_novel_variants(e, chrcol, pscol, a1col, a2col)
 
 
 # Below gets the genes > d
-url = server+'/overlap/region/human/'+str(e[chrcol][0])+':'+str(e[pscol].min())+'-'+str(e[pscol].max())+'?feature=gene;content-type=application/json'
+url = server+'/overlap/region/human/'+str(e[chrcol][0])+':'+str(int(e[pscol].min()))+'-'+str(int(e[pscol].max()))+'?feature=gene;content-type=application/json'
 info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
 response = urlopen(url).read().decode('utf-8')
 jData = json.loads(response)
@@ -106,6 +113,8 @@ for index, row in ff.iterrows():
 
 
 
+
+e.to_csv(file+".csv", index=False)
 
 e=ColumnDataSource(e)
 server = "http://ensembl.org" if build=="b38" else "http://grch37.ensembl.org";
@@ -132,4 +141,4 @@ p2.add_layout(labels)
 p2.xaxis.visible = False
 q=gridplot([[p], [p2]])
 save(q)
-
+info("End of script")

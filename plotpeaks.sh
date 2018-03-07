@@ -23,6 +23,7 @@ a2col=$8
 mafcol=$9
 flank_bp=${11}
 filelist=$files
+memory=30000
 
 ## LOCUSZOOM DATA PATHS
 ## (N.B. LZ path has to be in PATH)
@@ -81,8 +82,19 @@ curpeak_p=1
 first=1
 $cat $assocfile | awk -v p=$pvalcoli -v signif=$signif '$p<signif'| sort -k${chrcoli},${chrcoli}n -k ${pscoli},${pscoli}n  | tr ';' '_' | sed 's/\[b38\]//' > signals
 cat <($cat $assocfile | head -1) signals | sponge signals
-$DIR/peakit.py signals $pvalcol $chrcol $pscol | sort -k1,1n -k2,2n | bedtools merge -i - | while read chr start end; do 
+echo $DIR/peakit.py signals $pvalcol $chrcol $pscol
+$DIR/peakit.py signals $pvalcol $chrcol $pscol | sort -k1,1n -k2,2n | bedtools merge -i - > peaked
 
+numpeaks=$(cat peaked | wc -l)
+
+current=1
+
+#cat peaked |  while read chr start end; do
+
+while [ "$numpeaks" -ge "$current" ]; do
+read chr start end <<< $(head -n $current peaked | tail -1)
+echo "Treating peak $chr $start $end (peak $current / $numpeaks )"
+current=$(( $current + 1 ))
 curpeak_c=$chr
 curpeak_ps=$start
 # For each signal:
@@ -110,7 +122,7 @@ fi
 for id in "${ids[@]}"
 do 
 
-	plink --allow-no-sex --memory 15000 --bfile ${files[$id]} --chr $chr --from-bp $sensible_start --to-bp $end --out $id --make-bed				
+	plink --allow-no-sex --memory $memory --bfile ${files[$id]} --chr $chr --from-bp $sensible_start --to-bp $end --out $id --make-bed				
 	# Use SNPIDs if rsids not available
 	awk 'OFS="\t"{if($2!~/:/ && $2!~/^rs/){$2="chr"$1":"$4}print}' $id.bim | tr ';' '_' | sponge $id.bim
 	# add chr if not present in SNPID
@@ -124,7 +136,7 @@ numfile=$(cat mergelist | wc -l)
 
 if [ "$numfile" -gt "1" ]; then
 	echo -e "\n\nAttempting to merge $numfile files...\n\n"
-	plink --allow-no-sex --merge-list mergelist --make-bed --out merged --allow-no-sex
+	plink --allow-no-sex --merge-list mergelist --make-bed --out merged
 			if [ -f merged-merge.missnp ]
 				then
 				grep -v -w -f merged-merge.missnp peakdata | sponge peakdata
@@ -147,9 +159,13 @@ fi
 # Correct IDs in peakdata file
 cat <(head -1 signals) peakdata > peakdata.header
 # Use SNPIDs if rsids not available
-awk 'OFS="\t"{if($'$rscoli'!~/:/ && $'$rscoli'!~/^rs/){$'$rscoli'="chr"$'$chrcoli'":"$'$pscoli'}print}' peakdata.header | sponge peakdata.header
+#<<<<<<< HEAD
+#awk 'OFS="\t"{if($'$rscoli'!~/:/ && $'$rscoli'!~/^rs/){$'$rscoli'="chr"$'$chrcoli'":"$'$pscoli'}print}' peakdata.header | sponge peakdata.header
+#=======
+awk 'OFS="\t"{if(NR>1){if($'$rscoli'!~/:/ && $'$rscoli'!~/^rs/){$'$rscoli'="chr"$'$chrcoli'":"$'$rscoli'}}print}' peakdata.header | sponge peakdata.header
+#>>>>>>> 9db6e2348fe89b634ea16b07d4cd8b7c22132c4d
 # add chr if not present in SNPID
-awk 'OFS="\t"{if($2~/:/ && $2!~/^chr/){$2="chr"$2}print}' peakdata.header | sponge peakdata.header
+awk 'OFS="\t"{if(NR>1){if($'$rscoli'~/:/ && $'$rscoli'!~/^chr/){$'$rscoli'="chr"$'$rscoli'}}print}' peakdata.header | sponge peakdata.header
 
 
 # Extract top SNP
@@ -167,14 +183,22 @@ locuszoom --metal peakdata.header --refsnp "$refsnp" --markercol "$rscol" --pval
 # interactive manh expects comma-separated, with a ld column
 join --header -1 $rscoli -2 1 <(cat <(head -n1 peakdata.header) <(tail -n+2 peakdata.header | sort -k$rscoli,$rscoli)) <(cat <(echo $rscol ld) <(cut -f2,3 -d' ' merged.ld |sort -k1,1) ) |tr ' ' ','> $chr.$start.$end.peakdata.ld
 
-
 # Running interactive manhattan
 	if [ -z "$b37" ]
 	then
+		echo $DIR/scripts/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
 		$DIR/scripts/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
 	else
 		$DIR/scripts/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b37
 	fi
+
+echo "Done with peak $chr $start $end."
 done
 
-#rm cp* merge* peak* 0.* *.db *signal* *.line  
+#rm merge* peak* 0.* *.db *signal* 
+
+if [ -a cp* ] ; then rm cp*; fi
+if [ -a *.line ] ; then rm *.line; fi
+
+
+
