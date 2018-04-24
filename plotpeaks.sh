@@ -159,7 +159,11 @@ fi
 # Correct IDs in peakdata file
 cat <(head -1 signals) peakdata > peakdata.header
 # Use SNPIDs if rsids not available
+#<<<<<<< HEAD
+#awk 'OFS="\t"{if($'$rscoli'!~/:/ && $'$rscoli'!~/^rs/){$'$rscoli'="chr"$'$chrcoli'":"$'$pscoli'}print}' peakdata.header | sponge peakdata.header
+#=======
 awk 'OFS="\t"{if(NR>1){if($'$rscoli'!~/:/ && $'$rscoli'!~/^rs/){$'$rscoli'="chr"$'$chrcoli'":"$'$rscoli'}}print}' peakdata.header | sponge peakdata.header
+#>>>>>>> 9db6e2348fe89b634ea16b07d4cd8b7c22132c4d
 # add chr if not present in SNPID
 awk 'OFS="\t"{if(NR>1){if($'$rscoli'~/:/ && $'$rscoli'!~/^chr/){$'$rscoli'="chr"$'$rscoli'}}print}' peakdata.header | sponge peakdata.header
 
