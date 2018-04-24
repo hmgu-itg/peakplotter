@@ -141,4 +141,5 @@ p2.add_layout(labels)
 p2.xaxis.visible = False
 q=gridplot([[p], [p2]])
 save(q)
-info("End of script")
+
+
