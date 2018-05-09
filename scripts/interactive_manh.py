@@ -29,6 +29,7 @@ build=sys.argv[9]
 pd.options.mode.chained_assignment = None  
 d=pd.read_csv(file, sep=",",index_col=False)
 output_file(outfile)
+
 # this was below before:     ("name", "   @"+sys.argv[4]),
 hover= HoverTool(tooltips = [
         ("==============", "=============="),
@@ -125,21 +126,24 @@ p.circle(sys.argv[3], 'logp', line_width=2, source=e, size=9, fill_color='col', 
 p.xaxis[0].formatter.use_scientific = False
 
 p2=figure(width=1500, height=300, x_range=p.x_range, tools=['tap'])
-ys=np.random.rand(len(d['end']))
-d['y']=ys
 
-d['color']="cornflowerblue"
-d['color'].ix[d['biotype']=="protein_coding"]="goldenrod"
+if d.empty==False: # if d is not empty, save the plot
+    ys=np.random.rand(len(d['end']))
+    d['y']=ys
 
-d['sens']="<"
-d['sens'].ix[d['strand']>0]=">"
-d['name']=d['sens']+d['external_name']
-p2.segment(x0=d['start'], x1=d['end'], y0=ys, y1=ys, line_width=4, color=d['color'])
+    d['color']="cornflowerblue"
+    d['color'].ix[d['biotype']=="protein_coding"]="goldenrod"
 
-labels=LabelSet(x='start', y='y', text='name', source=ColumnDataSource(d))
-p2.add_layout(labels)
-p2.xaxis.visible = False
+    d['sens']="<"
+    d['sens'].ix[d['strand']>0]=">"
+    d['name']=d['sens']+d['external_name']
+    p2.segment(x0=d['start'], x1=d['end'], y0=ys, y1=ys, line_width=4, color=d['color'])
+
+    labels=LabelSet(x='start', y='y', text='name', source=ColumnDataSource(d))
+    p2.add_layout(labels)
+    p2.xaxis.visible = False
+else:
+    info("\t\t\t🌐   No genes overlap this genomic region.")
+
 q=gridplot([[p], [p2]])
 save(q)
-
-
