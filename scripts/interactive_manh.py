@@ -8,7 +8,7 @@ from bokeh.models import *
 import pandas as pd
 import numpy as np
 import logging
-import json, requests, asr
+import json, requests, asr, io 
 from urllib.request import urlopen
 from bokeh.io import output_file, show
 from bokeh.layouts import gridplot
@@ -23,12 +23,38 @@ chrcol=sys.argv[6]
 pscol=sys.argv[3]
 a1col=sys.argv[7]
 a2col=sys.argv[8]
-
 build=sys.argv[9]
 
 pd.options.mode.chained_assignment = None  
 d=pd.read_csv(file, sep=",",index_col=False)
 output_file(outfile)
+
+chrom=set(d['chr']) # This is for later to check whether the region window overlaps a centromere.
+assert (len(chrom)==1),print("The chromosome spans across multiple chromosomes, which is impossible.")
+
+# Check whether the region window overlaps a centromere. Print the information about the presence of centromeric region later in the script.
+chrom=str(chrom.pop())
+if build=="b38":
+    url="https://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/data/38/Modeled_regions_for_GRCh38.tsv"
+    s=requests.get(url).content
+    cen_list=pd.read_csv(io.StringIO(s.decode('utf-8')), sep='\t', header=(0))
+    if cen_list.empty==False:
+        cen_list.drop(['HET7'], inplace=True)
+        cen_list.drop(cen_list.columns[3], axis=1, inplace=True)
+        cen_list.columns = ['chr','start','end']
+        cen_start=int(cen_list[cen_list['chr'] == chrom]['start'])
+        cen_end=int(cen_list[cen_list['chr'] == chrom]['end'])
+    else:
+        info("Failed to obtain GRCh38 centromere coordinates")
+
+region_start=min(d['ps'])
+region_end=max(d['ps'])
+
+cen_coordinate=set(range(int(cen_start),int(cen_end)))
+region=set(range(region_start, region_end))
+cen_overlap=region.intersection(cen_coordinate)
+
+
 
 # this was below before:     ("name", "   @"+sys.argv[4]),
 hover= HoverTool(tooltips = [
@@ -114,7 +140,7 @@ for index, row in ff.iterrows():
 
 
 
-
+ 
 e.to_csv(file+".csv", index=False)
 
 e=ColumnDataSource(e)
@@ -127,7 +153,7 @@ p.xaxis[0].formatter.use_scientific = False
 
 p2=figure(width=1500, height=300, x_range=p.x_range, tools=['tap'])
 
-if d.empty==False: # if d is not empty, save the plot
+if d.empty==False: # if d is not empty,
     ys=np.random.rand(len(d['end']))
     d['y']=ys
 
@@ -144,6 +170,21 @@ if d.empty==False: # if d is not empty, save the plot
     p2.xaxis.visible = False
 else:
     info("\t\t\t🌐   No genes overlap this genomic region.")
+
+if (len(cen_overlap)>0): # Add indication of the centromeric region in the plot
+    perc_overlap=int((len(cen_overlap)/len(region))*100)
+    info("\t\t\t    {0}% of the genomic region overlaps a centromere".format(perc_overlap))
+
+    xs=min(cen_overlap)
+    xe=max(cen_overlap)+1
+    cen_median=max(cen_overlap)-int((max(cen_overlap)-min(cen_overlap))/2)
+    p2.segment(x0=xs, x1=xe, y0=0.5, y1=0.5, line_width=100, color="grey")
+    d=dict(x=[cen_median],y=[0.9],text=["Centromeric_region"])
+    labels=LabelSet(x="x", y="y", text="text",  source=ColumnDataSource(d))
+    p2.add_layout(labels)
+
+
+
 
 q=gridplot([[p], [p2]])
 save(q)
