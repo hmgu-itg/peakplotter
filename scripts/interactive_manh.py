@@ -29,7 +29,7 @@ pd.options.mode.chained_assignment = None
 d=pd.read_csv(file, sep=",",index_col=False)
 output_file(outfile)
 
-chrom=set(d['chr']) # This is for later to check whether the region window overlaps a centromere.
+chrom=set(d[chrcol]) # This is for later to check whether the region window overlaps a centromere.
 assert (len(chrom)==1),print("The chromosome spans across multiple chromosomes, which is impossible.")
 
 # Check whether the region window overlaps a centromere. Print the information about the presence of centromeric region later in the script.
@@ -46,11 +46,29 @@ if build=="b38":
         cen_end=int(cen_list[cen_list['chr'] == chrom]['end'])
     else:
         info("Failed to obtain GRCh38 centromere coordinates")
+else:
+   url="wget -O- http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz | gunzip | grep -v -e chrX -e chrY | grep cen | mergeBed -i - | sed 's/chr//'"
+   import subprocess
+   sp=subprocess.check_output(url, shell=True)
+   #print(sp.decode('utf-8'))
+   cen_list=pd.read_table(io.StringIO(sp.decode('utf-8')), sep='\t', header=None)
+   #print(chrom)
+   if cen_list.empty==False:
+      cen_list.apply(pd.to_numeric)
+      #print(cen_list)
+      cen_list.columns = ['chr','start','end']
+      #chrom=pd.to_numeric(chrom)
+      #print(cen_list.dtypes)
+      cen_start=cen_list[cen_list['chr'] == np.int64(chrom)]['start']
+      cen_end=cen_list[cen_list['chr'] == np.int64(chrom)]['end']
+      cen_start=cen_start[0]
+      cen_end=cen_end[0]
+   else:
+      info("Failed to obtain GRCh37 centromere coordinates")
+region_start=min(d[pscol])
+region_end=max(d[pscol])
 
-region_start=min(d['ps'])
-region_end=max(d['ps'])
-
-cen_coordinate=set(range(int(cen_start),int(cen_end)))
+cen_coordinate=set(range(cen_start,cen_end))
 region=set(range(region_start, region_end))
 cen_overlap=region.intersection(cen_coordinate)
 
@@ -102,11 +120,11 @@ print(e.head())
 emax=pd.merge(e, ff, on='ps', how='outer')
 emax.loc[pd.isnull(emax['ensembl_rs']), 'ensembl_rs']="novel"
 emax.loc[pd.isnull(emax['ensembl_consequence']), 'ensembl_consequence']="novel"
-emax.dropna(subset=['chr'], inplace=True)
+emax.dropna(subset=[chrcol], inplace=True)
 e=emax
 e['ensembl_assoc'].fillna("none", inplace=True)
 
-e['chr']=e['chr'].astype(int)
+e[chrcol]=e[chrcol].astype(int)
 
 
 # Create the alpha vector for associations in LD
