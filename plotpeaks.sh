@@ -189,6 +189,7 @@ join --header -1 $rscoli -2 1 <(cat <(head -n1 peakdata.header) <(tail -n+2 peak
 		echo $DIR/scripts/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
 		$DIR/scripts/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
 	else
+		echo $DIR/scripts/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b37
 		$DIR/scripts/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b37
 	fi
 

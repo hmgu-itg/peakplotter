@@ -117,9 +117,13 @@ def get_rsid_in_region(c, start, end):
 				
 				variant.location=assoc['location']
 	resp=pd.merge(snps, pheno, on='location', how='outer')
-	resp.drop(["alleles", "assembly_name", "clinical_significance", "feature_type", "end", "seq_region_name", "phenotype_associations", "strand", "source", "id_y", "location"], axis=1, inplace=True)
-	resp.dropna(inplace=True, subset=["id_x"])
-	resp.rename(columns = {'start':'ps', 'id_x':'rs', 'consequence_type':'consequence'}, inplace = True)
+	if pheno.empty==True:
+		resp.drop(["alleles", "assembly_name", "clinical_significance", "feature_type", "end", "seq_region_name", "strand", "source", "location"], axis=1, inplace=True)
+		resp.rename(columns = {'start':'ps', 'id':'rs', 'consequence_type':'consequence'}, inplace = True)	
+	else:
+		resp.drop(["alleles", "assembly_name", "clinical_significance", "feature_type", "end", "seq_region_name", "phenotype_associations", "strand", "source", "id_y", "location"], axis=1, inplace=True)
+		resp.rename(columns = {'start':'ps', 'id_x':'rs', 'consequence_type':'consequence'}, inplace = True)	
+	resp.dropna(inplace=True, subset=["rs"])
 	return(resp)
 
 def get_rsid_in_region_old(gc):

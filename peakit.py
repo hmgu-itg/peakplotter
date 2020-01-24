@@ -64,6 +64,9 @@ class peakCollection:
 			else:
 				peak.start=int(peak.start-TOTAL_LENGTH/4)
 				peak.end=int(peak.end+TOTAL_LENGTH/4)
+			
+			if peak.start<0:
+				peak.start=0
 			self.peaks[i]=peak
 	
 
