@@ -75,11 +75,11 @@ print(e.head())
 emax=pd.merge(e, ff, on='ps', how='outer')
 emax.loc[pd.isnull(emax['ensembl_rs']), 'ensembl_rs']="novel"
 emax.loc[pd.isnull(emax['ensembl_consequence']), 'ensembl_consequence']="novel"
-emax.dropna(subset=['chr'], inplace=True)
+emax.dropna(subset=[chrcol], inplace=True)
 e=emax
 e['ensembl_assoc'].fillna("none", inplace=True)
 
-e['chr']=e['chr'].astype(int)
+e[chrcol]=e[chrcol].astype(int)
 
 
 # Create the alpha vector for associations in LD

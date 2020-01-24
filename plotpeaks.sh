@@ -100,7 +100,7 @@ curpeak_ps=$start
 # For each signal:
 
 #Extract the assoc file with tabix, assigning chr:pos ids if not already present (or rsids)
-tabix $assocfile ${chr}:${start}-$end | awk -v cc=$chrcoli -v pc=$pscoli -v ic=$rscoli '{if(NR>1 && $ic!~/\:/ && $ic!~/rs/){$ic=$cc":"$pc}print}' | sed 's/\[b38\]//;s/\[b37\]//'> peakdata
+tabix $assocfile ${chr}:${start}-$end | grep -v nan | awk -v cc=$chrcoli -v pc=$pscoli -v ic=$rscoli '{if(NR>1 && $ic!~/\:/ && $ic!~/rs/){$ic=$cc":"$pc}print}' | sed 's/\[b38\]//;s/\[b37\]//'> peakdata
 
 # Create LocusZoom dB
 cat  <(echo -e "snp\tchr\tpos") <(awk -v rs=$rscoli -v chr=$chrcoli -v ps=$pscoli 'BEGIN{OFS="\t"} NR>1 {print $rs, $chr, $ps}' peakdata) | tr ' ' '\t' > peakdata.chrpos
