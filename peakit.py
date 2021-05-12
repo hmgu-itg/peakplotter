@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-
-import pandas as pd
+#!/usr/bin/env python3
 import sys
+
 import numpy as np
+import pandas as pd
 
 d=pd.read_table(sys.argv[1])
 d.sort_values(sys.argv[2], inplace=True)

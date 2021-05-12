@@ -1,17 +1,21 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-#/nfs/team144/agilly/inter_manh_env/bin/python
+import io
 import sys
-from bokeh.plotting import *
-from bokeh.models import *
-import pandas as pd
-import numpy as np
+import json
 import logging
-import json, requests, asr, io 
+
+import asr
+import requests
+import numpy as np
+import pandas as pd
 from urllib.request import urlopen
 from bokeh.io import output_file, show
+from bokeh.models import *
 from bokeh.layouts import gridplot
+from bokeh.plotting import *
+
 import helper_functions
 from helper_functions import *
 

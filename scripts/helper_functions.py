@@ -1,8 +1,17 @@
-import json, requests, asr, subprocess, sys, requests, re
+#!/usr/bin/env python3
+
+import re
+import sys
+import json
+import subprocess
 import urllib.request
 import urllib.parse
-import pandas as pd
+
+import asr
+import requests
 import numpy as np
+import pandas as pd
+
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
