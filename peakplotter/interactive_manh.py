@@ -5,6 +5,7 @@ import io
 import sys
 import json
 import logging
+import subprocess
 from urllib.request import urlopen
 
 import requests
@@ -14,6 +15,7 @@ from bokeh.io import output_file
 from bokeh.models import *
 from bokeh.layouts import gridplot
 from bokeh.plotting import *
+from bokeh.palettes import Spectral10
 
 from . import helper
 
@@ -53,8 +55,8 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a2col, a1col, 
         else:
             helper.info("Failed to obtain GRCh38 centromere coordinates")
     else:
-    url="wget -O- http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz | gunzip | grep -v -e chrX -e chrY | grep cen | mergeBed -i - | sed 's/chr//'"
-    import subprocess
+        url="wget -O- http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz | gunzip | grep -v -e chrX -e chrY | grep cen | mergeBed -i - | sed 's/chr//'"
+    
     sp=subprocess.check_output(url, shell=True)
     #print(sp.decode('utf-8'))
     cen_list=pd.read_table(io.StringIO(sp.decode('utf-8')), sep='\t', header=None)
@@ -96,7 +98,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a2col, a1col, 
     #print(d)
     d.replace(r'\s+', np.nan, regex=True)
     if (pscol != "ps"):
-    d['ps']=d[pscol] 
+        d['ps']=d[pscol]
 
 
     #d.rename(columns={pscol:'ps'}, inplace=True)
@@ -104,7 +106,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a2col, a1col, 
 
     # LD colouring
     e['col']=pd.cut(e['ld'], 9, labels=range(1,10))
-    from bokeh.palettes import Spectral10
+    
     collol = pd.DataFrame({'pal':Spectral10})
     e['col']= np.asarray(collol.ix[e['col']]).flatten()
 
