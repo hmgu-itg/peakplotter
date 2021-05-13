@@ -15,8 +15,7 @@ from bokeh.models import *
 from bokeh.layouts import gridplot
 from bokeh.plotting import *
 
-import .helper_functions
-from .helper_functions import *
+from . import helper
 
 logging.basicConfig()
 file=sys.argv[1]
@@ -48,7 +47,7 @@ if build=="b38":
         cen_start=int(cen_list[cen_list['chr'] == chrom]['start'])
         cen_end=int(cen_list[cen_list['chr'] == chrom]['end'])
     else:
-        info("Failed to obtain GRCh38 centromere coordinates")
+        helper.info("Failed to obtain GRCh38 centromere coordinates")
 else:
    url="wget -O- http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz | gunzip | grep -v -e chrX -e chrY | grep cen | mergeBed -i - | sed 's/chr//'"
    import subprocess
@@ -67,7 +66,7 @@ else:
       cen_start=cen_start[0]
       cen_end=cen_end[0]
    else:
-      info("Failed to obtain GRCh37 centromere coordinates")
+      helper.info("Failed to obtain GRCh37 centromere coordinates")
 region_start=min(d[pscol])
 region_end=max(d[pscol])
 
@@ -110,8 +109,8 @@ e['logp']=-np.log10(e[sys.argv[2]])
 
 ## We get the list of rsids and phenotype associations in the region
 server = "https://rest.ensembl.org" if build=="b38" else "http://grch37.rest.ensembl.org";
-helper_functions.server=server;
-ff=get_rsid_in_region(str(e[chrcol][0]), str(e[pscol].min()), str(e[pscol].max()))
+helper.server=server;
+ff=helper.get_rsid_in_region(str(e[chrcol][0]), str(e[pscol].min()), str(e[pscol].max()))
 print(ff.head())
 ff.columns=['ensembl_consequence', 'ensembl_rs', 'ps', 'ensembl_assoc']
 ff['ensembl_assoc'].fillna("none", inplace=True)
@@ -137,12 +136,12 @@ e['col_assoc']=e['col_assoc'].astype(int)
 
 
 # ENSEMBL consequences for variants in LD that do not have rs-ids
-e=get_csq_novel_variants(e, chrcol, pscol, a1col, a2col)
+e=helper.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col)
 
 
 # Below gets the genes > d
 url = server+'/overlap/region/human/'+str(e[chrcol][0])+':'+str(int(e[pscol].min()))+'-'+str(int(e[pscol].max()))+'?feature=gene;content-type=application/json'
-info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
+helper.info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
 response = urlopen(url).read().decode('utf-8')
 jData = json.loads(response)
 d=pd.DataFrame(jData)
@@ -190,11 +189,11 @@ if d.empty==False: # if d is not empty,
     p2.add_layout(labels)
     p2.xaxis.visible = False
 else:
-    info("\t\t\t🌐   No genes overlap this genomic region.")
+    helper.info("\t\t\t🌐   No genes overlap this genomic region.")
 
 if (len(cen_overlap)>0): # Add indication of the centromeric region in the plot
     perc_overlap=int((len(cen_overlap)/len(region))*100)
-    info("\t\t\t    {0}% of the genomic region overlaps a centromere".format(perc_overlap))
+    helper.info("\t\t\t    {0}% of the genomic region overlaps a centromere".format(perc_overlap))
 
     xs=min(cen_overlap)
     xe=max(cen_overlap)+1

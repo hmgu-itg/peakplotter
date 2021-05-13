@@ -18,14 +18,14 @@ pd.set_option('display.width', 1000)
 # Increase if lots of 504 Timeout errors
 ENSEMBL_USELESSNESS_COEFFICIENT=3
 
-def info (*strs):
+def info(*strs):
 	outstr="[INFO]"
 	for string in strs:
 		outstr+=" "+str(string)
 	print(outstr)
 	return
 
-def warn (*strs):
+def warn(*strs):
 	outstr="[WARNING]"
 	for string in strs:
 		outstr+=" "+str(string)
