@@ -38,7 +38,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a2col, a1col, 
     output_file(outfile)
 
     chrom=set(d[chrcol]) # This is for later to check whether the region window overlaps a centromere.
-    assert (len(chrom)==1),print("The chromosome spans across multiple chromosomes, which is impossible.")
+    assert len(chrom)==1, "The chromosome spans across multiple chromosomes, which is impossible."
 
     # Check whether the region window overlaps a centromere. Print the information about the presence of centromeric region later in the script.
     chrom=str(chrom.pop())
