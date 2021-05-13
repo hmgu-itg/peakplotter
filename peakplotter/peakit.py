@@ -3,10 +3,8 @@ import sys
 
 import pandas as pd
 
-d=pd.read_table(sys.argv[1])
-d.sort_values(sys.argv[2], inplace=True)
 
-MARGIN=500000
+MARGIN = 500000
 
 class Peak:
 	chrom=0
@@ -67,15 +65,17 @@ class peakCollection:
 			if peak.start<0:
 				peak.start=0
 			self.peaks[i]=peak
-	
 
+def peakit(signals, pvalcol, chrcol, pscol):
+	d = pd.read_table(signals)
+	d.sort_values(pvalcol, inplace=True)
 
-p=peakCollection()
-for index, row in d.iterrows():
-#	print(index, row)
-	p.check_and_add(row[sys.argv[3]], row[sys.argv[4]])
+	p = peakCollection()
+	for index, row in d.iterrows():
+		p.check_and_add(row[chrcol], row[pscol])
 
-#p.print()
-p.extend(1000000)
-#print("lol")
-p.print()
+	p.extend(1000000)
+	p.print()
+
+if __name__ == '__main__':
+	peakit(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
