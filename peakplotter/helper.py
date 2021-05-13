@@ -11,9 +11,6 @@ import requests
 import numpy as np
 import pandas as pd
 
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 1000)
-
 # number by which to multiply the normal number of requests to Ensembl
 # Increase if lots of 504 Timeout errors
 ENSEMBL_USELESSNESS_COEFFICIENT=3
@@ -25,12 +22,14 @@ def info(*strs):
 	print(outstr)
 	return
 
+
 def warn(*strs):
 	outstr="[WARNING]"
 	for string in strs:
 		outstr+=" "+str(string)
 	print(outstr, file=sys.stderr)
 	return
+
 
 class GeneCoordinates:
 	chrom=0
@@ -78,6 +77,7 @@ def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col):
 	e['ensembl_consequence'].replace('_', ' ')
 	return e
 
+
 def get_coordinates(gene_name):
     '''
     Function to return the genomic coordinates of a gene submitted (GRCh37)
@@ -96,6 +96,7 @@ def get_coordinates(gene_name):
     decoded = r.json()
     gc=GeneCoordinates(int(decoded["seq_region_name"]), int(decoded["start"]), int(decoded["end"]), decoded["id"], gene_name)
     return(gc)
+
 
 def get_rsid_in_region(c, start, end):
 	url = server+'/overlap/region/human/'+str(c)+":"+str(start)+"-"+str(end)+'?feature=variation;content-type=application/json;'
@@ -134,6 +135,7 @@ def get_rsid_in_region(c, start, end):
 	resp.dropna(inplace=True, subset=["rs"])
 	return(resp)
 
+
 def get_rsid_in_region_old(gc):
 	c=gc.chrom
 	start=gc.start
@@ -171,6 +173,7 @@ def get_rsid_in_region_old(gc):
 				resp=resp.append({'rs':rsid, 'ps':int(ps), 'consequence':consequence, 'pheno':pheno}, ignore_index=True)
 	return(resp)
 
+
 def fetch_single_point(gc, sp_results):
 	c=gc.chrom
 	start=gc.start
@@ -181,6 +184,7 @@ def fetch_single_point(gc, sp_results):
 	task = subprocess.Popen(["zgrep", "-m1", "chr", sp_results], stdout=subprocess.PIPE)
 	sp.columns=task.stdout.read().decode('UTF-8').split()
 	return(sp)
+
 
 def read_variants_from_gene_set(gc, input_monster):
 	c=gc.chrom

@@ -27,6 +27,8 @@ a1col=sys.argv[7]
 a2col=sys.argv[8]
 build=sys.argv[9]
 
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 pd.options.mode.chained_assignment = None  
 d=pd.read_csv(file, sep=",",index_col=False)
 output_file(outfile)
