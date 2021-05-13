@@ -28,12 +28,12 @@ memory=30000
 ## LOCUSZOOM DATA PATHS
 ## (N.B. LZ path has to be in PATH)
 if [ -z "$b37" ]
-	then
+then
 	REFFLAT="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/refFlat.b38.txt"
 	RECOMB="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/recomb-rate_GRCh38.txt"
 else
-        REFFLAT="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/refFlat.txt"
-        RECOMB="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/recomb-rate.txt"	
+	REFFLAT="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/refFlat.txt"
+	RECOMB="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/recomb-rate.txt"	
 fi
 ## SELF DIR
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -82,8 +82,8 @@ curpeak_p=1
 first=1
 $cat $assocfile | awk -v p=$pvalcoli -v signif=$signif '$p<signif'| sort -k${chrcoli},${chrcoli}n -k ${pscoli},${pscoli}n  | tr ';' '_' | sed 's/\[b38\]//' > signals
 cat <($cat $assocfile | head -1) signals | sponge signals
-echo $DIR/peakplotter/peakit.py signals $pvalcol $chrcol $pscol
-$DIR/peakplotter/peakit.py signals $pvalcol $chrcol $pscol | sort -k1,1n -k2,2n | bedtools merge -i - > peaked
+echo $DIR/peakit.py signals $pvalcol $chrcol $pscol
+$DIR/peakit.py signals $pvalcol $chrcol $pscol | sort -k1,1n -k2,2n | bedtools merge -i - > peaked
 
 numpeaks=$(cat peaked | wc -l)
 
@@ -186,11 +186,11 @@ join --header -1 $rscoli -2 1 <(cat <(head -n1 peakdata.header) <(tail -n+2 peak
 # Running interactive manhattan
 	if [ -z "$b37" ]
 	then
-		echo $DIR/peakplotter/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
-		$DIR/peakplotter/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
+		echo $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
+		$DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
 	else
-		echo $DIR/peakplotter/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b37
-		$DIR/peakplotter/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b37
+		echo $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b37
+		$DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b37
 	fi
 
 echo "Done with peak $chr $start $end."
@@ -200,6 +200,4 @@ done
 
 if [ -a cp* ] ; then rm cp*; fi
 if [ -a *.line ] ; then rm *.line; fi
-
-
 
