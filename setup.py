@@ -7,11 +7,11 @@ setup(
     version = "0.0.1",
     install_requires = [
         'asr',
+        'click',
         'numpy',
         'pandas',
         'bokeh',
-        'requests',
-
+        'requests'
     ],
     include_package_data = False,
     
