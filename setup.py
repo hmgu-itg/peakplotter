@@ -18,7 +18,7 @@ setup(
         'console_scripts': [
             'peakplotter = peakplotter.main:cli',
         ],
-    }
+    },
 # Metadata
     author = "Arthur Gilly",
     author_email = "arthur.gilly@helmholtz-muenchen.de",

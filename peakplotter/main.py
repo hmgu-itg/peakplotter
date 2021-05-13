@@ -16,7 +16,7 @@ def cli(path):
             missing_executables.append(exe)
 
     if missing_executables:
-        raise MissingExecutableError(f'Executables missing: {', '.join(missing_executables)}')
+        raise MissingExecutableError(f"Executables missing: {', '.join(missing_executables)}")
         sys.exit(1)
 
 if __name__ == '__main__':
