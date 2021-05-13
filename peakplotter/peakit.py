@@ -7,9 +7,9 @@ import pandas as pd
 MARGIN = 500000
 
 class Peak:
-	chrom=0
-	start=0
-	end=0
+	chrom = 0
+	start = 0
+	end = 0
 	def __init__(self, chr, ps):
 		self.chrom = chr
 		self.start = ps
@@ -17,34 +17,30 @@ class Peak:
 
 	def add_snp(self, chr, ps):
 		if ps < self.start:
-			self.start=ps
+			self.start = ps
 		if ps > self.end:
-			self.end=ps
+			self.end = ps
 
 
 class peakCollection:
-	peaks=[]
 	def __init__(self):
-		self.peaks=[]
+		self.peaks = []
 
 	def check_and_add(self, chr, ps):
 		if len(self.peaks)==0:
-#			print("Initialised array of peaks with ",chr,":",ps)
-			x=Peak(chr, ps)
-			self.peaks=[x]
+			x = Peak(chr, ps)
+			self.peaks = [x]
 			return
-		found=0
+		
+		found = 0
 		for i, peak in enumerate(self.peaks):
 			if (chr == peak.chrom) and (ps > (peak.start - MARGIN)) and (ps < (peak.end + MARGIN)):
-#				print("New snp ",chr, ":", ps, " added to peak ", peak.chrom, ":", peak.start)
 				self.peaks[i].add_snp(chr, ps)
 				found=1
+		
 		if not found:
-#				print("Added new peak: ",chr, ":", ps)
-				self.peaks.append(Peak(chr, ps))
-#		print("At end:")
-#		self.print()
-#		print("\n\n")
+			self.peaks.append(Peak(chr, ps))
+
 		
 	def print(self):
 		for peak in self.peaks:
