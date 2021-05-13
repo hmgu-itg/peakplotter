@@ -1,16 +1,4 @@
 #!/bin/bash
-
-b37=0
-
-if [[ $1 == "b37" ]]; then
-	shift
-	echo -e "\n\nBuild 37 requested.\n\n"
-	b37=1
-else
-	echo -e "\n\nBuild 38 requested.\n\n"
-	b37=""
-fi
-
 signif=$1
 assocfile=$2
 chrcol=$3
@@ -22,19 +10,12 @@ a2col=$8
 mafcol=$9
 files=${10}
 flank_bp=${11}
+REFFLAT=${12}
+RECOMB=${13}
 filelist=$files
 memory=30000
 
-## LOCUSZOOM DATA PATHS
-## (N.B. LZ path has to be in PATH)
-if [ -z "$b37" ]
-then
-	REFFLAT="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/refFlat.b38.txt"
-	RECOMB="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/recomb-rate_GRCh38.txt"
-else
-	REFFLAT="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/refFlat.txt"
-	RECOMB="/nfs/team144/software/locuszoom-1.3/locuszoom/data/database/recomb-rate.txt"	
-fi
+
 ## SELF DIR
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo Running from $(pwd), executable in $DIR.
