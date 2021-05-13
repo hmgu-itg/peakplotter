@@ -108,8 +108,8 @@ e['col']= np.asarray(collol.ix[e['col']]).flatten()
 e['logp']=-np.log10(e[sys.argv[2]])
 
 ## We get the list of rsids and phenotype associations in the region
-server = "https://rest.ensembl.org" if build=="b38" else "http://grch37.rest.ensembl.org";
-helper.server=server;
+server = "https://rest.ensembl.org" if build=="b38" else "http://grch37.rest.ensembl.org"
+helper.server=server
 ff=helper.get_rsid_in_region(str(e[chrcol][0]), str(e[pscol].min()), str(e[pscol].max()))
 print(ff.head())
 ff.columns=['ensembl_consequence', 'ensembl_rs', 'ps', 'ensembl_assoc']
@@ -164,7 +164,7 @@ for index, row in ff.iterrows():
 e.to_csv(file+".csv", index=False)
 
 e=ColumnDataSource(e)
-server = "http://ensembl.org" if build=="b38" else "http://grch37.ensembl.org";
+server = "http://ensembl.org" if build=="b38" else "http://grch37.ensembl.org"
 url = server+"/Homo_sapiens/Variation/Explore?v=@ensembl_rs"
 taptool = p.select(type=TapTool)
 taptool.callback = OpenURL(url=url)
