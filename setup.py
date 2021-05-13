@@ -12,7 +12,7 @@ setup(
         'bokeh',
         'requests'
     ],
-    include_package_data = False,
+    include_package_data = True,
     entry_points = {
         'console_scripts': [
             'peakplotter = peakplotter.main:cli',
