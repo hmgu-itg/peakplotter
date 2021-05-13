@@ -20,18 +20,18 @@ pd.set_option('display.width', 1000)
 ENSEMBL_USELESSNESS_COEFFICIENT=3
 
 def info (*strs):
-	outstr="[INFO]";
+	outstr="[INFO]"
 	for string in strs:
 		outstr+=" "+str(string)
-	print(outstr);
-	return;
+	print(outstr)
+	return
 
 def warn (*strs):
-	outstr="[WARNING]";
+	outstr="[WARNING]"
 	for string in strs:
 		outstr+=" "+str(string)
-	print(outstr, file=sys.stderr);
-	return;
+	print(outstr, file=sys.stderr)
+	return
 
 class GeneCoordinates:
 	chrom=0
@@ -47,8 +47,8 @@ class GeneCoordinates:
 		self.name=name
 
 	def extend(self, margin):
-		self.start-=int(margin);
-		self.end+=int(margin);
+		self.start-=int(margin)
+		self.end+=int(margin)
 
 
 def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col):
@@ -99,14 +99,14 @@ def get_coordinates(gene_name):
     return(gc)
 
 def get_rsid_in_region(c, start, end):
-	url = server+'/overlap/region/human/'+str(c)+":"+str(start)+"-"+str(end)+'?feature=variation;content-type=application/json;';
+	url = server+'/overlap/region/human/'+str(c)+":"+str(start)+"-"+str(end)+'?feature=variation;content-type=application/json;'
 	info("\t\t\t🌐   Querying Ensembl with region "+url)
 	response = urllib.request.urlopen(url).read().decode('utf-8')
 	jData = json.loads(response)
 	snps=pd.DataFrame(jData)
 	snps['location']=snps.seq_region_name.map(str)+":"+snps.start.map(str)+"-"+snps.end.map(str)
 
-	url = server+'/phenotype/region/homo_sapiens/'+str(c)+":"+str(start)+"-"+str(end)+'?feature_type=Variation;content-type=application/json;';
+	url = server+'/phenotype/region/homo_sapiens/'+str(c)+":"+str(start)+"-"+str(end)+'?feature_type=Variation;content-type=application/json;'
 	info("\t\t\t🌐   Querying Ensembl with region "+url)
 	response = urllib.request.urlopen(url).read().decode('utf-8')
 	jData = json.loads(response)
@@ -146,7 +146,7 @@ def get_rsid_in_region_old(gc):
 	cat=pd.DataFrame(jData)
 	nsplit=ENSEMBL_USELESSNESS_COEFFICIENT*int(cat.count()[0]/1000)
 	resp=pd.DataFrame(columns=('rs', 'ps', 'consequence', 'pheno'))
-	info("\t\t\t🌐   Performing "+str(nsplit)+" phenotype requests...");
+	info("\t\t\t🌐   Performing "+str(nsplit)+" phenotype requests...")
 	ext = "/variation/homo_sapiens?phenotypes=1"
 	j=0
 	for i in np.array_split(cat['id'], nsplit):
@@ -168,7 +168,7 @@ def get_rsid_in_region_old(gc):
 				consequence=jData[rsid]['most_severe_consequence']
 				pheno=""
 				for k in jData[rsid]['phenotypes']:
-					pheno=k['trait'] if (pheno=="") else pheno+";"+k['trait'];
+					pheno=k['trait'] if (pheno=="") else pheno+";"+k['trait']
 				resp=resp.append({'rs':rsid, 'ps':int(ps), 'consequence':consequence, 'pheno':pheno}, ignore_index=True)
 	return(resp)
 
@@ -176,11 +176,11 @@ def fetch_single_point(gc, sp_results):
 	c=gc.chrom
 	start=gc.start
 	end=gc.end
-	sp = pd.DataFrame();
-	task = subprocess.Popen(["tabix", "-h", sp_results, str(c)+":"+str(start)+"-"+str(end)], stdout=subprocess.PIPE);
-	sp=pd.read_table(task.stdout);
-	task = subprocess.Popen(["zgrep", "-m1", "chr", sp_results], stdout=subprocess.PIPE);
-	sp.columns=task.stdout.read().decode('UTF-8').split();
+	sp = pd.DataFrame()
+	task = subprocess.Popen(["tabix", "-h", sp_results, str(c)+":"+str(start)+"-"+str(end)], stdout=subprocess.PIPE)
+	sp=pd.read_table(task.stdout)
+	task = subprocess.Popen(["zgrep", "-m1", "chr", sp_results], stdout=subprocess.PIPE)
+	sp.columns=task.stdout.read().decode('UTF-8').split()
 	return(sp)
 
 def read_variants_from_gene_set(gc, input_monster):

@@ -5,19 +5,19 @@ import io
 import sys
 import json
 import logging
+from urllib.request import urlopen
 
 import asr
 import requests
 import numpy as np
 import pandas as pd
-from urllib.request import urlopen
 from bokeh.io import output_file, show
 from bokeh.models import *
 from bokeh.layouts import gridplot
 from bokeh.plotting import *
 
-import helper_functions
-from helper_functions import *
+import .helper_functions
+from .helper_functions import *
 
 logging.basicConfig()
 file=sys.argv[1]
