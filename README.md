@@ -71,10 +71,10 @@ Options:
   -bp, --flank-bp INTEGER  Flanking size in base pairs for drawing plots
                            (defaults to 500kb, i.e. 1Mbp plots) around lead
                            SNPs.
-  --ref-flat FILE          Path to Locuszoom's refFlat file. By default,
+  --ref-flat FILE          Path to Locuszoom\'s refFlat file. By default,
                            peakplotter finds it for you in the locuszoom
                            files.
-  --recomb FILE            Path to Locuszoom's recomb_rate file. By default,
+  --recomb FILE            Path to Locuszoom\'s recomb_rate file. By default,
                            peakplotter finds it for you in the locuszoom
                            files.
   --overwrite              Overwrite output directory if it already exists.
