@@ -22,14 +22,7 @@ from . import helper
 def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a2col, a1col, build: str):
 
     logging.basicConfig()
-    file=sys.argv[1]
     outfile=file+".html"
-
-    chrcol=sys.argv[6]
-    pscol=sys.argv[3]
-    a1col=sys.argv[7]
-    a2col=sys.argv[8]
-    build=sys.argv[9]
 
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
@@ -174,7 +167,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a2col, a1col, 
     url = server+"/Homo_sapiens/Variation/Explore?v=@ensembl_rs"
     taptool = p.select(type=TapTool)
     taptool.callback = OpenURL(url=url)
-    p.circle(sys.argv[3], 'logp', line_width=2, source=e, size=9, fill_color='col', line_color="black",  line_alpha='col_assoc')
+    p.circle(pscol, 'logp', line_width=2, source=e, size=9, fill_color='col', line_color="black",  line_alpha='col_assoc')
     p.xaxis[0].formatter.use_scientific = False
 
     p2=figure(width=1500, height=300, x_range=p.x_range, tools=['tap'])
