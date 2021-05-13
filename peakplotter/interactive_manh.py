@@ -7,11 +7,10 @@ import json
 import logging
 from urllib.request import urlopen
 
-import asr
 import requests
 import numpy as np
 import pandas as pd
-from bokeh.io import output_file, show
+from bokeh.io import output_file
 from bokeh.models import *
 from bokeh.layouts import gridplot
 from bokeh.plotting import *

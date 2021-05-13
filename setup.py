@@ -6,7 +6,6 @@ setup(
     name = "peakplotter",
     version = "0.0.1",
     install_requires = [
-        'asr',
         'click',
         'numpy',
         'pandas',

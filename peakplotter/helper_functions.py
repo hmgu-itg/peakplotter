@@ -7,7 +7,6 @@ import subprocess
 import urllib.request
 import urllib.parse
 
-import asr
 import requests
 import numpy as np
 import pandas as pd

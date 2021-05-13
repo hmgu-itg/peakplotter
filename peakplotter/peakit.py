@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import sys
 
-import numpy as np
 import pandas as pd
 
 d=pd.read_table(sys.argv[1])
@@ -14,9 +13,9 @@ class Peak:
 	start=0
 	end=0
 	def __init__(self, chr, ps):
-		self.chrom=chr
-		self.start=ps
-		self.end=ps
+		self.chrom = chr
+		self.start = ps
+		self.end = ps
 
 	def add_snp(self, chr, ps):
 		if ps < self.start:
