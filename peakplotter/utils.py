@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from __future__ import annotations
+from typing import Tuple
 
 import shutil
 from pathlib import Path
@@ -31,7 +31,7 @@ def check_executable(executable: str) -> bool:
 
 
 
-def _get_locuszoom_data_path() -> tuple[Path, Path]:
+def _get_locuszoom_data_path() -> Tuple[Path, Path]:
     locuszoom_path = shutil.which('locuszoom')
     if locuszoom_path is None:
         raise MissingExecutableError('locuszoom executable not in PATH')
