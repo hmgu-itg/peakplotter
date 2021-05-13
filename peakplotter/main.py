@@ -8,8 +8,7 @@ from .utils import check_executable, DEPENDENT_EXECUTABLES
 
 
 @click.command()
-def cli(path):
-    
+def cli():
     missing_executables = list()
     for exe in DEPENDENT_EXECUTABLES:
         if not check_executable(exe):
