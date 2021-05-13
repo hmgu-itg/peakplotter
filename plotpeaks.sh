@@ -82,8 +82,8 @@ curpeak_p=1
 first=1
 $cat $assocfile | awk -v p=$pvalcoli -v signif=$signif '$p<signif'| sort -k${chrcoli},${chrcoli}n -k ${pscoli},${pscoli}n  | tr ';' '_' | sed 's/\[b38\]//' > signals
 cat <($cat $assocfile | head -1) signals | sponge signals
-echo $DIR/peakit.py signals $pvalcol $chrcol $pscol
-$DIR/peakit.py signals $pvalcol $chrcol $pscol | sort -k1,1n -k2,2n | bedtools merge -i - > peaked
+echo $DIR/peakplotter/peakit.py signals $pvalcol $chrcol $pscol
+$DIR/peakplotter/peakit.py signals $pvalcol $chrcol $pscol | sort -k1,1n -k2,2n | bedtools merge -i - > peaked
 
 numpeaks=$(cat peaked | wc -l)
 
