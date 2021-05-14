@@ -23,7 +23,7 @@ In order to run PeakPlotter you need to install the following tools and add the 
 * LocusZoom Standalone 1.3 or newer ([available here](http://genome.sph.umich.edu/wiki/LocusZoom_Standalone))
 * BedTools ([available here](http://bedtools.readthedocs.io/en/latest/))
 * Tabix ([available here](https://github.com/samtools/htslib))
-* Coreutils (for `sponge`)
+* Moreutils (for `sponge`)
 
 PeakPlotter will throw a `MissingExecutableError` if you have any of the above tools missing in your `PATH` environment variable.  
 Add the necessary tools to your `PATH` like below:  
@@ -71,10 +71,10 @@ Options:
   -bp, --flank-bp INTEGER  Flanking size in base pairs for drawing plots
                            (defaults to 500kb, i.e. 1Mbp plots) around lead
                            SNPs.
-  --ref-flat FILE          Path to Locuszoom\'s refFlat file. By default,
+  --ref-flat FILE          Path to Locuszoom's refFlat file. By default,
                            peakplotter finds it for you in the locuszoom
                            files.
-  --recomb FILE            Path to Locuszoom\'s recomb_rate file. By default,
+  --recomb FILE            Path to Locuszoom's recomb_rate file. By default,
                            peakplotter finds it for you in the locuszoom
                            files.
   --overwrite              Overwrite output directory if it already exists.
