@@ -3,6 +3,9 @@
 PeakPlotter takes away the annoying task of running regional association plots and annotating variants for your association studies results. It is compatible with sequencing as well as GWAS data. It is compatible with any format (GEMMA, SNPTEST, Bolt-LMM...) that produces the relevant columns: chromosome, position, unique ID, P-value, reference and non-reference alleles.
 
 ## Install
+
+Install the prerequisites below.
+
 Clone the repository and install using `pip`.
 ```bash
 git clone https://github.com/hmgu-itg/peakplotter.git
@@ -17,7 +20,7 @@ python3 -m peakplotter --help
 ```
 
 ## Prerequisites
-PeakPlotter also have non-python dependencies.  
+PeakPlotter has has non-python dependencies.  
 In order to run PeakPlotter you need to install the following tools and add the executables to your `PATH`:
 * Plink 1.9 or newer ([available here](https://www.cog-genomics.org/plink2/index))
 * LocusZoom Standalone 1.3 or newer ([available here](http://genome.sph.umich.edu/wiki/LocusZoom_Standalone))
