@@ -40,7 +40,8 @@ def cli(assoc_file, bfiles, signif, chr_col, pos_col, rs_col, pval_col, a1_col, 
 
     # TODO: Handle situation where only one file is given
     if (ref_flat is None) and (recomb is None):
-        ref_flat, recomb = _get_locuszoom_data_path() 
+        raise FileNotFoundError('Need to give ref_flat and recomb option')
+        # ref_flat, recomb = _get_locuszoom_data_path() 
 
     command = f"{PLOTPEAKS_SCRIPT} {signif} {assoc_file} {chr_col} {pos_col} {rs_col} {pval_col} {a1_col} {a2_col} {maf_col} {bfiles} {flank_bp} {ref_flat} {recomb}"
     subprocess.run(shlex.split(command))
