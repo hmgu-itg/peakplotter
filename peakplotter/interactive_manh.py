@@ -17,7 +17,7 @@ from bokeh.layouts import gridplot
 from bokeh.plotting import *
 from bokeh.palettes import Spectral10
 
-from . import helper
+from peakplotter import helper # TODO: Change this back to relative import after we replace plotpeaks.sh to a python equivalent.
 
 def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a2col, a1col, build: str):
 
