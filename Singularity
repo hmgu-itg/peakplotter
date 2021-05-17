@@ -2,17 +2,18 @@ Bootstrap: docker
 From: ubuntu:18.04
 
 %environment
-	TZ=Europe/Berlin
-	PATH=$PATH:/usr/local/bin:/opt/locuszoom/bin:/opt/plink
+    export TZ=Europe/Berlin
+    export PATH=/usr/local/bin:/opt/locuszoom/bin:/opt/plink:$PATH
     
-    LC_ALL=C.UTF-8
-    LANG=C.UTF-8
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
 
 %post
     apt update
-	ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+    export TZ=Europe/Berlin
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
     
-    apt install -y tabix moreutils git
+    apt install -y tabix moreutils git wget zip unzip python3-pip
 
 
 # locuszoom    
@@ -39,22 +40,37 @@ From: ubuntu:18.04
 
 
 # Bedtools
+    apt install -y python-pip
     apt-get install -y zlib1g zlib1g-dev firefox python-dev emacs
 
     cd /opt
     git clone https://github.com/arq5x/bedtools2.git
-	cd bedtools2
-	# gwava needs a version without "sam header" error messages
-	git checkout tags/v2.27.1
-	make && make install
-
-	pip2 install pybedtools scipy pandas numpy scikit-learn==0.14.1
-
+    cd bedtools2
+    # gwava needs a version without "sam header" error messages
+    git checkout tags/v2.27.1
+    make && make install
+    pip install scipy pandas numpy scikit-learn==0.14.1
+    pip install pybedtools
 
 # PLINK
-	cd /opt
-	mkdir plink
-	cd plink
-	wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20201019.zip
-	unzip plink_linux_x86_64_20201019.zip
-	rm plink_linux_x86_64_20201019.zip
+    cd /opt
+    mkdir plink
+    cd plink
+    wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20201019.zip
+    unzip plink_linux_x86_64_20201019.zip
+    rm plink_linux_x86_64_20201019.zip
+
+
+# PeakPlotter
+    cd /opt
+    git clone https://github.com/hmgu-itg/peakplotter.git -b functionise
+    cd peakplotter
+    python3 -m pip install .
+    
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8    
+    peakplotter-data-setup 
+    chmod -R 777 /usr/local/lib/python3.6    
+
+%runscript
+exec python3 -m peakplotter "$@"
