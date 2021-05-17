@@ -16,6 +16,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'peakplotter = peakplotter.main:cli',
+            'peakplotter-data-setup = peakplotter.data:setup_data',
         ],
     },
 # Metadata
