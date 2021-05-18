@@ -16,6 +16,9 @@ filelist=$files
 memory=30000
 
 
+tmp_outdir=$(mktemp -d -p $(pwd) temp_plotpeaks_XXXXXXXX)
+cd $tmp_outdir
+
 ## SELF DIR
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo Running from $(pwd), executable in $DIR.
