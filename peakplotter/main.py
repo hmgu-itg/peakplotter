@@ -61,7 +61,8 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
         click.echo(f'[INFO] Overwriting output directory ({str(outdir)}).')
         shutil.rmtree(outdir)
         outdir.mkdir()
-    
+    else:
+        outdir.mkdir()
     # Save run configurations in the output directory
     configs = {
         'assoc_file': assoc_file,
