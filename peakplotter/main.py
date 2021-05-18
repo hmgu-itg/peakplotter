@@ -4,10 +4,11 @@ import shlex
 import shutil
 import subprocess
 from pathlib import Path
+from datetime import datetime
 
 import click
 
-from . import PLOTPEAKS_SCRIPT
+from . import PLOTPEAKS_SCRIPT, __version__
 from .data import get_data_path
 from .utils import check_executable, DEPENDENT_EXECUTABLES
 from .errors import MissingExecutableError
@@ -61,7 +62,30 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
         shutil.rmtree(outdir)
         outdir.mkdir()
     
-    command = f"{PLOTPEAKS_SCRIPT} {signif} {assoc_file} {chr_col} {pos_col} {rs_col} {pval_col} {a1_col} {a2_col} {maf_col} {bfiles} {flank_bp} {ref_flat} {recomb} {build}"
+    # Save run configurations in the output directory
+    configs = {
+        'assoc_file': assoc_file,
+        'bfiles': bfiles,
+        'outdir': outdir,
+        'chr_col': chr_col,
+        'pos_col': pos_col,
+        'rs_col': rs_col,
+        'pval_col': pval_col,
+        'a1_col': a1_col,
+        'a2_col': a2_col,
+        'maf_col': maf_col,
+        'build': build,
+        'signif': signif,
+        'flank_bp': flank_bp
+    }
+    now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+    with open(outdir.joinpath(outdir.name), 'w') as f:
+        f.write(f'peakplotter: {__version__}\n')
+        f.write(f'started: {now}\n')
+        for key, val in configs.items():
+            f.write(f'{key}: {val}\n')
+
+    command = f"{PLOTPEAKS_SCRIPT} {signif} {assoc_file} {chr_col} {pos_col} {rs_col} {pval_col} {a1_col} {a2_col} {maf_col} {bfiles} {flank_bp} {ref_flat} {recomb} {build} {outdir}"
     subprocess.run(shlex.split(command))
 
 if __name__ == '__main__':
