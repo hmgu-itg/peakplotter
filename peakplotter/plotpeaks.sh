@@ -82,11 +82,19 @@ do
   # For each signal:
 
   # Extract the assoc file with tabix, assigning chr:pos ids if not already present (or rsids)
-  tabix $assocfile ${chr}:${start}-$end | grep -v nan | awk -v cc=$chrcoli -v pc=$pscoli -v ic=$rscoli '{if(NR>1 && $ic!~/\:/ && $ic!~/rs/){$ic=$cc":"$pc}print}' | sed 's/\[b38\]//;s/\[b37\]//'> peakdata
-
+  # tabix $assocfile ${chr}:${start}-$end | grep -v nan | awk -v cc=$chrcoli -v pc=$pscoli -v ic=$rscoli '{if(NR>1 && $ic!~/\:/ && $ic!~/rs/){$ic=$cc":"$pc}print}' | sed 's/\[b38\]//;s/\[b37\]//'> peakdata
+  zcat $assocfile | awk \
+    -v curpeak_c="$curpeak_c" \
+    -v chrcoli="$chrcoli" \
+    -v rscoli="$rscoli" \
+    -v pscoli="$pscoli" \
+    -v start="$start" \
+    -v end="$end" \
+    'BEGIN{FS="\t";OFS="\t";}{if ($chrcoli==curpeak_c && start<$pscoli && $pscoli<end){$rscoli=$chrcoli":"$pscoli ; print}}' |
+    grep -v nan | sed 's/\[b38\]//;s/\[b37\]//' > peakdata
   # Create LocusZoom dB
   cat  <(echo -e "snp\tchr\tpos") <(awk -v rs=$rscoli -v chr=$chrcoli -v ps=$pscoli 'BEGIN{OFS="\t"} NR>1 {print $rs, $chr, $ps}' peakdata) | tr ' ' '\t' > peakdata.chrpos
-  awk '{if($1~/:/ && $1 !~/^chr/){$1="chr"$1}print}' peakdata.chrpos | tr ' ' '\t' |sponge peakdata.chrpos
+  awk '{if($1~/:/ && $1 !~/^chr/){$1="chr"$1}print}' peakdata.chrpos | tr ' ' '\t' | sponge peakdata.chrpos
   dbmeister.py --db $curpeak_c.$curpeak_ps.db --snp_pos peakdata.chrpos
   dbmeister.py --db $curpeak_c.$curpeak_ps.db --refflat $REFFLAT
   dbmeister.py --db $curpeak_c.$curpeak_ps.db --recomb_rate $RECOMB
@@ -95,20 +103,20 @@ do
   if [ $start -lt 1 ]
   then
     sensible_start=1
-	echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start : $curpeak_c $curpeak_ps (1)\n\n\n"
+    echo -e "\n\n\nWARNING\t Negative start position changed to $sensible_start : $curpeak_c $curpeak_ps (1)\n\n\n"
   else
-	sensible_start=$start
+    sensible_start=$start
   fi
 
   # For each PLINK file, extract genotype data				
   for id in "${ids[@]}"
   do 
-	plink --allow-no-sex --memory $memory --bfile ${files[$id]} --chr $chr --from-bp $sensible_start --to-bp $end --out $id --make-bed				
-	# Use SNPIDs if rsids not available
-	awk 'OFS="\t"{if($2!~/:/ && $2!~/^rs/){$2="chr"$1":"$4}print}' $id.bim | tr ';' '_' | sponge $id.bim
-	# add chr if not present in SNPID
-	awk 'OFS="\t"{if($2~/:/ && $2!~/^chr/){$2="chr"$2}print}' $id.bim | tr ';' '_' | sponge $id.bim
-	sed -i 's/\[b38\]//;s/\[b37\]//' $id.bim
+    plink --allow-no-sex --memory $memory --bfile ${files[$id]} --chr $chr --from-bp $sensible_start --to-bp $end --out $id --make-bed
+    # Use SNPIDs if rsids not available
+    awk 'OFS="\t"{if($2!~/:/ && $2!~/^rs/){$2="chr"$1":"$4}print}' $id.bim | tr ';' '_' | sponge $id.bim
+    # add chr if not present in SNPID
+    awk 'OFS="\t"{if($2~/:/ && $2!~/^chr/){$2="chr"$2}print}' $id.bim | tr ';' '_' | sponge $id.bim
+    sed -i 's/\[b38\]//;s/\[b37\]//' $id.bim
   done
 
   # If several input files, attempt to merge
@@ -119,7 +127,7 @@ do
   then
     echo -e "\n\nAttempting to merge $numfile files...\n\n"
     plink --allow-no-sex --merge-list mergelist --make-bed --out merged
-	if [ -f merged-merge.missnp ]
+    if [ -f merged-merge.missnp ]
     then
       grep -v -w -f merged-merge.missnp peakdata | sponge peakdata
       for id in "${ids[@]}"
@@ -156,22 +164,37 @@ do
 
   # Calculate LD
   plink --allow-no-sex --bfile merged --r2 --ld-snp $refsnp  --ld-window-kb $ext_flank_kb $flank_kb_ext --ld-window 999999 --ld-window-r2 0 --out merged
-  cat <(echo -e "snp1\tsnp2\tdprime\trsquare") <(tail -n +2  merged.ld| awk 'OFS=" "{print $3,$6,$7,$7}') |sed 's/\[b38\]//' |sponge merged.ld
-
+  cat <(echo -e "snp1\tsnp2\tdprime\trsquare") <(tail -n +2  merged.ld | awk 'OFS=" "{print $3,$6,$7,$7}') |sed 's/\[b38\]//' | sponge merged.ld
+  
+  build=$(echo $RECOMB | sed 's/.*recomb_rate_b//;s/\.tsv//') # TODO: Change this to something better
   # Running LZ (LZ is build aware)
-  locuszoom --metal peakdata.header --refsnp "$refsnp" --markercol "$rscol" --pvalcol "$pvalcol" --db $chr.$start.db --prefix $chr.$start.$end.500kb --plotonly showAnnot=T showRefsnpAnnot=T annotPch="21,24,24,25,22,22,8,7" rfrows=20 geneFontSize=.4 --ld merged.ld --start=$sensible_start --end=$end --chr=$chr showRecomb=T
+  locuszoom \
+    --build $build \
+    --metal peakdata.header \
+    --refsnp "$refsnp" \
+    --markercol "$rscol" \
+    --pvalcol "$pvalcol" \
+    --db $chr.$start.db \
+    --prefix $chr.$start.$end.500kb \
+    --plotonly showAnnot=T showRefsnpAnnot=T annotPch="21,24,24,25,22,22,8,7" rfrows=20 geneFontSize=.4 \
+    --ld merged.ld \
+    --start=$sensible_start \
+    --end=$end \
+    --chr=$chr showRecomb=T
 
   # interactive manh expects comma-separated, with a ld column
   join --header -1 $rscoli -2 1 <(cat <(head -n1 peakdata.header) <(tail -n+2 peakdata.header | sort -k$rscoli,$rscoli)) <(cat <(echo $rscol ld) <(cut -f2,3 -d' ' merged.ld |sort -k1,1) ) |tr ' ' ','> $chr.$start.$end.peakdata.ld
 
   # Running interactive manhattan
-  if [ -z "$b37" ]
+
+  if [[ $build -eq 37 ]]
   then
-    echo $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
-    $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b38
-  else
-    echo $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b37
-    $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a2col" "$a1col" b37
+    echo $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a1col" "$a2col" b37
+    $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a1col" "$a2col" b37
+  elif [[ $build -eq 38 ]] 
+  then
+    echo $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a1col" "$a2col" b38
+    $DIR/interactive_manh.py $chr.$start.$end.peakdata.ld "$pvalcol" "$pscol" "$rscol" "$mafcol" "$chrcol" "$a1col" "$a2col" b38
   fi
   echo "Done with peak $chr $start $end."
 done
