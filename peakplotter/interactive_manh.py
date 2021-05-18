@@ -35,7 +35,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
 
     # Check whether the region window overlaps a centromere. Print the information about the presence of centromeric region later in the script.
     chrom=str(chrom.pop())
-    if build=="b38":
+    if build=="b38": # TODO: Move this code to data.py
         url="https://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/data/38/Modeled_regions_for_GRCh38.tsv"
         s=requests.get(url).content
         cen_list=pd.read_csv(io.StringIO(s.decode('utf-8')), sep='\t', header=(0))
@@ -47,21 +47,22 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
             cen_end=int(cen_list[cen_list['chr'] == chrom]['end'])
         else:
             helper.info("Failed to obtain GRCh38 centromere coordinates")
-    else:
+    else: # If b37
         url="wget -O- http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz | gunzip | grep -v -e chrX -e chrY | grep cen | mergeBed -i - | sed 's/chr//'"
-    
+
         sp=subprocess.check_output(url, shell=True)
         #print(sp.decode('utf-8'))
         cen_list=pd.read_table(io.StringIO(sp.decode('utf-8')), sep='\t', header=None)
         #print(chrom)
     if cen_list.empty==False:
+        cen_list.drop(['CENX', 'CENY'], inplace=True)
         cen_list.apply(pd.to_numeric)
         #print(cen_list)
         cen_list.columns = ['chr','start','end']
         #chrom=pd.to_numeric(chrom)
         #print(cen_list.dtypes)
-        cen_start=cen_list[cen_list['chr'] == np.int64(chrom)]['start']
-        cen_end=cen_list[cen_list['chr'] == np.int64(chrom)]['end']
+        cen_start=cen_list[cen_list['chr'] == chrom]['start']
+        cen_end=cen_list[cen_list['chr'] == chrom]['end']
         cen_start=cen_start[0]
         cen_end=cen_end[0]
     else:
@@ -76,9 +77,9 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
 
 
     # this was below before:     ("name", "   @"+sys.argv[4]),
-    hover= HoverTool(tooltips = [
+    hover = HoverTool(tooltips = [
             ("==============", "=============="),
-        ("name", "   @rs"),
+            ("name", "   @rs"),
             ("RS-id", "@ensembl_rs"),
             ("ld","@ld"),
             ("M.A.F", "@"+mafcol),
@@ -101,7 +102,8 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     e['col']=pd.cut(e['ld'], 9, labels=range(1,10))
     
     collol = pd.DataFrame({'pal':Spectral10})
-    e['col']= np.asarray(collol.ix[e['col']]).flatten()
+    # e['col']= np.asarray(collol.ix[e['col']]).flatten() # .ix deprecated
+    e['col']= np.asarray(collol.loc[e['col']]).flatten()
 
     # Log P column
     e['logp']=-np.log10(e[pvalcol])
@@ -135,7 +137,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
 
 
     # ENSEMBL consequences for variants in LD that do not have rs-ids
-    e=helper.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col)
+    e=helper.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server)
 
 
     # Below gets the genes > d
@@ -146,7 +148,11 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     d=pd.DataFrame(jData)
     e['gene']=""
     for index, row in d.iterrows():
-        e.loc[(e['ps']>row['start']) & (e['ps']<row['end']), 'gene']=e.loc[(e['ps']>row['start']) & (e['ps']<row['end']), 'gene']+";"+row['external_name']
+        external_name = row['external_name']
+        # TODO: Think about how to deal with genes with no external name!
+        if not isinstance(external_name, str) and np.isnan(row['external_name']):
+            external_name = 'NULL'
+        e.loc[(e['ps']>row['start']) & (e['ps']<row['end']), 'gene']=e.loc[(e['ps']>row['start']) & (e['ps']<row['end']), 'gene']+";"+external_name
     e['gene']=e['gene'].str.replace(r'^\;', '')
 
     ff=ff.loc[ff['ensembl_assoc']!="none",]
@@ -177,10 +183,12 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
         d['y']=ys
 
         d['color']="cornflowerblue"
-        d['color'].ix[d['biotype']=="protein_coding"]="goldenrod"
+        # d['color'].ix[d['biotype']=="protein_coding"]="goldenrod"
+        d['color'].loc[d['biotype']=="protein_coding"]="goldenrod"
 
         d['sens']="<"
-        d['sens'].ix[d['strand']>0]=">"
+        # d['sens'].ix[d['strand']>0]=">"
+        d['sens'].loc[d['strand']>0]=">"
         d['name']=d['sens']+d['external_name']
         p2.segment(x0=d['start'], x1=d['end'], y0=ys, y1=ys, line_width=4, color=d['color'])
 

@@ -49,33 +49,33 @@ class GeneCoordinates:
 		self.end+=int(margin)
 
 
-def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col):
-	global server
-	e.loc[(e['ensembl_rs']=="novel") & (e[a1col]==e[a2col]),'ensembl_consequence']='double allele'
-	novelsnps=e.loc[(e['ensembl_rs']=="novel") & (e['ld']>0.1) & (e['ensembl_consequence']!='double allele'),]
-	if novelsnps.empty:
-		return e
-	novelsnps['query']=novelsnps[chrcol].astype(str)+" "+novelsnps[pscol].astype(int).astype(str)+" . "+novelsnps[a1col].astype(str)+" "+novelsnps[a2col].astype(str)+" . . ."
-	request='{ "variants" : ["'+'", "'.join(novelsnps['query'])+'" ] }'
-	ext = "/vep/homo_sapiens/region"
-	headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
-	info("\t\t\t🌐   Querying Ensembl VEP (POST) :"+server+ext)
-	r = requests.post(server+ext, headers=headers, data=request)
-	 
-	if not r.ok:
-		print("headers :"+request)
-		r.raise_for_status()
-		sys.exit()
-	 
-	jData = json.loads(r.text)
-	csq=pd.DataFrame(jData)
+def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server):
+    copied_e = e.copy()
+    copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e[a1col]==copied_e[a2col]),'ensembl_consequence']='double allele'
+    novelsnps=copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e['ld']>0.1) & (copied_e['ensembl_consequence']!='double allele'),]
+    if novelsnps.empty:
+        return copied_e
+    novelsnps['query']=novelsnps[chrcol].astype(str)+" "+novelsnps[pscol].astype(int).astype(str)+" . "+novelsnps[a1col].astype(str)+" "+novelsnps[a2col].astype(str)+" . . ."
+    request='{ "variants" : ["'+'", "'.join(novelsnps['query'])+'" ] }'
+    ext = "/vep/homo_sapiens/region"
+    headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
+    info("\t\t\t🌐   Querying Ensembl VEP (POST) :"+server+ext)
+    r = requests.post(server+ext, headers=headers, data=request)
+
+    if not r.ok:
+        print("headers :"+request)
+        r.raise_for_status()
+        sys.exit()
+    
+    jData = json.loads(r.text)
+    csq=pd.DataFrame(jData)
 
 
-	for index,row in csq.iterrows():
-	    e.loc[e['ps']==row['start'],'ensembl_consequence']=row['most_severe_consequence']
+    for index,row in csq.iterrows():
+        copied_e.loc[copied_e['ps']==row['start'],'ensembl_consequence']=row['most_severe_consequence']
 
-	e['ensembl_consequence'].replace('_', ' ')
-	return e
+    copied_e['ensembl_consequence'].replace('_', ' ')
+    return copied_e
 
 
 def get_coordinates(gene_name):
