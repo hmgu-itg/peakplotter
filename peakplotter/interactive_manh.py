@@ -51,16 +51,14 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
         url="wget -O- http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz | gunzip | grep -v -e chrX -e chrY | grep cen | mergeBed -i - | sed 's/chr//'"
 
         sp=subprocess.check_output(url, shell=True)
-        #print(sp.decode('utf-8'))
+
         cen_list=pd.read_table(io.StringIO(sp.decode('utf-8')), sep='\t', header=None)
-        #print(chrom)
+
     if cen_list.empty==False:
         cen_list.drop(['CENX', 'CENY'], inplace=True)
         cen_list.apply(pd.to_numeric)
-        #print(cen_list)
+
         cen_list.columns = ['chr','start','end']
-        #chrom=pd.to_numeric(chrom)
-        #print(cen_list.dtypes)
         cen_start=cen_list[cen_list['chr'] == chrom]['start']
         cen_end=cen_list[cen_list['chr'] == chrom]['end']
         cen_start=cen_start[0]
