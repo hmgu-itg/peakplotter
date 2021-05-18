@@ -79,7 +79,7 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
         'flank_bp': flank_bp
     }
     now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
-    with open(outdir.joinpath(outdir.name), 'w') as f:
+    with open(outdir.joinpath(f'{outdir.name}.config.yaml'), 'x') as f:
         f.write(f'peakplotter: {__version__}\n')
         f.write(f'started: {now}\n')
         for key, val in configs.items():
