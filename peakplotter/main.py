@@ -49,7 +49,7 @@ def cli(assoc_file, bfiles, signif, chr_col, pos_col, rs_col, pval_col, a1_col, 
         raise FileNotFoundError('Need to give ref_flat and recomb option')
         # ref_flat, recomb = _get_locuszoom_data_path() 
 
-    command = f"{PLOTPEAKS_SCRIPT} {signif} {assoc_file} {chr_col} {pos_col} {rs_col} {pval_col} {a1_col} {a2_col} {maf_col} {bfiles} {flank_bp} {ref_flat} {recomb}"
+    command = f"{PLOTPEAKS_SCRIPT} {signif} {assoc_file} {chr_col} {pos_col} {rs_col} {pval_col} {a1_col} {a2_col} {maf_col} {bfiles} {flank_bp} {ref_flat} {recomb} {build}"
     subprocess.run(shlex.split(command))
 
 if __name__ == '__main__':

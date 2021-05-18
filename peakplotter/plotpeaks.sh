@@ -12,6 +12,7 @@ files=${10}
 flank_bp=${11}
 REFFLAT=${12}
 RECOMB=${13}
+build=${14}
 filelist=$files
 memory=30000
 
@@ -25,7 +26,7 @@ echo Running from $(pwd), executable in $DIR.
 
 echo
 echo
-echo $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11}
+echo $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13} ${14}
 echo
 echo
 
@@ -169,7 +170,6 @@ do
   plink --allow-no-sex --bfile merged --r2 --ld-snp $refsnp  --ld-window-kb $ext_flank_kb $flank_kb_ext --ld-window 999999 --ld-window-r2 0 --out merged
   cat <(echo -e "snp1\tsnp2\tdprime\trsquare") <(tail -n +2  merged.ld | awk 'OFS=" "{print $3,$6,$7,$7}') |sed 's/\[b38\]//' | sponge merged.ld
   
-  build=$(echo $RECOMB | sed 's/.*recomb_rate_b//;s/\.tsv//') # TODO: Change this to something better
   # Running LZ (LZ is build aware)
   locuszoom \
     --build $build \
