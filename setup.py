@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
+import re
 
 from setuptools import setup, find_packages
 
+
+with open("peakplotter/__init__.py") as f:
+    version = re.search(r"__version__ = \'(.*?)\'", f.read()).group(1)
+
 setup(
     name = "peakplotter",
-    version = "0.0.2",
+    version = version,
     install_requires = [
         'click',
         'numpy',
