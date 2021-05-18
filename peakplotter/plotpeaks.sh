@@ -13,12 +13,12 @@ flank_bp=${11}
 REFFLAT=${12}
 RECOMB=${13}
 build=${14}
+work_dir=${15}
 filelist=$files
 memory=30000
 
 
-tmp_outdir=$(mktemp -d -p $(pwd) temp_plotpeaks_XXXXXXXX)
-cd $tmp_outdir
+cd $work_dir
 
 ## SELF DIR
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -26,7 +26,7 @@ echo Running from $(pwd), executable in $DIR.
 
 echo
 echo
-echo $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13} ${14}
+echo $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13} ${14} ${15}
 echo
 echo
 
