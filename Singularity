@@ -13,7 +13,7 @@ From: ubuntu:18.04
     export TZ=Europe/Berlin
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
     
-    apt install -y tabix moreutils git wget zip unzip python3-pip
+    apt install -y tabix moreutils git wget zip unzip python3-pip r-base
 
 
 # locuszoom    
