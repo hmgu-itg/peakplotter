@@ -15,8 +15,7 @@ from .errors import MissingExecutableError
 @click.command()
 @click.option('-a', '--assoc-file', type = click.Path(exists=True, dir_okay=False), required=True, help = 'Path to the association file. It can be gzipped, provided that it bears the .gz extension. Its first line must be a header, coherent with the name arguments below. It must be tab-separated, bgzipped and tabixed (tabix is available as part of bcftools)')
 @click.option('-f', '--bfiles',type = click.STRING, required=True, help = 'Binary PLINK (.bed/.bim/.fam) file base name. This should contain the genotypes for at least all the variants in the assoc_file, but it can contain more. Please note that this is the base name, without the .bed/.bim/.fam extension.')
-@click.option('-s', '--signif', type=click.FLOAT, default=5e-8, help = 'The significance level above which to declare a variant significant. 
-Scientific notation (such as 5e-8) is fine.')
+@click.option('-s', '--signif', type=click.FLOAT, default=5e-8, help = 'The significance level above which to declare a variant significant. Scientific notation (such as 5e-8) is fine.')
 @click.option('-chr', '--chr-col', type = click.STRING, required=True, help = 'Name of the column for chromosome names.')
 @click.option('-ps', '--pos-col', type = click.STRING, required=True, help = 'Name of the column for chromosomal position.')
 @click.option('-rs', '--rs-col', type = click.STRING, required=True, help = 'Name of the column for unique SNP ids (RS-id or chr:pos).')

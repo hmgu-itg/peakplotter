@@ -12,9 +12,9 @@ import requests
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file
-from bokeh.models import *
+from bokeh.models import HoverTool, TapTool, OpenURL, LabelSet, Span, Label, ColumnDataSource
 from bokeh.layouts import gridplot
-from bokeh.plotting import *
+from bokeh.plotting import figure, save
 from bokeh.palettes import Spectral10
 
 from peakplotter import helper # TODO: Change this back to relative import after we replace plotpeaks.sh to a python equivalent.

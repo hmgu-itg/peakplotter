@@ -119,7 +119,7 @@ def get_rsid_in_region(c, start, end):
 			if assoc['source'] != 'COSMIC':
 				try:
 					variant.pheno=";".join(set(variant.pheno.split(";").append(assoc['description'])))
-				except TypeError as e:
+				except TypeError:
 					variant.pheno=assoc['description']
 				
 				#variant.pheno=assoc['description'] if (variant.pheno=="") else variant.pheno+";"+assoc['description'];
