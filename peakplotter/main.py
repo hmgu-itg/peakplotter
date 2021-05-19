@@ -9,7 +9,7 @@ from datetime import datetime
 import click
 
 from . import PLOTPEAKS_SCRIPT, __version__
-from .data import get_data_path
+from ._data import get_data_path
 from .utils import check_executable, DEPENDENT_EXECUTABLES
 from .errors import MissingExecutableError
 

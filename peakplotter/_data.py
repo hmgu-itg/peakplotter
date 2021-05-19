@@ -3,6 +3,7 @@ Module which contains code for downloading refFlat and recombination data files 
 """
 
 import os
+import sys
 import gzip
 from io import BytesIO
 from pathlib import Path
@@ -10,6 +11,8 @@ from pathlib import Path
 import click
 import requests
 import pandas as pd
+
+from .data import REFFLAT_B37_PATH, REFFLAT_B38_PATH, RECOMB_B37_PATH, RECOMB_B38_PATH, DATA_DIR
 
 _DOWNLOAD_URLS = {
     'HG19_REFFLAT_URL': 'https://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refFlat.txt.gz',
@@ -90,25 +93,29 @@ def setup_data(force):
     """PeakPlotter data setup commandline interface
     This CLI is for downloading the necessary refFlat and recombination data to run PeakPlotter.
     """
-    base = Path(__file__).absolute().parent
-    data_dir = base.joinpath('data')
-    if not data_dir.exists():
-        print(f'Downloading data to {str(data_dir)}')
-        data_dir.mkdir()
-        download_data(data_dir)
-    elif data_dir.exists() and force is True:
-        print(f'Overwriting data to {str(data_dir)}')
-        download_data(data_dir)
+    data_exists = [
+        REFFLAT_B37_PATH.exists(),
+        REFFLAT_B38_PATH.exists(),
+        RECOMB_B37_PATH.exists(),
+        RECOMB_B38_PATH.exists()
+    ]
+    
+    if any(data_exists) and force is True:
+        print(f'Overwriting data in {str(DATA_DIR)}')
+        download_data(DATA_DIR)
+    elif any(data_exists) and force is False:
+        click.echo(f'At least one data in {str(DATA_DIR)} already exists.')
+        click.echo('Use peakplotter-data-setup --force to overwrite data')
+        sys.exit(0)
     else:
-        print(f'{str(data_dir)} directory already exists.')
+        click.echo(f'Downloading data to {str(DATA_DIR)}')
+        download_data(DATA_DIR)
 
 
-def get_data_path(build):
-    base = Path(__file__).absolute().parent
-    data_dir = base.joinpath('data')
+def get_data_path(build: int):
     if build==37:
-        return data_dir.joinpath('refFlat_b37.tsv'), data_dir.joinpath('recomb_b37.tsv')
+        return REFFLAT_B37_PATH, RECOMB_B37_PATH
     if build==38:
-        return data_dir.joinpath('refFlat_b38.tsv'), data_dir.joinpath('recomb_b38.tsv')
+        return REFFLAT_B38_PATH, RECOMB_B38_PATH
     else:
         raise ValueError('Only 38 or 37 value allowed.')

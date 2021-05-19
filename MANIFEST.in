@@ -1,1 +1,2 @@
 include peakplotter/plotpeaks.sh
+recursive-include peakplotter/data *.tsv
