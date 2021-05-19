@@ -17,6 +17,7 @@ from bokeh.layouts import gridplot
 from bokeh.plotting import figure, save
 from bokeh.palettes import Spectral10
 
+from peakplotter.data import CENTROMERE_B37, CENTROMERE_B38
 from peakplotter import helper # TODO: Change this back to relative import after we replace plotpeaks.sh to a python equivalent.
 
 def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, build: str):
@@ -33,44 +34,22 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     chrom=set(d[chrcol]) # This is for later to check whether the region window overlaps a centromere.
     assert len(chrom)==1, "The chromosome spans across multiple chromosomes, which is impossible."
 
-    # Check whether the region window overlaps a centromere. Print the information about the presence of centromeric region later in the script.
-    chrom=str(chrom.pop())
+    # Check whether the region window overlaps a centromere. 
+    # Print the information about the presence of centromeric region later in the script.
+    chrom = str(chrom.pop())
     if build=="b38": # TODO: Move this code to data.py
-        url="https://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/data/38/Modeled_regions_for_GRCh38.tsv"
-        s=requests.get(url).content
-        cen_list=pd.read_csv(io.StringIO(s.decode('utf-8')), sep='\t', header=(0))
-        if cen_list.empty==False:
-            cen_list.drop(['HET7'], inplace=True)
-            cen_list.drop(cen_list.columns[3], axis=1, inplace=True)
-            cen_list.columns = ['chr','start','end']
-            cen_start=int(cen_list[cen_list['chr'] == chrom]['start'])
-            cen_end=int(cen_list[cen_list['chr'] == chrom]['end'])
-        else:
-            helper.info("Failed to obtain GRCh38 centromere coordinates")
+        cen_list = CENTROMERE_B37
     else: # If b37
-        url="wget -O- http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz | gunzip | grep -v -e chrX -e chrY | grep cen | mergeBed -i - | sed 's/chr//'"
+        cen_list = CENTROMERE_B38
+    cen_start = cen_list[cen_list['chrom'] == chrom]['start'][0]
+    cen_end = cen_list[cen_list['chrom'] == chrom]['end'][0]
+    
+    region_start = min(d[pscol])
+    region_end = max(d[pscol])
 
-        sp=subprocess.check_output(url, shell=True)
-
-        cen_list=pd.read_table(io.StringIO(sp.decode('utf-8')), sep='\t', header=None)
-
-    if cen_list.empty==False:
-        cen_list.drop(['CENX', 'CENY'], inplace=True)
-        cen_list.apply(pd.to_numeric)
-
-        cen_list.columns = ['chr','start','end']
-        cen_start=cen_list[cen_list['chr'] == chrom]['start']
-        cen_end=cen_list[cen_list['chr'] == chrom]['end']
-        cen_start=cen_start[0]
-        cen_end=cen_end[0]
-    else:
-        helper.info("Failed to obtain GRCh37 centromere coordinates")
-    region_start=min(d[pscol])
-    region_end=max(d[pscol])
-
-    cen_coordinate=set(range(cen_start,cen_end))
-    region=set(range(region_start, region_end))
-    cen_overlap=region.intersection(cen_coordinate)
+    cen_coordinate = set(range(cen_start, cen_end))
+    region = set(range(region_start, region_end))
+    cen_overlap = region.intersection(cen_coordinate)
 
 
 
