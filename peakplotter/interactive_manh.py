@@ -32,13 +32,13 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
 
     # Check whether the region window overlaps a centromere. 
     # Print the information about the presence of centromeric region later in the script.
-    chrom = str(chrom.pop())
+    chrom = int(chrom.pop())
     if build=="b38": # TODO: Move this code to data.py
         cen_list = CENTROMERE_B37
     else: # If b37
         cen_list = CENTROMERE_B38
-    cen_start = cen_list[cen_list['chrom'] == chrom]['start'][0]
-    cen_end = cen_list[cen_list['chrom'] == chrom]['end'][0]
+    cen_start = cen_list.loc[cen_list['chrom'] == int(chrom), 'start'].to_list()[0]
+    cen_end = cen_list.loc[cen_list['chrom'] == chrom, 'end'].to_list()[0]
     
     region_start = min(d[pscol])
     region_end = max(d[pscol])
@@ -73,7 +73,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
 
     # LD colouring
     e['col']=pd.cut(e['ld'], 9, labels=range(1,10))
-    
+
     collol = pd.DataFrame({'pal':Spectral10})
     # e['col']= np.asarray(collol.ix[e['col']]).flatten() # .ix deprecated
     e['col']= np.asarray(collol.loc[e['col']]).flatten()
@@ -120,9 +120,8 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     e.loc[(e['ensembl_assoc']!="none") & (e['ld']>0.1), 'col_assoc']=1
     e['col_assoc']=e['col_assoc'].astype(int)
 
-
     # ENSEMBL consequences for variants in LD that do not have rs-ids
-    e = helper.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server)
+    e=helper.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server)
 
 
     # Below gets the genes > d
@@ -132,7 +131,9 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     for index, row in d.iterrows():
         external_name = row['external_name']
         if external_name=='':
-            continue
+            # TODO: This case is things like pseudogenes, IncRNA, and rRNA genes.
+            # Check with Arthur whether these genes should just be removed completely
+            external_name = row['biotype']
         e.loc[(e['ps']>row['start']) & (e['ps']<row['end']), 'gene']=e.loc[(e['ps']>row['start']) & (e['ps']<row['end']), 'gene']+";"+external_name
     e['gene']=e['gene'].str.replace(r'^\;', '')
 
@@ -154,8 +155,8 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     p.circle(pscol, 'logp', line_width=2, source=e, size=9, fill_color='col', line_color="black",  line_alpha='col_assoc')
     p.xaxis[0].formatter.use_scientific = False
 
+    # Make bottom figure with genes
     p2=figure(width=1500, height=300, x_range=p.x_range, tools=['tap'])
-
     if d.empty==False: # if d is not empty,
         ys=np.random.rand(len(d['end']))
         d['y']=ys
