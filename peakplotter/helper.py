@@ -6,9 +6,9 @@ import json
 import subprocess
 import urllib.request
 import urllib.parse
+from typing import Union
 
 import requests
-import numpy as np
 import pandas as pd
 
 # number by which to multiply the normal number of requests to Ensembl
@@ -49,6 +49,20 @@ class GeneCoordinates:
 		self.end+=int(margin)
 
 
+def get_build_server(build: Union[int, str]) -> str:
+	B38_SERVER = "https://rest.ensembl.org"
+	B37_SERVER = "http://grch37.rest.ensembl.org"
+	mapper = {
+			'b38': B38_SERVER,
+			'38': B38_SERVER,
+			38: B38_SERVER,
+			'b37': B37_SERVER,
+			'37': B37_SERVER,
+			37: B37_SERVER
+		}
+	return mapper[build]
+
+
 def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server):
     copied_e = e.copy()
     copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e[a1col]==copied_e[a2col]),'ensembl_consequence']='double allele'
@@ -78,13 +92,12 @@ def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server):
     return copied_e
 
 
-def get_coordinates(gene_name):
+def get_coordinates(gene_name, server):
     '''
     Function to return the genomic coordinates of a gene submitted (GRCh37)
     output data: chromosome, start, end, stable ID
     '''
 
-    global server
     ext = "/lookup/symbol/homo_sapiens/%s?expand=0" % (gene_name)
 
     r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
@@ -98,15 +111,15 @@ def get_coordinates(gene_name):
     return(gc)
 
 
-def get_rsid_in_region(c, start, end):
-	url = server+'/overlap/region/human/'+str(c)+":"+str(start)+"-"+str(end)+'?feature=variation;content-type=application/json;'
+def get_rsid_in_region(chrom, start, end, server):
+	url = server+'/overlap/region/human/'+str(chrom)+":"+str(start)+"-"+str(end)+'?feature=variation;content-type=application/json;'
 	info("\t\t\t🌐   Querying Ensembl with region "+url)
 	response = urllib.request.urlopen(url).read().decode('utf-8')
 	jData = json.loads(response)
-	snps=pd.DataFrame(jData)
-	snps['location']=snps.seq_region_name.map(str)+":"+snps.start.map(str)+"-"+snps.end.map(str)
+	snps = pd.DataFrame(jData)
+	snps['location'] = snps.seq_region_name.map(str)+":"+snps.start.map(str)+"-"+snps.end.map(str)
 
-	url = server+'/phenotype/region/homo_sapiens/'+str(c)+":"+str(start)+"-"+str(end)+'?feature_type=Variation;content-type=application/json;'
+	url = server+'/phenotype/region/homo_sapiens/'+str(chrom)+":"+str(start)+"-"+str(end)+'?feature_type=Variation;content-type=application/json;'
 	info("\t\t\t🌐   Querying Ensembl with region "+url)
 	response = urllib.request.urlopen(url).read().decode('utf-8')
 	jData = json.loads(response)
@@ -133,44 +146,6 @@ def get_rsid_in_region(c, start, end):
 		resp.drop(["alleles", "assembly_name", "clinical_significance", "feature_type", "end", "seq_region_name", "phenotype_associations", "strand", "source", "id_y", "location"], axis=1, inplace=True)
 		resp.rename(columns = {'start':'ps', 'id_x':'rs', 'consequence_type':'consequence'}, inplace = True)	
 	resp.dropna(inplace=True, subset=["rs"])
-	return(resp)
-
-
-def get_rsid_in_region_old(gc):
-	c=gc.chrom
-	start=gc.start
-	end=gc.end
-	url = server+'/overlap/region/human/'+str(c)+":"+str(start)+"-"+str(end)+'?feature=variation;content-type=application/json;';
-	info("Querying Ensembl with region "+url)
-	response = urllib.request.urlopen(url).read().decode('utf-8')
-	jData = json.loads(response)
-	cat=pd.DataFrame(jData)
-	nsplit=ENSEMBL_USELESSNESS_COEFFICIENT*int(cat.count()[0]/1000)
-	resp=pd.DataFrame(columns=('rs', 'ps', 'consequence', 'pheno'))
-	info("\t\t\t🌐   Performing "+str(nsplit)+" phenotype requests...")
-	ext = "/variation/homo_sapiens?phenotypes=1"
-	j=0
-	for i in np.array_split(cat['id'], nsplit):
-		j=j+1
-		info("\t\t\t⌛   GWASCAT (POST) at "+server+ext+" ("+str(j)+'/'+str(nsplit)+")")
-		header=pd.DataFrame()
-		header['ids']=i
-		data = header.to_dict(orient="list")
-		headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
-		data=json.dumps(data)
-		data = data.encode('ascii')
-		req = urllib.request.Request(server+ext, data=data, headers=headers)
-		with urllib.request.urlopen(req) as response:
-			r=response.read().decode('utf-8')
-			jData = json.loads(r)
-			#pp.pprint(jData)
-			for rsid in jData:
-				ps=jData[rsid]['mappings'][0]['end']
-				consequence=jData[rsid]['most_severe_consequence']
-				pheno=""
-				for k in jData[rsid]['phenotypes']:
-					pheno=k['trait'] if (pheno=="") else pheno+";"+k['trait']
-				resp=resp.append({'rs':rsid, 'ps':int(ps), 'consequence':consequence, 'pheno':pheno}, ignore_index=True)
 	return(resp)
 
 
