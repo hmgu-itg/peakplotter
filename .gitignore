@@ -1,1 +1,3 @@
 peakplotter/__pycache__
+peakplotter/data/centromere_b37.tsv
+peakplotter/data/centromere_b38.tsv
