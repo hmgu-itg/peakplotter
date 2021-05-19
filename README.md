@@ -4,9 +4,7 @@ PeakPlotter takes away the annoying task of running regional association plots a
 
 ## Install
 
-Install the prerequisites below.
-
-Clone the repository and install using `pip`.
+After installing the prerequisites (see below), clone the repository and install using `pip`.
 ```bash
 git clone https://github.com/hmgu-itg/peakplotter.git
 
@@ -14,16 +12,20 @@ cd peakplotter
 
 python3 -m pip install .
 
+peakplotter-data-setup # This only needs to be run once
+
 peakplotter --help
 # or 
 python3 -m peakplotter --help
 ```
 
+A `Singularity` definition file is also available in the repository if you wish to build a container to use `peakplotter`.
+
 ## Prerequisites
 PeakPlotter has has non-python dependencies.  
 In order to run PeakPlotter you need to install the following tools and add the executables to your `PATH`:
 * Plink 1.9 or newer ([available here](https://www.cog-genomics.org/plink2/index))
-* LocusZoom Standalone 1.3 or newer ([available here](http://genome.sph.umich.edu/wiki/LocusZoom_Standalone))
+* LocusZoom Standalone 1.4 or newer ([available here](http://genome.sph.umich.edu/wiki/LocusZoom_Standalone))
 * BedTools ([available here](http://bedtools.readthedocs.io/en/latest/))
 * Tabix ([available here](https://github.com/samtools/htslib))
 * Moreutils (for `sponge`)
@@ -41,8 +43,8 @@ echo 'export PATH=/path/to/locuszoom:/path/to/plink:$PATH' >> ~/.bashrc
 
 ## Usage
 ```bash
-$ python3 -m peakplotter --help
-Usage: python -m peakplotter [OPTIONS]
+$ peakplotter --help
+Usage: peakplotter [OPTIONS]
 
   PeakPlotter
 
@@ -52,40 +54,39 @@ Options:
                            line must be a header, coherent with the name
                            arguments below. It must be tab-separated, bgzipped
                            and tabixed (tabix is available as part of
-                           bcftools)
-  -f, --bfiles FILE        Binary PLINK (.bed/.bim/.fam) file base name. This
+                           bcftools)  [required]
+  -f, --bfiles TEXT        Binary PLINK (.bed/.bim/.fam) file base name. This
                            should contain the genotypes for at least all the
                            variants in the assoc_file, but it can contain
                            more. Please note that this is the base name,
-                           without the .bed/.bim/.fam extension.
+                           without the .bed/.bim/.fam extension.  [required]
+  -o, --out DIRECTORY      Output directory to store all output files.
+                           [required]
+  -chr, --chr-col TEXT     Name of the column for chromosome names.
+                           [required]
+  -ps, --pos-col TEXT      Name of the column for chromosomal position.
+                           [required]
+  -rs, --rs-col TEXT       Name of the column for unique SNP ids (RS-id or
+                           chr:pos).  [required]
+  -p, --pval-col TEXT      Name of the column for p-values.  [required]
+  -a1, --a1-col TEXT       Name of the column for reference or major allele
+                           (used for predicting consequence).  [required]
+  -a2, --a2-col TEXT       Name of the column for alternate or minor allele.
+                           [required]
+  -maf, --maf-col TEXT     Name of the column for non-reference or minor
+                           allele frequency.  [required]
+  -b, --build INTEGER      Assembly build (37 or 38)  [default: 38]
   -s, --signif FLOAT       The significance level above which to declare a
                            variant significant. Scientific notation (such as
                            5e-8) is fine.
-  -chr, --chr-col TEXT     Name of the column for chromosome names.
-  -ps, --pos-col TEXT      Name of the column for chromosomal position.
-  -rs, --rs-col TEXT       Name of the column for unique SNP ids (RS-id or
-                           chr:pos).
-  -p, --pval-col TEXT      Name of the column for p-values.
-  -a1, --a1-col TEXT       Name of the column for reference or major allele
-                           (used for predicting consequence).
-  -a2, --a2-col TEXT       Name of the column for alternate or minor allele.
-  -maf, --maf-col TEXT     Name of the column for non-reference or minor
-                           allele frequency.
   -bp, --flank-bp INTEGER  Flanking size in base pairs for drawing plots
                            (defaults to 500kb, i.e. 1Mbp plots) around lead
                            SNPs.
-  --ref-flat FILE          Path to Locuszoom's refFlat file. By default,
-                           peakplotter finds it for you in the locuszoom
-                           files.
-  --recomb FILE            Path to Locuszoom's recomb_rate file. By default,
-                           peakplotter finds it for you in the locuszoom
-                           files.
   --overwrite              Overwrite output directory if it already exists.
   --help                   Show this message and exit.
 ``` 
 
-## Output
-Curently, the script outputs results in the current directory. More precisely, it appends extensions to the association results filename, so it is generally good to assume that PeakPlotter is not very good at handling relative, or even absolute paths. It is therefore safest to work in the same directory as the association results file. Paths to the bed file are insensitive to this issue and can be located wherever you want.
+## Testing
+Run `pytest` at the root of the repository to run the testsuite.
 
-## Troubleshooting
-At the moment PeakPlotter does not handle errors very well. In particular, it doesn't catch errors thrown by Plink and doesn't stop if something goes wrong at some point in the pipeline. This is work in progress, if you want to report a bug, keep your logs and email [the author](mailto:ag15@sanger.ac.uk).
+There aren't a lot of tests right now, and this is a work in progress. If you encounter any bugs, please raise an issue at the [issue page](https://github.com/hmgu-itg/peakplotter/issues).
