@@ -202,6 +202,7 @@ do
   echo "Done with peak $chr $start $end."
 done
 
+touch done
 # rm merge* peak* 0.* *.db *signal* 
 
 if [ -a cp* ] ; then rm cp*; fi
