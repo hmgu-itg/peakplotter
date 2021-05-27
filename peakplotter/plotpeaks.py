@@ -1,16 +1,16 @@
 import pandas as pd
 import numpy as np
 
-def read_assoc(filepath, signif, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, chunksize = 10000) -> pd.DataFrame:
+def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, chunksize = 10000) -> pd.DataFrame:
     """
     Lazily load and filter the association file.
     
     Example
     -------
     >>> # GCTA file as input
-    >>> signals = read_assoc('/path/to/assoc.mlma.gz', 5e-8, 'Chr', 'bp', 'p', 'Freq', 'SNP', 'A1', 'A2')
+    >>> assoc = read_assoc('/path/to/assoc.mlma.gz', 'Chr', 'bp', 'p', 'Freq', 'SNP', 'A1', 'A2')
     """
-    chunks = pd.read_csv(filepath, sep = '\t',
+    assoc = pd.read_csv(filepath, sep = '\t',
                         chunksize = chunksize,
                         dtype = {
                             chr_col: np.int64,
@@ -22,11 +22,15 @@ def read_assoc(filepath, signif, chr_col, pos_col, pval_col, maf_col, rs_col, a1
                             a2_col: str
                         })
 
+    return assoc
+
+
+def get_signals(assoc, signif) -> pd.DataFrame:
     concat_list = list()
-    for chunk in chunks:
+    for chunk in assoc:
         chunk = chunk[signif>chunk['p']]
         if chunk.shape[0]>0:
             concat_list.append(chunk)
-    data = pd.concat(concat_list).reset_index(drop = True)
-    data.sort_values(by = [chr_col, pos_col], inplace = True)
-    return data
+    signals = pd.concat(concat_list).reset_index(drop = True)
+    signals.sort_values(by = [chr_col, pos_col], inplace = True)
+    return signals
