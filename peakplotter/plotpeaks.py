@@ -246,10 +246,13 @@ def process_peak(assocfile: str,
     ld_file = f'{out_merge}.ld'
     ld_data.to_csv(ld_file, sep = ' ', header = True, index = False)
 
+    subset_ld_data = ld_data[['snp2', 'dprime']].sort_values('snp2').reset_index(drop = True)
+    subset_ld_data.columns = [rs_col, 'ld']
+
     peakdata_file = outdir.joinpath('peakdata.header')
     peakdata.to_csv(peakdata_file, sep = '\t', header = True, index = False)
 
-    joined_peakdata_ld = peakdata.merge(ld_data[['snp2', 'dprime']], left_on=rs_col, right_on='snp2')
+    joined_peakdata_ld = peakdata.merge(subset_ld_data, on=rs_col)
     joined_peakdata_ld_file = outdir.joinpath(f'{chrom}.{start}.{end}.500kb')
     joined_peakdata_ld.to_csv(joined_peakdata_ld_file, sep = ',', header = True, index = False)
 
@@ -379,7 +382,9 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
         ld_data.columns = ['snp1', 'snp2', 'dprime', 'rsquare']
         ld_file = f'{out_merge}.ld'
         ld_data.to_csv(ld_file, sep = ' ', header = True, index = False)
-
+        
+        
+        
         peakdata_file = outdir.joinpath('peakdata.header')
         peakdata.to_csv(peakdata_file, sep = '\t', header = True, index = False)
 
