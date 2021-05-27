@@ -162,7 +162,11 @@ do
   awk 'OFS="\t"{if(NR>1){if($'$rscoli'~/:/ && $'$rscoli'!~/^chr/){$'$rscoli'="chr"$'$rscoli'}}print}' peakdata.header | sponge peakdata.header
 
   # Extract top SNP
+<<<<<<< HEAD
   refsnp=$(python3 -c 'import pandas as pd; d=pd.read_csv("peakdata.header", sep = "\t");id=d["'$rscol'"][d["'$pvalcol'"].idxmin()];print(id if id.startswith("rs") else "chr"+str(d["'$chrcol'"][d["'$pvalcol'"].idxmin()])+":"+str(int(d["'$pscol'"][d["'$pvalcol'"].idxmin()])))')
+=======
+  refsnp=$(python -c 'import pandas as pd; d=pd.read_table("peakdata.header");id=d["'$rscol'"][d["'$pvalcol'"].idxmin()];print(id if id.startswith("rs") else "chr"+str(d["'$chrcol'"][d["'$pvalcol'"].idxmin()])+":"+str(int(d["'$pscol'"][d["'$pvalcol'"].idxmin()])))')
+>>>>>>> master
 
   echo -e "\n\nIn region $chr $start $end, top SNP is $refsnp\n\n"
 
@@ -202,6 +206,10 @@ do
   echo "Done with peak $chr $start $end."
 done
 
+<<<<<<< HEAD
+=======
+touch done
+>>>>>>> master
 # rm merge* peak* 0.* *.db *signal* 
 
 if [ -a cp* ] ; then rm cp*; fi
