@@ -82,15 +82,13 @@ def peakit(signals, pvalcol, chrcol, pscol):
 	p.extend(1000000)
 	p.print()
 
-def _peakit(signals: pd.DataFrame, pvalcol, chrcol, pscol):
-	signals.sort_values(pvalcol, inplace=True)
-
+def _peakit(signals: pd.DataFrame, pvalcol: str, chrcol: str, pscol: str) -> peakCollection:
+	sorted_signals = signals.sort_values(pvalcol)
 	p = peakCollection()
-	for index, row in d.iterrows():
+	for index, row in sorted_signals.iterrows():
 		p.check_and_add(row[chrcol], row[pscol])
-
 	p.extend(1000000)
-	p.print()
+	return p
 
 if __name__ == '__main__':
 	peakit(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
