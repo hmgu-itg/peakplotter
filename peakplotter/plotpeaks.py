@@ -116,6 +116,135 @@ def _add_chr_to_id(column: pd.Series) -> pd.Series:
     return pd.Series(new_column, dtype = str)
     
 
+def process_peak(assocfile,
+                  chr_col,
+                  pos_col,
+                  pval_col,
+                  maf_col,
+                  rs_col,
+                  a1_col,
+                  a2_col,
+                  chrom,
+                  start,
+                  end,
+                  current,
+                  total_peak_count,
+                  outdir,
+                  refflat,
+                  recomb,
+                  bfiles_list,
+                  plink,
+                  build):
+    print(f"Treating peak {chrom} {start} {end} (peak {current+1} / {total_peak_count} )")
+    
+    assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
+    
+    concat_list = list()
+    for chunk in assoc:
+        filtered_chunk = chunk.loc[(chunk[chr_col]==chrom) & (start < chunk[pos_col]) & (chunk[pos_col] < end)]
+        if filtered_chunk.shape[0] > 0:
+            concat_list.append(filtered_chunk)
+    peakdata = pd.concat(concat_list).sort_values([chr_col, pos_col]).reset_index(drop = True)
+    peakdata_chrpos = peakdata[[rs_col, chr_col, pos_col]].copy()
+    # Add 'chr' to variant ID name
+    # e.g. '1:100:A:G' -> 'chr1:100:A:G'
+    rows_with_no_chr = ~peakdata_chrpos[rs_col].str.startswith('chr')
+    peakdata_chrpos.loc[rows_with_no_chr, rs_col] = 'chr'+peakdata_chrpos.loc[rows_with_no_chr, rs_col]
+    peakdata_chrpos.columns = ['snp', 'chr', 'pos']
+    
+    peakdata_chrpos_path = outdir.joinpath('peakdata.chrpos')
+    db_file = outdir.joinpath(f'{chrom}.{start}.db')
+
+    peakdata_chrpos.to_csv(peakdata_chrpos_path, sep = '\t', index = False)
+
+    sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --snp_pos {peakdata_chrpos_path}"))
+    sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --refflat {refflat}"))
+    sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --recomb_rate {recomb}"))
+    
+    if start < 1:
+        sensible_start = 1
+        print(f'\n\n\nWARNING\t Negative start position changed to {sensible_start} : {chrom} {start} (1)\n\n\n')
+    else:
+        sensible_start = start
+
+
+
+    for count, bfile in enumerate(bfiles_list):
+        out = outdir.joinpath(f'peak.{chrom}.{start}.{end}.{count}')
+        print(plink.extract_genotypes(bfile, chrom, start, end, out))
+        
+        ## Modify BIM file 
+        bimfile = f'{out}.bim'
+        bim = pd.read_csv(bimfile, sep = '\t', header = None, names = ['chrom', 'id', '_', 'pos', 'a1', 'a2'])
+
+        # 'non_rs_id' -> 'chr1:100'
+        bim['id'] = _create_non_rs_to_pos_id(bim, 'chrom', 'id', 'pos')
+
+        # '1:100' -> 'chr1:100'
+        bim['id'] = _add_chr_to_id(bim['id'])
+        bim.to_csv(bimfile, sep = '\t', header = False, index = False)
+        
+        
+
+    ## Merge plink binaries if multiple present
+    mergelist = [str(f).strip('.bed') for f in outdir.glob(f'peak.{chrom}.{start}.{end}.*.bed')]
+    assert len(mergelist) >= 1, f'mergelist length is {len(mergelist)}'
+
+    if len(mergelist)==1:
+        bfile = Path(mergelist[0])
+        out_merge = bfile.parent.joinpath('merged')
+        Path(f'{bfile}.bed').rename(f'{out_merge}.bed')
+        Path(f'{bfile}.bim').rename(f'{out_merge}.bim')
+        Path(f'{bfile}.fam').rename(f'{out_merge}.fam')
+    elif len(mergelist) > 1:
+        mergelist_file = str(outdir.joinpath('tmp_mergelist'))
+        out_merge = str(outdir.joinpath('merged'))
+        
+        process = plink.merge(mergelist_file, mergelist, chrom, start, end, out)
+        if process.returncode == 3:
+            # Exclude variants which failed merge
+            missnp_file = f'{out}-merge.missnp'
+            missnp_list = pd.read_csv(missnp_file, header = None)[0].to_list()
+            peakdata = peakdata[~peakdata[rs_col].isin(missnp_list)].reset_index(drop = True)
+            for bfile in mergelist:
+                plink.exclude(bfile, missnp_file, f'{bfile}.tmp')
+                Path(f'{bfile}.tmp.bed').rename(f'{bfile}.bed')
+                Path(f'{bfile}.tmp.bim').rename(f'{bfile}.bim')
+                Path(f'{bfile}.tmp.fam').rename(f'{bfile}.fam')
+                
+            process = plink.merge(mergelist_file, mergelist, chrom, start, end, out)
+        
+        
+        
+    peakdata[rs_col] = _create_non_rs_to_pos_id(peakdata, chr_col, rs_col, pos_col)
+    peakdata[rs_col] = _add_chr_to_id(peakdata[rs_col])
+
+    index_of_var_with_lowest_pval = peakdata[pval_col].idxmin()
+    ref_snp_id = peakdata.loc[index_of_var_with_lowest_pval, rs_col]
+
+    if ref_snp_id.startswith('rs'):
+        refsnp = ref_snp_id
+    else:
+        chrom = str(peakdata.loc[index_of_var_with_lowest_pval, chr_col]).strip('chr')
+        pos = peakdata.loc[index_of_var_with_lowest_pval, pos_col]
+        refsnp = f'chr{chrom}:{pos}'
+
+    print(f"\n\nIn region {chrom} {start} {end}, top SNP is {refsnp}\n\n")
+
+    plink.ld(bfile, refsnp, ext_flank_kb, out_merge)
+    ld_data = pd.read_csv(f'{out_merge}.ld', delim_whitespace=True)
+    ld_data = ld_data[['SNP_A', 'SNP_B', 'R2', 'R2']]
+    ld_data.columns = ['snp1', 'snp2', 'dprime', 'rsquare']
+    ld_file = f'{out_merge}.ld'
+    ld_data.to_csv(ld_file, sep = ' ', header = True, index = False)
+
+    peakdata_file = outdir.joinpath('peakdata.header')
+    peakdata.to_csv(peakdata_file, sep = '\t', header = True, index = False)
+
+
+    run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, f'{chrom}.{start}.{end}.500kb', ld_file, sensible_start, end, chrom)
+
+
 def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, memory = 30000):
     ext_flank_bp = flank_bp + 100_000
     flank_kb = flank_bp // 1000
@@ -171,32 +300,13 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
             
             ## Modify BIM file 
             bimfile = f'{out}.bim'
-
             bim = pd.read_csv(bimfile, sep = '\t', header = None, names = ['chrom', 'id', '_', 'pos', 'a1', 'a2'])
 
             # 'non_rs_id' -> 'chr1:100'
             bim['id'] = _create_non_rs_to_pos_id(bim, 'chrom', 'id', 'pos')
-            # not_rsid = ~bim['id'].str.startswith('rs')
-            # not_contain_colon = ~bim['id'].str.contains(':')
-            # needs_id_change_indices = bim[(not_rsid) & (not_contain_colon)].index
-            # if not needs_id_change_indices.empty:
-            #     bim.loc[needs_id_change_indices, 'id'] \
-            #         = 'chr' \
-            #         + bim.loc[needs_id_change_indices, 'chrom'].astype(str) \
-            #         + ':' \
-            #         + bim.loc[needs_id_change_indices, 'pos'].astype(str)
-
 
             # '1:100' -> 'chr1:100'
             bim['id'] = _add_chr_to_id(bim['id'])
-            # contain_colon = bim['id'].str.contains(':')
-            # not_startwith_chr = ~bim['id'].str.startswith('chr')
-            # needs_id_change_indices = bim[(contain_colon) & (not_startwith_chr)].index
-            # if not needs_id_change_indices.empty:
-            #     bim.loc[needs_id_change_indices, 'id'] \
-            #         = 'chr' \
-            #         + bim.loc[needs_id_change_indices, 'id']
-
             bim.to_csv(bimfile, sep = '\t', header = False, index = False)
             
             
