@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import sys
+from io import StringIO
 
 import pandas as pd
-
+from pybedtools import BedTool
 
 MARGIN = 500000
 
@@ -89,6 +90,16 @@ def _peakit(signals: pd.DataFrame, pvalcol: str, chrcol: str, pscol: str) -> pea
 		p.check_and_add(row[chrcol], row[pscol])
 	p.extend(1000000)
 	return p
+
+
+def bedtools_merge(data: pd.DataFrame) -> pd.DataFrame:
+    bedtool = BedTool(data.to_string(header = False, index = False), from_string = True)
+    merged = bedtool.merge()
+    
+    peaked = pd.read_csv(StringIO(str(merged)), sep = '\t', names = ['chrom', 'start', 'end'])
+    return peaked
+
+
 
 if __name__ == '__main__':
 	peakit(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
