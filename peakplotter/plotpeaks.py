@@ -175,7 +175,9 @@ def process_peak(assocfile: str,
 
     for count, bfile in enumerate(bfiles_list):
         out = outdir.joinpath(f'peak.{chrom}.{start}.{end}.{count}')
-        print(plink.extract_genotypes(bfile, chrom, start, end, out))
+        ps = plink.extract_genotypes(bfile, chrom, start, end, out)
+        print(ps.stdout.decode())
+        print(ps.stderr.decode())
         
         ## Modify BIM file 
         bimfile = f'{out}.bim'
