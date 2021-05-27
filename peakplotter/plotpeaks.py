@@ -221,20 +221,24 @@ def process_peak(assocfile: str,
         
     peakdata[rs_col] = _create_non_rs_to_pos_id(peakdata, chr_col, rs_col, pos_col)
     peakdata[rs_col] = _add_chr_to_id(peakdata[rs_col])
+    # TODO: NO POINT DOING THE ABOVE IF I AM DOING THE BELOW
+    peakdata[rs_col] = 'chr' + peakdata[chr_col].astype(str) + ':' + peakdata[pos_col].astype(str)
+    # TODO: FIND OUT THE CORRECT WAY TO HANDLE VAR IDS
 
     index_of_var_with_lowest_pval = peakdata[pval_col].idxmin()
     ref_snp_id = peakdata.loc[index_of_var_with_lowest_pval, rs_col]
 
     if ref_snp_id.startswith('rs'):
-        refsnp = ref_snp_id
+        refsnp = ref_snp_id # TODO: THIS CURRENTLY IS NEVER TRUE
     else:
-        chrom = str(peakdata.loc[index_of_var_with_lowest_pval, chr_col]).strip('chr')
-        pos = peakdata.loc[index_of_var_with_lowest_pval, pos_col]
-        refsnp = f'chr{chrom}:{pos}'
+        refsnp = ref_snp_id
+        # chrom = str(peakdata.loc[index_of_var_with_lowest_pval, chr_col]).strip('chr')
+        # pos = peakdata.loc[index_of_var_with_lowest_pval, pos_col]
+        # refsnp = f'chr{chrom}:{pos}'
 
     print(f"\n\nIn region {chrom} {start} {end}, top SNP is {refsnp}\n\n")
 
-    plink.ld(bfile, refsnp, ext_flank_kb, out_merge)
+    plink.ld(out_merge, refsnp, ext_flank_kb, out_merge)
     ld_data = pd.read_csv(f'{out_merge}.ld', delim_whitespace=True)
     ld_data = ld_data[['SNP_A', 'SNP_B', 'R2', 'R2']]
     ld_data.columns = ['snp1', 'snp2', 'dprime', 'rsquare']
@@ -244,8 +248,12 @@ def process_peak(assocfile: str,
     peakdata_file = outdir.joinpath('peakdata.header')
     peakdata.to_csv(peakdata_file, sep = '\t', header = True, index = False)
 
+    joined_peakdata_ld = peakdata.merge(ld_data[['snp2', 'dprime']], left_on=rs_col, right_on='snp2')
+    joined_peakdata_ld_file = outdir.joinpath(f'{chrom}.{start}.{end}.500kb')
+    joined_peakdata_ld.to_csv(joined_peakdata_ld_file, sep = ',', header = True, index = False)
 
-    run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, f'{chrom}.{start}.{end}.500kb', ld_file, sensible_start, end, chrom)
+
+    print(run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, joined_peakdata_ld_file, ld_file, sensible_start, end, chrom))
 
 
 def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, memory = 30000):
