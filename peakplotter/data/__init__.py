@@ -11,13 +11,8 @@ CENTROMERE_B37_PATH = DATA_DIR.joinpath('centromere_b37.tsv')
 CENTROMERE_B38_PATH = DATA_DIR.joinpath('centromere_b38.tsv')
 REFFLAT_B37_PATH = DATA_DIR.joinpath('refFlat_b37.tsv')
 REFFLAT_B38_PATH = DATA_DIR.joinpath('refFlat_b38.tsv')
-<<<<<<< HEAD
-RECOMB_B37_PATH = DATA_DIR.joinpath('recomb_b37.tsv')
-RECOMB_B38_PATH = DATA_DIR.joinpath('recomb_b38.tsv')
-=======
 RECOMB_B37_PATH = DATA_DIR.joinpath('recomb_rate_b37.tsv')
 RECOMB_B38_PATH = DATA_DIR.joinpath('recomb_rate_b38.tsv')
->>>>>>> master
 
 
 

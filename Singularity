@@ -63,11 +63,7 @@ From: ubuntu:18.04
 
 # PeakPlotter
     cd /opt
-<<<<<<< HEAD
-    git clone https://github.com/hmgu-itg/peakplotter.git -b functionise
-=======
     git clone https://github.com/hmgu-itg/peakplotter.git
->>>>>>> master
     cd peakplotter
     python3 -m pip install .
     
