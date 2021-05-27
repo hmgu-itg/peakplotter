@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-__version__ = '0.1.1'
+__version__ = '0.1.1.dev'
 
 
 PLOTPEAKS_SCRIPT = str(Path(__file__).parent.joinpath('plotpeaks.sh'))
