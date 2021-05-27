@@ -46,6 +46,15 @@ class peakCollection:
 		for peak in self.peaks:
 			print(str(peak.chrom)+"\t"+str(peak.start)+"\t"+str(peak.end));
 	
+	@property
+	def data(self):
+		d = list()
+		for peak in self.peaks:
+			assert peak.start < peak.end
+			d.append([peak.chrom, peak.start, peak.end])
+		d = pd.DataFrame(d, columns = ['chrom', 'start', 'end']).sort_values(['chrom', 'start']).reset_index(drop=True)
+		return d
+	
 	def extend(self, TOTAL_LENGTH):
 		## extend the region around its center so that it spans TOTAL_LENGTH
 		## If it is already TOTAL_LENGTH or larger, add 1/4 TOTAL_LENGTH either side
