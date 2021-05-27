@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 
 from .peakit import _peakit, bedtools_merge
+from .interactive_manh import interactive_manh
 
 def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, chunksize = 10000) -> pd.DataFrame:
     """
@@ -254,7 +255,12 @@ def process_peak(assocfile: str,
 
 
     print(run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, joined_peakdata_ld_file, ld_file, sensible_start, end, chrom))
-
+    
+    if build==37:
+        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b37')
+    elif build==38:
+        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b37')
+    print(f"Done with peak {chrom} {start} {end}.")
 
 def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, memory = 30000):
     ext_flank_bp = flank_bp + 100_000
