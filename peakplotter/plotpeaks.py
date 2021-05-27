@@ -134,7 +134,8 @@ def process_peak(assocfile,
                   recomb,
                   bfiles_list,
                   plink,
-                  build):
+                  build,
+                  ext_flank_kb):
     print(f"Treating peak {chrom} {start} {end} (peak {current+1} / {total_peak_count} )")
     
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
