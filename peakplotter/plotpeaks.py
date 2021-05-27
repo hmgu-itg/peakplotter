@@ -33,7 +33,7 @@ def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2
     return assoc
 
 
-def get_signals(assoc, signif) -> pd.DataFrame:
+def get_signals(assoc, signif, chr_col, pos_col) -> pd.DataFrame:
     concat_list = list()
     for chunk in assoc:
         chunk = chunk[signif>chunk['p']]
@@ -53,27 +53,29 @@ class Plink:
         return f'plink --memory {self.memory}'
     
     def __call__(self, command):
-        return sp.run(shlex.split(f'{self._cmd} {command}'), capture_output=True)
+        return sp.run(shlex.split(f'{self._cmd} {command}'), stdout = sp.PIPE, stderr = sp.PIPE)
     
     def dry_call(self, command):
         return f'{self._cmd} {command}'
     
     def extract_genotypes(self, bfile, chrom, start, end, out):
-        return sp.run(shlex.split(f'{self._cmd} --bfile {bfile} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), capture_output=True)
+        return sp.run(
+            shlex.split(f'{self._cmd} --bfile {bfile} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE
+            )
     
     def merge(self, file: str, bfiles: List[str], chrom, start, end, out: str):
         with open(file, 'w') as f:
             for bfile in bfiles:
                 f.write(f'{bfile}\n')
-        process = sp.run(shlex.split(f'{self._cmd} --merge-list {file} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), capture_output=True)
+        process = sp.run(shlex.split(f'{self._cmd} --merge-list {file} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE)
         os.remove(file)
         return process
     
     def exclude(self, bfile, exclude, out):
-        return sp.run(shlex.split(f'{self._cmd} --allow-no-sex --bfile {bfile} --exclude {exclude} --make-bed --out {out}'), capture_output=True)
+        return sp.run(shlex.split(f'{self._cmd} --allow-no-sex --bfile {bfile} --exclude {exclude} --make-bed --out {out}'), stdout = sp.PIPE, stderr = sp.PIPE)
     
     def ld(self, bfile, ld_snp, ext_flank_kb, out):
-        return sp.run(shlex.split(f'{self._cmd} --allow-no-sex --bfile {bfile} --r2 --ld-snp {ld_snp}  --ld-window-kb {ext_flank_kb} --ld-window 999999 --ld-window-r2 0 --out {out}'), capture_output=True)
+        return sp.run(shlex.split(f'{self._cmd} --allow-no-sex --bfile {bfile} --r2 --ld-snp {ld_snp}  --ld-window-kb {ext_flank_kb} --ld-window 999999 --ld-window-r2 0 --out {out}'), stdout = sp.PIPE, stderr = sp.PIPE)
 
 
 def run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, prefix, ld, start, end, chrom):
@@ -91,7 +93,7 @@ def run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, prefi
             --start={start} \
             --end={end} \
             --chr={chrom} showRecomb=T
-        '''), capture_output = True)
+        '''), stdout = sp.PIPE, stderr = sp.PIPE)
     return process
 
 
@@ -116,26 +118,26 @@ def _add_chr_to_id(column: pd.Series) -> pd.Series:
     return pd.Series(new_column, dtype = str)
     
 
-def process_peak(assocfile,
-                  chr_col,
-                  pos_col,
-                  pval_col,
-                  maf_col,
-                  rs_col,
-                  a1_col,
-                  a2_col,
-                  chrom,
-                  start,
-                  end,
-                  current,
-                  total_peak_count,
-                  outdir,
-                  refflat,
-                  recomb,
-                  bfiles_list,
-                  plink,
-                  build,
-                  ext_flank_kb):
+def process_peak(assocfile: str,
+                  chr_col: str,
+                  pos_col: str,
+                  pval_col: str,
+                  maf_col: str,
+                  rs_col: str,
+                  a1_col: str,
+                  a2_col: str,
+                  chrom: int,
+                  start: int,
+                  end: int,
+                  current: int,
+                  total_peak_count: int,
+                  outdir: Path,
+                  refflat: Path,
+                  recomb: Path,
+                  bfiles_list: List[str],
+                  plink: Plink,
+                  build: int,
+                  ext_flank_kb: int):
     print(f"Treating peak {chrom} {start} {end} (peak {current+1} / {total_peak_count} )")
     
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
@@ -254,7 +256,7 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
     bfiles_list = bfiles.split(',')
     plink = Plink(memory)
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
-    signals = get_signals(assoc, signif)
+    signals = get_signals(assoc, signif, chr_col, pos_col)
     peak_collections = _peakit(signals, pval_col, chr_col, pos_col)
     peaked = bedtools_merge(peak_collections.data)
 
