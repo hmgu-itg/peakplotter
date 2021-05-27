@@ -34,7 +34,7 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
     '''PeakPlotter
     '''
     ref_flat, recomb = get_data_path(build)
-    if not ref_flat.exists() or recomb.exists():
+    if not ref_flat.exists() or not recomb.exists():
         click.echo('[ERROR] Download of some data is required. Please run peakplotter-data-setup in the commandline')
         sys.exit(1)
 
