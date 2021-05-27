@@ -34,7 +34,7 @@ class peakCollection:
 		
 		found = 0
 		for i, peak in enumerate(self.peaks):
-			if (chr == peak.chrom) and (ps > (peak.start - MARGIN)) and (ps < (peak.end + MARGIN)):
+			if (chr == peak.chrom) and ((peak.start - MARGIN) < ps < (peak.end + MARGIN)):
 				self.peaks[i].add_snp(chr, ps)
 				found=1
 		
@@ -65,6 +65,16 @@ class peakCollection:
 def peakit(signals, pvalcol, chrcol, pscol):
 	d = pd.read_table(signals)
 	d.sort_values(pvalcol, inplace=True)
+
+	p = peakCollection()
+	for index, row in d.iterrows():
+		p.check_and_add(row[chrcol], row[pscol])
+
+	p.extend(1000000)
+	p.print()
+
+def _peakit(signals: pd.DataFrame, pvalcol, chrcol, pscol):
+	signals.sort_values(pvalcol, inplace=True)
 
 	p = peakCollection()
 	for index, row in d.iterrows():
