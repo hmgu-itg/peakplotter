@@ -309,3 +309,7 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
                   plink,
                   build,
                   ext_flank_kb)
+    
+    with open(outdir.joinpath('done'), 'w') as f:
+        f.write('done')
+    print("Finished..")
