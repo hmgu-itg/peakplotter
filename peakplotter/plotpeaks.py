@@ -48,7 +48,7 @@ def get_signals(assoc, signif, chr_col, pos_col, pval_col) -> pd.DataFrame:
     signals.sort_values(by = [chr_col, pos_col], inplace = True)
     return signals
 
-
+# TODO: Move this to somewhere else
 class Plink:
     def __init__(self, memory = 30000):
         self.memory = memory
@@ -122,7 +122,7 @@ def _add_chr_to_id(column: pd.Series) -> pd.Series:
             new_column.append(ele)
     return pd.Series(new_column, dtype = str)
     
-
+# TODO: Modulerise this function. Split it up to smaller functions
 def process_peak(assocfile: str,
                   chr_col: str,
                   pos_col: str,
