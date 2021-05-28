@@ -20,18 +20,21 @@ def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2
     >>> assoc = read_assoc('/path/to/assoc.mlma.gz', 'Chr', 'bp', 'p', 'Freq', 'SNP', 'A1', 'A2')
     """
     assoc = pd.read_csv(filepath, sep = '\t',
-                        chunksize = chunksize,
-                        dtype = {
-                            chr_col: np.int64,
-                            pos_col: np.int64,
-                            pval_col: np.float64,
-                            maf_col: np.float64,
-                            rs_col: str,
-                            a1_col: str,
-                            a2_col: str
-                        })
-
-    return assoc
+                            chunksize = chunksize,
+                            dtype = {
+                                chr_col: np.int64,
+                                pos_col: np.int64,
+                                maf_col: np.float64,
+                                rs_col: str,
+                                a1_col: str,
+                                a2_col: str
+                            })
+    for chunk in assoc:
+        chunk[pval_col] = pd.to_numeric(chunk[pval_col], errors = 'coerce')
+        nan_list = list(pd.isna(chunk[pval_col]))
+        if nan_list.count(True):
+            print(f"[WARNING] Removing {nan_list.count(True)} rows with invalid p-value")
+        yield chunk.dropna().reset_index(drop = True)
 
 
 def get_signals(assoc, signif, chr_col, pos_col) -> pd.DataFrame:
