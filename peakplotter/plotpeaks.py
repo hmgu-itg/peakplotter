@@ -73,7 +73,7 @@ class Plink:
             for bfile in bfiles:
                 f.write(f'{bfile}\n')
         process = sp.run(shlex.split(f'{self._cmd} --merge-list {file} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE)
-        os.remove(file)
+        # os.remove(file)
         return process
     
     def exclude(self, bfile, exclude, out):
@@ -213,12 +213,12 @@ def process_peak(assocfile: str,
         mergelist_file = str(outdir.joinpath('tmp_mergelist'))
         out_merge = str(outdir.joinpath('merged'))
         
-        ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out)
+        ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out_merge)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
         if ps.returncode == 3:
             # Exclude variants which failed merge
-            missnp_file = f'{out}-merge.missnp'
+            missnp_file = f'{out_merge}-merge.missnp'
             missnp_list = pd.read_csv(missnp_file, header = None)[0].to_list()
             peakdata = peakdata[~peakdata[rs_col].isin(missnp_list)].reset_index(drop = True)
             for bfile in mergelist:
