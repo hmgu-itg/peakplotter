@@ -211,7 +211,7 @@ def process_peak(assocfile: str,
     elif len(mergelist) > 1:
         print(f"[INFO] Merging {mergelist}")
         mergelist_file = str(outdir.joinpath('tmp_mergelist'))
-        out_merge = str(outdir.joinpath('merged'))
+        out_merge = str(outdir.joinpath(f'peak.{current+1}'))
         
         ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out_merge)
         print(ps.stdout.decode())
@@ -284,6 +284,11 @@ def process_peak(assocfile: str,
         print(f"[DEBUG] interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b38')")
         interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b38')
     print(f"Done with peak {chrom} {start} {end}.")
+    print(f"Cleaning plink binary files")
+    to_delete = list(outdir.glob(f'peak.{chrom}.{start}.{end}.*.*'))
+    for file in to_delete:
+        file.unlink()
+
 
 def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, memory = 30000):
     # ext_flank_bp = flank_bp + 100_000
