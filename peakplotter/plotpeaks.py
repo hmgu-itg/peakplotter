@@ -1,4 +1,5 @@
 import os
+import re
 import shlex
 from typing import List
 import subprocess as sp
@@ -188,9 +189,11 @@ def process_peak(assocfile: str,
 
         # 'non_rs_id' -> 'chr1:100'
         bim['id'] = _create_non_rs_to_pos_id(bim, 'chrom', 'id', 'pos')
-
         # '1:100' -> 'chr1:100'
         bim['id'] = _add_chr_to_id(bim['id'])
+        # 'chr1:100[b38]' -> 'chr1:100'
+        bim['id'] = [re.sub('\[b3[78]\]', '', _id) for _id in bim['id']] # This is a ITG specific problem handling
+
         bim.to_csv(bimfile, sep = '\t', header = False, index = False)
         
         
@@ -198,7 +201,7 @@ def process_peak(assocfile: str,
     ## Merge plink binaries if multiple present
     mergelist = [str(f).strip('.bed') for f in outdir.glob(f'peak.{chrom}.{start}.{end}.*.bed')]
     assert len(mergelist) >= 1, f'mergelist length is {len(mergelist)}'
-
+    print(f"[DEBUG] {mergelist}")
     if len(mergelist)==1:
         bfile = Path(mergelist[0])
         out_merge = bfile.parent.joinpath('merged')
@@ -206,11 +209,14 @@ def process_peak(assocfile: str,
         Path(f'{bfile}.bim').rename(f'{out_merge}.bim')
         Path(f'{bfile}.fam').rename(f'{out_merge}.fam')
     elif len(mergelist) > 1:
+        print(f"[INFO] Merging {mergelist}")
         mergelist_file = str(outdir.joinpath('tmp_mergelist'))
         out_merge = str(outdir.joinpath('merged'))
         
-        process = plink.merge(mergelist_file, mergelist, chrom, start, end, out)
-        if process.returncode == 3:
+        ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out)
+        print(ps.stdout)
+        print(ps.stderr)
+        if ps.returncode == 3:
             # Exclude variants which failed merge
             missnp_file = f'{out}-merge.missnp'
             missnp_list = pd.read_csv(missnp_file, header = None)[0].to_list()
@@ -221,7 +227,9 @@ def process_peak(assocfile: str,
                 Path(f'{bfile}.tmp.bim').rename(f'{bfile}.bim')
                 Path(f'{bfile}.tmp.fam').rename(f'{bfile}.fam')
                 
-            process = plink.merge(mergelist_file, mergelist, chrom, start, end, out)
+            ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out)
+            print(ps.stdout)
+            print(ps.stderr)
         
         
         
