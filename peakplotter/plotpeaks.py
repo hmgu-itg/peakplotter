@@ -178,7 +178,7 @@ def process_peak(assocfile: str,
         ps = plink.extract_genotypes(bfile, chrom, start, end, out)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
-        
+
         ## Modify BIM file 
         bimfile = f'{out}.bim'
         bim = pd.read_csv(bimfile, sep = '\t', header = None, names = ['chrom', 'id', '_', 'pos', 'a1', 'a2'])
@@ -265,9 +265,11 @@ def process_peak(assocfile: str,
     print(ps.stdout.decode())
     print(ps.stderr.decode())
     if build==37:
+        print(f"[DEBUG] interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b37')")
         interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b37')
     elif build==38:
-        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b37')
+        print(f"[DEBUG] interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b38')")
+        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b38')
     print(f"Done with peak {chrom} {start} {end}.")
 
 def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, memory = 30000):
