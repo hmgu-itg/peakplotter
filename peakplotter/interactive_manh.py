@@ -17,7 +17,6 @@ from peakplotter import helper # TODO: Change this back to relative import after
 from peakplotter import _interactive_manh
 
 def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, build: str):
-
     logging.basicConfig()
     outfile=file+".html"
 
@@ -85,6 +84,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     end = int(e[pscol].max())
     ## We get the list of rsids and phenotype associations in the region
     server = helper.get_build_server(build)
+    print("f[DEBUG] get_rsid_in_region({chrom}, {start}, {end}, {server}")
     ff = _interactive_manh.get_rsid_in_region(chrom, start, end, server)
     print(ff.head())
     columns = ['ensembl_rs', 'ps', 'ensembl_consequence', 'ensembl_assoc']

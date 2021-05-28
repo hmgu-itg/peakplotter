@@ -12,7 +12,7 @@ from . import PLOTPEAKS_SCRIPT, __version__
 from ._data import get_data_path
 from .utils import check_executable, DEPENDENT_EXECUTABLES
 from .errors import MissingExecutableError
-
+from .plotpeaks import main
 
 
 @click.command()
@@ -34,7 +34,7 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
     '''PeakPlotter
     '''
     ref_flat, recomb = get_data_path(build)
-    if not ref_flat.exists() or recomb.exists():
+    if not ref_flat.exists() or not recomb.exists():
         click.echo('[ERROR] Download of some data is required. Please run peakplotter-data-setup in the commandline')
         sys.exit(1)
 
@@ -86,8 +86,22 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
         for key, val in configs.items():
             f.write(f'{key}: {val}\n')
 
-    command = f"{PLOTPEAKS_SCRIPT} {signif} {assoc_file} {chr_col} {pos_col} {rs_col} {pval_col} {a1_col} {a2_col} {maf_col} {bfiles} {flank_bp} {ref_flat} {recomb} {build} {outdir}"
-    subprocess.run(shlex.split(command))
+    main(signif,
+        assoc_file,
+        chr_col,
+        pos_col,
+        rs_col,
+        pval_col,
+        a1_col,
+        a2_col,
+        maf_col,
+        bfiles,
+        flank_bp,
+        ref_flat,
+        recomb,
+        build,
+        outdir,
+        memory = 30000)
 
 if __name__ == '__main__':
     cli()

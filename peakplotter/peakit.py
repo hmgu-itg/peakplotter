@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import sys
+from io import StringIO
 
 import pandas as pd
-
+from pybedtools import BedTool
 
 MARGIN = 500000
 
@@ -34,7 +35,7 @@ class peakCollection:
 		
 		found = 0
 		for i, peak in enumerate(self.peaks):
-			if (chr == peak.chrom) and (ps > (peak.start - MARGIN)) and (ps < (peak.end + MARGIN)):
+			if (chr == peak.chrom) and ((peak.start - MARGIN) < ps < (peak.end + MARGIN)):
 				self.peaks[i].add_snp(chr, ps)
 				found=1
 		
@@ -45,6 +46,15 @@ class peakCollection:
 	def print(self):
 		for peak in self.peaks:
 			print(str(peak.chrom)+"\t"+str(peak.start)+"\t"+str(peak.end));
+	
+	@property
+	def data(self):
+		d = list()
+		for peak in self.peaks:
+			assert peak.start < peak.end
+			d.append([peak.chrom, peak.start, peak.end])
+		d = pd.DataFrame(d, columns = ['chrom', 'start', 'end']).sort_values(['chrom', 'start']).reset_index(drop=True)
+		return d
 	
 	def extend(self, TOTAL_LENGTH):
 		## extend the region around its center so that it spans TOTAL_LENGTH
@@ -72,6 +82,24 @@ def peakit(signals, pvalcol, chrcol, pscol):
 
 	p.extend(1000000)
 	p.print()
+
+def _peakit(signals: pd.DataFrame, pvalcol: str, chrcol: str, pscol: str) -> peakCollection:
+	sorted_signals = signals.sort_values(pvalcol)
+	p = peakCollection()
+	for index, row in sorted_signals.iterrows():
+		p.check_and_add(row[chrcol], row[pscol])
+	p.extend(1000000)
+	return p
+
+
+def bedtools_merge(data: pd.DataFrame) -> pd.DataFrame:
+    bedtool = BedTool(data.to_string(header = False, index = False), from_string = True)
+    merged = bedtool.merge()
+    
+    peaked = pd.read_csv(StringIO(str(merged)), sep = '\t', names = ['chrom', 'start', 'end'])
+    return peaked
+
+
 
 if __name__ == '__main__':
 	peakit(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
