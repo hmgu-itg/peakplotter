@@ -37,10 +37,10 @@ def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2
         yield chunk.dropna().reset_index(drop = True)
 
 
-def get_signals(assoc, signif, chr_col, pos_col) -> pd.DataFrame:
+def get_signals(assoc, signif, chr_col, pos_col, pval_col) -> pd.DataFrame:
     concat_list = list()
     for chunk in assoc:
-        chunk = chunk[signif>chunk['p']]
+        chunk = chunk[signif>chunk[pval_col]]
         if chunk.shape[0]>0:
             concat_list.append(chunk)
     signals = pd.concat(concat_list).reset_index(drop = True)
@@ -283,7 +283,7 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
     bfiles_list = bfiles.split(',')
     plink = Plink(memory)
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
-    signals = get_signals(assoc, signif, chr_col, pos_col)
+    signals = get_signals(assoc, signif, chr_col, pos_col, pval_col)
     peak_collections = _peakit(signals, pval_col, chr_col, pos_col)
     peaked = bedtools_merge(peak_collections.data)
 
