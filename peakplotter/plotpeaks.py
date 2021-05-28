@@ -214,22 +214,24 @@ def process_peak(assocfile: str,
         out_merge = str(outdir.joinpath('merged'))
         
         ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out)
-        print(ps.stdout)
-        print(ps.stderr)
+        print(ps.stdout.decode())
+        print(ps.stderr.decode())
         if ps.returncode == 3:
             # Exclude variants which failed merge
             missnp_file = f'{out}-merge.missnp'
             missnp_list = pd.read_csv(missnp_file, header = None)[0].to_list()
             peakdata = peakdata[~peakdata[rs_col].isin(missnp_list)].reset_index(drop = True)
             for bfile in mergelist:
-                plink.exclude(bfile, missnp_file, f'{bfile}.tmp')
+                ps = plink.exclude(bfile, missnp_file, f'{bfile}.tmp')
+                print(ps.stdout.decode())
+                print(ps.stderr.decode())
                 Path(f'{bfile}.tmp.bed').rename(f'{bfile}.bed')
                 Path(f'{bfile}.tmp.bim').rename(f'{bfile}.bim')
                 Path(f'{bfile}.tmp.fam').rename(f'{bfile}.fam')
                 
             ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out)
-            print(ps.stdout)
-            print(ps.stderr)
+            print(ps.stdout.decode())
+            print(ps.stderr.decode())
         
         
         
