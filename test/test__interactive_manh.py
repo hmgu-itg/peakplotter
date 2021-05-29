@@ -23,7 +23,7 @@ def test_make_resp_when_pheno_df_is_empty():
         )
 
     expected = pd.DataFrame([
-        ['rs100', 200, 'intergenic_variant', '']],
+        ['rs100', 200, 'intergenic_variant', 'none']],
         columns = ['rs', 'ps', 'consequence', 'pheno']
     )
 
