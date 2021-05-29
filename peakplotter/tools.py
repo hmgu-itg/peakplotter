@@ -23,6 +23,10 @@ class Plink:
             shlex.split(f'{self._cmd} --bfile {bfile} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE
             )
     
+    def merge(self, mergelist: Path, out: str):
+        process = sp.run(shlex.split(f'{self._cmd} --merge-list {mergelist} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE)
+        return process
+
     def merge_region(self, file: str, bfiles: List[str], chrom, start, end, out: str):
         with open(file, 'w') as f:
             for bfile in bfiles:
