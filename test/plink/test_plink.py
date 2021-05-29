@@ -48,7 +48,7 @@ def test_plink_merge_one_cohort():
     merge command with one bfile in mergelist
     """
     plink = setup()
-    mergelist = merge_dir.joinpath('mergelist_one_cohort.txt')
+    mergelist = base_dir.joinpath('mergelist_one_cohort.txt')
     with open(mergelist, 'w') as f:
         f.write(f'{base_dir.joinpath("cohortA")}\n')
     out = merge_dir.joinpath('merge_one_cohort')
@@ -62,7 +62,7 @@ def test_plink_merge_two_cohorts():
     merge command with one bfile in mergelist
     """
     plink = setup()
-    mergelist = merge_dir.joinpath('mergelist_two_cohorts.txt')
+    mergelist = base_dir.joinpath('mergelist_two_cohorts.txt')
     with open(mergelist, 'w') as f:
         f.write(f'{base_dir.joinpath("cohortA")}\n')
         f.write(f'{base_dir.joinpath("cohortB")}\n')
