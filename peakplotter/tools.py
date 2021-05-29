@@ -1,5 +1,6 @@
 import shlex
 import subprocess as sp
+from pathlib import Path
 from typing import List
 
 
@@ -36,3 +37,16 @@ class Plink:
     def ld(self, bfile, ld_snp, ext_flank_kb, out):
         return sp.run(shlex.split(f'{self._cmd} --allow-no-sex --bfile {bfile} --r2 --ld-snp {ld_snp}  --ld-window-kb {ext_flank_kb} --ld-window 999999 --ld-window-r2 0 --out {out}'), stdout = sp.PIPE, stderr = sp.PIPE)
 
+
+def plink_exclude_across_bfiles(plink: Plink, bfiles: List[Path], missnp_file: Path) -> List[Path]:
+    outlist = list()
+    for bfile in bfiles:
+        excluded_bfile = Path(f'{bfile}.excluded')
+        ps = plink.exclude(bfile, missnp_file, excluded_bfile)
+        print(ps.stdout.decode())
+        print(ps.stderr.decode())
+        if ps.returncode==0:
+            outlist.append(excluded_bfile)
+        else:
+            print(f'[WARNING] All variants in {bfile} were excluded')
+    return outlist
