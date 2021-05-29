@@ -187,7 +187,7 @@ def process_peak(assocfile: str,
         mergelist_file = str(outdir.joinpath('tmp_mergelist'))
         out_merge = str(outdir.joinpath(f'peak.{current+1}'))
         
-        ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out_merge)
+        ps = plink.merge_region(mergelist_file, mergelist, chrom, start, end, out_merge)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
         if ps.returncode == 3:
@@ -203,7 +203,7 @@ def process_peak(assocfile: str,
                 Path(f'{bfile}.tmp.bim').rename(f'{bfile}.bim')
                 Path(f'{bfile}.tmp.fam').rename(f'{bfile}.fam')
                 
-            ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out_merge)
+            ps = plink.merge_region(mergelist_file, mergelist, chrom, start, end, out_merge)
             print(ps.stdout.decode())
             print(ps.stderr.decode())
         

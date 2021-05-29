@@ -23,12 +23,11 @@ class Plink:
             shlex.split(f'{self._cmd} --bfile {bfile} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE
             )
     
-    def merge(self, file: str, bfiles: List[str], chrom, start, end, out: str):
+    def merge_region(self, file: str, bfiles: List[str], chrom, start, end, out: str):
         with open(file, 'w') as f:
             for bfile in bfiles:
                 f.write(f'{bfile}\n')
         process = sp.run(shlex.split(f'{self._cmd} --merge-list {file} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE)
-        # os.remove(file)
         return process
     
     def exclude(self, bfile, exclude, out):
