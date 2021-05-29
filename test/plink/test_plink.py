@@ -51,7 +51,7 @@ def test_plink_merge_one_cohort():
     mergelist = base_dir.joinpath('mergelist_one_cohort.txt')
     with open(mergelist, 'w') as f:
         f.write(f'{base_dir.joinpath("cohortA")}\n')
-    out = merge_dir.joinpath('merge_one_cohort')
+    out = base_dir.joinpath('merge_one_cohort')
     output = plink.merge(mergelist, out)
     
     assert output.returncode == 0, f'Merging one cohort returned exit code {output.returncode}'
@@ -66,7 +66,7 @@ def test_plink_merge_two_cohorts():
     with open(mergelist, 'w') as f:
         f.write(f'{base_dir.joinpath("cohortA")}\n')
         f.write(f'{base_dir.joinpath("cohortB")}\n')
-    out = merge_dir.joinpath('merge_two_cohorts')
+    out = base_dir.joinpath('merge_two_cohorts')
     output = plink.merge(mergelist, out)
     
     assert output.returncode == 0, f'Merging one cohort returned exit code {output.returncode}'
