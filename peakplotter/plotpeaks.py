@@ -1,5 +1,5 @@
-import os
 import re
+import sys
 import shlex
 from typing import List
 import subprocess as sp
@@ -39,11 +39,18 @@ def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2
 
 
 def get_signals(assoc, signif, chr_col, pos_col, pval_col) -> pd.DataFrame:
+    """
+    Accepts `read_assoc` function's iterable and outputs a DataFrame
+    only including variants with p-value lower than the significance threshold.
+    Outputs an empty DataFrame if no variants exceeds significance threshold.
+    """
     concat_list = list()
     for chunk in assoc:
         chunk = chunk[signif>chunk[pval_col]]
         if chunk.shape[0]>0:
             concat_list.append(chunk)
+    if len(concat_list)==0:
+        return pd.DataFrame()
     signals = pd.concat(concat_list).reset_index(drop = True)
     signals.sort_values(by = [chr_col, pos_col], inplace = True)
     return signals
@@ -305,6 +312,10 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
     plink = Plink(memory)
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
     signals = get_signals(assoc, signif, chr_col, pos_col, pval_col)
+    if signals.empty:
+        print("No peaks found. Exiting.")
+        _make_done(outdir)
+        sys.exit(0)
     peak_collections = _peakit(signals, pval_col, chr_col, pos_col)
     peaked = bedtools_merge(peak_collections.data)
 
