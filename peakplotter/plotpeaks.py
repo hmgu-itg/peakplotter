@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
+from .tools import Plink
 from .peakit import _peakit, bedtools_merge
 from .interactive_manh import interactive_manh
 
@@ -54,40 +55,6 @@ def get_signals(assoc, signif, chr_col, pos_col, pval_col) -> pd.DataFrame:
     signals = pd.concat(concat_list).reset_index(drop = True)
     signals.sort_values(by = [chr_col, pos_col], inplace = True)
     return signals
-
-# TODO: Move this to somewhere else
-class Plink:
-    def __init__(self, memory = 30000):
-        self.memory = memory
-    
-    @property
-    def _cmd(self):
-        return f'plink --memory {self.memory}'
-    
-    def __call__(self, command):
-        return sp.run(shlex.split(f'{self._cmd} {command}'), stdout = sp.PIPE, stderr = sp.PIPE)
-    
-    def dry_call(self, command):
-        return f'{self._cmd} {command}'
-    
-    def extract_genotypes(self, bfile, chrom, start, end, out):
-        return sp.run(
-            shlex.split(f'{self._cmd} --bfile {bfile} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE
-            )
-    
-    def merge(self, file: str, bfiles: List[str], chrom, start, end, out: str):
-        with open(file, 'w') as f:
-            for bfile in bfiles:
-                f.write(f'{bfile}\n')
-        process = sp.run(shlex.split(f'{self._cmd} --merge-list {file} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE)
-        # os.remove(file)
-        return process
-    
-    def exclude(self, bfile, exclude, out):
-        return sp.run(shlex.split(f'{self._cmd} --allow-no-sex --bfile {bfile} --exclude {exclude} --make-bed --out {out}'), stdout = sp.PIPE, stderr = sp.PIPE)
-    
-    def ld(self, bfile, ld_snp, ext_flank_kb, out):
-        return sp.run(shlex.split(f'{self._cmd} --allow-no-sex --bfile {bfile} --r2 --ld-snp {ld_snp}  --ld-window-kb {ext_flank_kb} --ld-window 999999 --ld-window-r2 0 --out {out}'), stdout = sp.PIPE, stderr = sp.PIPE)
 
 
 def run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, prefix, ld, start, end, chrom):
@@ -291,7 +258,7 @@ def process_peak(assocfile: str,
         print(f"[DEBUG] interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b38')")
         interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b38')
     print(f"Done with peak {chrom} {start} {end}.")
-    print(f"Cleaning plink binary files")
+    print("Cleaning plink binary files")
     to_delete = list(outdir.glob(f'peak.{chrom}.{start}.{end}.*.*'))
     for file in to_delete:
         file.unlink()
