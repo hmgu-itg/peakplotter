@@ -107,4 +107,11 @@ def get_overlap_genes(chrom, start, end, server) -> pd.DataFrame:
     helper.info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
     decoded = _query(url)
     
-    return pd.DataFrame(decoded).fillna('')
+    df = pd.DataFrame(decoded).fillna('')
+    if 'external_name' not in df.columns:
+        # NOTE: get_overlap_genes(1, 104210023, 105209701, 'https://rest.ensembl.org')
+        # The above region resulted in a dataframe with no 'external_name'.
+        # Can't write a test for this case due to the way the functions are written
+        # so we modify the function without a test.
+        df['external_name'] = ''
+    return df
