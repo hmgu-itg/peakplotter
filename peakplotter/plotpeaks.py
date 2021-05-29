@@ -290,6 +290,12 @@ def process_peak(assocfile: str,
         file.unlink()
 
 
+def _make_done(outdir: Path):
+    with open(outdir.joinpath('done'), 'w') as f:
+        f.write('done')
+    
+
+
 def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, memory = 30000):
     # ext_flank_bp = flank_bp + 100_000
     flank_kb = flank_bp // 1000
@@ -327,7 +333,5 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
                   plink,
                   build,
                   ext_flank_kb)
-    
-    with open(outdir.joinpath('done'), 'w') as f:
-        f.write('done')
-    print("Finished..")
+    _make_done(outdir)
+    print('Finished..')
