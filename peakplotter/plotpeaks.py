@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-from .tools import Plink
+from .tools import Plink, plink_exclude_across_bfiles
 from .peakit import _peakit, bedtools_merge
 from .interactive_manh import interactive_manh
 
@@ -176,36 +176,33 @@ def process_peak(assocfile: str,
     mergelist = [str(f).strip('.bed') for f in outdir.glob(f'peak.{chrom}.{start}.{end}.*.bed')]
     assert len(mergelist) >= 1, f'mergelist length is {len(mergelist)}'
     print(f"[DEBUG] {mergelist}")
-    if len(mergelist)==1:
-        bfile = Path(mergelist[0])
-        out_merge = bfile.parent.joinpath('merged')
-        Path(f'{bfile}.bed').rename(f'{out_merge}.bed')
-        Path(f'{bfile}.bim').rename(f'{out_merge}.bim')
-        Path(f'{bfile}.fam').rename(f'{out_merge}.fam')
-    elif len(mergelist) > 1:
-        print(f"[INFO] Merging {mergelist}")
-        mergelist_file = str(outdir.joinpath('tmp_mergelist'))
-        out_merge = str(outdir.joinpath(f'peak.{current+1}'))
+    print(f"[INFO] Merging {mergelist}")
+    mergelist_file = str(outdir.joinpath('mergelist'))
+    out_merge = str(outdir.joinpath(f'peak.{current+1}'))
+    
+    ps = plink.merge_region(mergelist_file, mergelist, chrom, start, end, out_merge)
+    print(ps.stdout.decode())
+    print(ps.stderr.decode())
+    if ps.returncode == 3:
+        # Exclude variants which failed merge
+        missnp_file = f'{out_merge}-merge.missnp'
+        missnp_list = pd.read_csv(missnp_file, header = None)[0].to_list()
+        peakdata = peakdata[~peakdata[rs_col].isin(missnp_list)].reset_index(drop = True)
+        new_mergelist = plink_exclude_across_bfiles(plink, mergelist, missnp_file)
         
-        ps = plink.merge_region(mergelist_file, mergelist, chrom, start, end, out_merge)
+        # Make --merge-list file
+        with open(mergelist_file, 'w') as f:
+            for bfile in new_mergelist:
+                f.write(f'{bfile}\n')
+        # Delete old files
+        for bfile in mergelist:
+            Path(f'{bfile}.bed').unlink()
+            Path(f'{bfile}.bim').unlink()
+            Path(f'{bfile}.fam').unlink()
+        
+        ps = plink.merge(mergelist_file, out_merge)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
-        if ps.returncode == 3:
-            # Exclude variants which failed merge
-            missnp_file = f'{out_merge}-merge.missnp'
-            missnp_list = pd.read_csv(missnp_file, header = None)[0].to_list()
-            peakdata = peakdata[~peakdata[rs_col].isin(missnp_list)].reset_index(drop = True)
-            for bfile in mergelist:
-                ps = plink.exclude(bfile, missnp_file, f'{bfile}.tmp')
-                print(ps.stdout.decode())
-                print(ps.stderr.decode())
-                Path(f'{bfile}.tmp.bed').rename(f'{bfile}.bed')
-                Path(f'{bfile}.tmp.bim').rename(f'{bfile}.bim')
-                Path(f'{bfile}.tmp.fam').rename(f'{bfile}.fam')
-                
-            ps = plink.merge_region(mergelist_file, mergelist, chrom, start, end, out_merge)
-            print(ps.stdout.decode())
-            print(ps.stderr.decode())
         
         
         
