@@ -95,7 +95,14 @@ def _add_chr_to_id(column: pd.Series) -> pd.Series:
         else:
             new_column.append(ele)
     return pd.Series(new_column, dtype = str)
-    
+
+
+def _remove_build_suffix(column: pd.Series) -> pd.Series:
+    """
+    This is more of an ITG specific problem solving function.
+    """
+    return [re.sub('\[b3[78]\]', '', _id) for _id in column]
+
 # TODO: Modulerise this function. Split it up to smaller functions
 def process_peak(assocfile: str,
                   chr_col: str,
@@ -127,13 +134,14 @@ def process_peak(assocfile: str,
         if filtered_chunk.shape[0] > 0:
             concat_list.append(filtered_chunk)
     peakdata = pd.concat(concat_list).sort_values([chr_col, pos_col]).reset_index(drop = True)
-    peakdata_chrpos = peakdata[[rs_col, chr_col, pos_col]].copy()
-    # Add 'chr' to variant ID name
-    # e.g. '1:100:A:G' -> 'chr1:100:A:G'
-    rows_with_no_chr = ~peakdata_chrpos[rs_col].str.startswith('chr')
-    peakdata_chrpos.loc[rows_with_no_chr, rs_col] = 'chr'+peakdata_chrpos.loc[rows_with_no_chr, rs_col]
+    peakdata[rs_col] = _create_non_rs_to_pos_id(peakdata, chr_col, rs_col, pos_col)
+    # '1:100' -> 'chr1:100'
+    peakdata[rs_col] = _add_chr_to_id(peakdata[rs_col])
+    # 'chr1:100[b38]' -> 'chr1:100'
+    peakdata[rs_col] = _remove_build_suffix(peakdata[rs_col])
+    peakdata_chrpos = peakdata[[rs_col, chr_col, pos_col]]
     peakdata_chrpos.columns = ['snp', 'chr', 'pos']
-    
+
     peakdata_chrpos_path = outdir.joinpath('peakdata.chrpos')
     db_file = outdir.joinpath(f'{chrom}.{start}.db')
 
@@ -142,47 +150,46 @@ def process_peak(assocfile: str,
     sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --snp_pos {peakdata_chrpos_path}"))
     sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --refflat {refflat}"))
     sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --recomb_rate {recomb}"))
-    
+
     if start < 1:
         sensible_start = 1
-        print(f'\n\n\nWARNING\t Negative start position changed to {sensible_start} : {chrom} {start} (1)\n\n\n')
+        print(f'[nWARNING]\t Negative start position changed to {sensible_start} : {chrom} {start} (1)')
     else:
         sensible_start = start
 
 
-
+    mergelist = list()
     for count, bfile in enumerate(bfiles_list):
         out = outdir.joinpath(f'peak.{chrom}.{start}.{end}.{count}')
+        print(f"[DEBUG] plink.extract_genotypes('{bfile}', {chrom}, {start}, {end}, '{out}')")
         ps = plink.extract_genotypes(bfile, chrom, start, end, out)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
-
         ## Modify BIM file 
         bimfile = f'{out}.bim'
         bim = pd.read_csv(bimfile, sep = '\t', header = None, names = ['chrom', 'id', '_', 'pos', 'a1', 'a2'])
-
         # 'non_rs_id' -> 'chr1:100'
         bim['id'] = _create_non_rs_to_pos_id(bim, 'chrom', 'id', 'pos')
         # '1:100' -> 'chr1:100'
         bim['id'] = _add_chr_to_id(bim['id'])
         # 'chr1:100[b38]' -> 'chr1:100'
-        bim['id'] = [re.sub('\[b3[78]\]', '', _id) for _id in bim['id']] # This is a ITG specific problem handling
-
+        bim['id'] = _remove_build_suffix(bim['id'])
         bim.to_csv(bimfile, sep = '\t', header = False, index = False)
-        
-        
+        mergelist.append(str(out))
 
     ## Merge plink binaries if multiple present
-    mergelist = [str(f).strip('.bed') for f in outdir.glob(f'peak.{chrom}.{start}.{end}.*.bed')]
     assert len(mergelist) >= 1, f'mergelist length is {len(mergelist)}'
     print(f"[DEBUG] {mergelist}")
     print(f"[INFO] Merging {mergelist}")
     mergelist_file = str(outdir.joinpath('mergelist'))
     out_merge = str(outdir.joinpath(f'peak.{current+1}'))
     
+    print(f"[DEBUG] plink.merge_region({mergelist_file}, '{mergelist}', {chrom}, {start}, {end}, '{out_merge}')")
     ps = plink.merge_region(mergelist_file, mergelist, chrom, start, end, out_merge)
     print(ps.stdout.decode())
     print(ps.stderr.decode())
+
+
     if ps.returncode == 3:
         # Exclude variants which failed merge
         missnp_file = f'{out_merge}-merge.missnp'
@@ -194,23 +201,17 @@ def process_peak(assocfile: str,
         with open(mergelist_file, 'w') as f:
             for bfile in new_mergelist:
                 f.write(f'{bfile}\n')
+        
         # Delete old files
         for bfile in mergelist:
             Path(f'{bfile}.bed').unlink()
             Path(f'{bfile}.bim').unlink()
             Path(f'{bfile}.fam').unlink()
-        
+        print("[DEBUG] plink.merge('{mergelist_file}', '{out_merge}')")
         ps = plink.merge(mergelist_file, out_merge)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
         
-        
-        
-    peakdata[rs_col] = _create_non_rs_to_pos_id(peakdata, chr_col, rs_col, pos_col)
-    peakdata[rs_col] = _add_chr_to_id(peakdata[rs_col])
-    # TODO: NO POINT DOING THE ABOVE IF I AM DOING THE BELOW
-    peakdata[rs_col] = 'chr' + peakdata[chr_col].astype(str) + ':' + peakdata[pos_col].astype(str)
-    # TODO: FIND OUT THE CORRECT WAY TO HANDLE VAR IDS
 
     index_of_var_with_lowest_pval = peakdata[pval_col].idxmin()
     ref_snp_id = peakdata.loc[index_of_var_with_lowest_pval, rs_col]
