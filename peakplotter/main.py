@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 import sys
-import shlex
 import shutil
-import subprocess
 from pathlib import Path
 from datetime import datetime
 
 import click
 
-from . import PLOTPEAKS_SCRIPT, __version__
+from . import __version__
 from ._data import get_data_path
 from .utils import check_executable, DEPENDENT_EXECUTABLES
 from .errors import MissingExecutableError
@@ -30,9 +28,15 @@ from .plotpeaks import main
 @click.option('-s', '--signif', type=click.FLOAT, default=5e-8, help = 'The significance level above which to declare a variant significant. Scientific notation (such as 5e-8) is fine.')
 @click.option('-bp', '--flank-bp', type = click.INT, default = 500_000, help = 'Flanking size in base pairs for drawing plots (defaults to 500kb, i.e. 1Mbp plots) around lead SNPs.')
 @click.option('--overwrite', is_flag=True, flag_value = True, default = False, help = 'Overwrite output directory if it already exists.')
-def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, build, signif, flank_bp, overwrite):
+@click.option('--version', is_flag=True, flag_value = True, default = False, help = 'Output version number of PeakPlotter')
+def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, build, signif, flank_bp, overwrite, version):
     '''PeakPlotter
     '''
+    if version is True:
+        click.echo(__version__)
+        sys.exit(0)
+
+
     ref_flat, recomb = get_data_path(build)
     if not ref_flat.exists() or not recomb.exists():
         click.echo('[ERROR] Download of some data is required. Please run peakplotter-data-setup in the commandline')
