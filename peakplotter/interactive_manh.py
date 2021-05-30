@@ -32,7 +32,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     # Print the information about the presence of centromeric region later in the script.
     chrom = int(chrom.pop())
 
-    cen_start, cen_end = _interactive_manh.get_centromere_region(build)
+    cen_start, cen_end = _interactive_manh.get_centromere_region(chrom, build)
     
     region_start = min(d[pscol])
     region_end = max(d[pscol])
