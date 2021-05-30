@@ -1,7 +1,10 @@
+from typing import Tuple, Union
+
 import requests
 import pandas as pd
 
 from peakplotter import helper
+from peakplotter.data import CENTROMERE_B37, CENTROMERE_B38
 
 def _query(url, headers = None):
     if headers is None:
@@ -115,3 +118,23 @@ def get_overlap_genes(chrom, start, end, server) -> pd.DataFrame:
         # so we modify the function without a test.
         df['external_name'] = ''
     return df
+
+def _get_build_centromere_file(build: Union[int, str]) -> str:
+    mapper = {
+            'b38': CENTROMERE_B38,
+            '38': CENTROMERE_B38,
+            38: CENTROMERE_B38,
+            'b37': CENTROMERE_B37,
+            '37': CENTROMERE_B37,
+            37: CENTROMERE_B37
+        }
+    return mapper[build]
+
+
+def get_centromere_region(chrom: int, build: Union[str, int]) -> Tuple[int, int]:
+    centromere = _get_build_centromere_file(build)
+
+    start = centromere.loc[centromere['chrom'] == chrom, 'start'].to_list()[0]
+    end = centromere.loc[centromere['chrom'] == chrom, 'end'].to_list()[0]
+
+    return start, end
