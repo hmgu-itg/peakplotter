@@ -12,7 +12,6 @@ from bokeh.layouts import gridplot
 from bokeh.plotting import figure, save
 from bokeh.palettes import Spectral10
 
-from peakplotter.data import CENTROMERE_B37, CENTROMERE_B38
 from peakplotter import helper # TODO: Change this back to relative import after we replace plotpeaks.sh to a python equivalent.
 from peakplotter import _interactive_manh
 
@@ -32,12 +31,8 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     # Check whether the region window overlaps a centromere. 
     # Print the information about the presence of centromeric region later in the script.
     chrom = int(chrom.pop())
-    if build=="b38": # TODO: Move this code to data.py
-        cen_list = CENTROMERE_B37
-    else: # If b37
-        cen_list = CENTROMERE_B38
-    cen_start = cen_list.loc[cen_list['chrom'] == int(chrom), 'start'].to_list()[0]
-    cen_end = cen_list.loc[cen_list['chrom'] == chrom, 'end'].to_list()[0]
+
+    cen_start, cen_end = _interactive_manh.get_centromere_region(build)
     
     region_start = min(d[pscol])
     region_end = max(d[pscol])
@@ -121,6 +116,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     e['col_assoc']=e['col_assoc'].astype(int)
 
     # ENSEMBL consequences for variants in LD that do not have rs-ids
+    print(f"[DEBUG] e=helper.get_csq_novel_variants(e, '{chrcol}', '{pscol}', '{a1col}', '{a2col}', '{server}')")
     e=helper.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server)
 
 
