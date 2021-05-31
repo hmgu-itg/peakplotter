@@ -1,5 +1,5 @@
-import os
 import re
+import sys
 import shlex
 from typing import List
 import subprocess as sp
@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
+from .tools import Plink, plink_exclude_across_bfiles
 from .peakit import _peakit, bedtools_merge
 from .interactive_manh import interactive_manh
 
@@ -39,48 +40,21 @@ def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2
 
 
 def get_signals(assoc, signif, chr_col, pos_col, pval_col) -> pd.DataFrame:
+    """
+    Accepts `read_assoc` function's iterable and outputs a DataFrame
+    only including variants with p-value lower than the significance threshold.
+    Outputs an empty DataFrame if no variants exceeds significance threshold.
+    """
     concat_list = list()
     for chunk in assoc:
         chunk = chunk[signif>chunk[pval_col]]
         if chunk.shape[0]>0:
             concat_list.append(chunk)
+    if len(concat_list)==0:
+        return pd.DataFrame()
     signals = pd.concat(concat_list).reset_index(drop = True)
     signals.sort_values(by = [chr_col, pos_col], inplace = True)
     return signals
-
-
-class Plink:
-    def __init__(self, memory = 30000):
-        self.memory = memory
-    
-    @property
-    def _cmd(self):
-        return f'plink --memory {self.memory}'
-    
-    def __call__(self, command):
-        return sp.run(shlex.split(f'{self._cmd} {command}'), stdout = sp.PIPE, stderr = sp.PIPE)
-    
-    def dry_call(self, command):
-        return f'{self._cmd} {command}'
-    
-    def extract_genotypes(self, bfile, chrom, start, end, out):
-        return sp.run(
-            shlex.split(f'{self._cmd} --bfile {bfile} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE
-            )
-    
-    def merge(self, file: str, bfiles: List[str], chrom, start, end, out: str):
-        with open(file, 'w') as f:
-            for bfile in bfiles:
-                f.write(f'{bfile}\n')
-        process = sp.run(shlex.split(f'{self._cmd} --merge-list {file} --chr {chrom} --from-bp {start} --to-bp {end} --out {out} --make-bed'), stdout = sp.PIPE, stderr = sp.PIPE)
-        # os.remove(file)
-        return process
-    
-    def exclude(self, bfile, exclude, out):
-        return sp.run(shlex.split(f'{self._cmd} --allow-no-sex --bfile {bfile} --exclude {exclude} --make-bed --out {out}'), stdout = sp.PIPE, stderr = sp.PIPE)
-    
-    def ld(self, bfile, ld_snp, ext_flank_kb, out):
-        return sp.run(shlex.split(f'{self._cmd} --allow-no-sex --bfile {bfile} --r2 --ld-snp {ld_snp}  --ld-window-kb {ext_flank_kb} --ld-window 999999 --ld-window-r2 0 --out {out}'), stdout = sp.PIPE, stderr = sp.PIPE)
 
 
 def run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, prefix, ld, start, end, chrom):
@@ -121,8 +95,15 @@ def _add_chr_to_id(column: pd.Series) -> pd.Series:
         else:
             new_column.append(ele)
     return pd.Series(new_column, dtype = str)
-    
 
+
+def _remove_build_suffix(column: pd.Series) -> pd.Series:
+    """
+    This is more of an ITG specific problem solving function.
+    """
+    return [re.sub('\[b3[78]\]', '', _id) for _id in column]
+
+# TODO: Modulerise this function. Split it up to smaller functions
 def process_peak(assocfile: str,
                   chr_col: str,
                   pos_col: str,
@@ -153,13 +134,14 @@ def process_peak(assocfile: str,
         if filtered_chunk.shape[0] > 0:
             concat_list.append(filtered_chunk)
     peakdata = pd.concat(concat_list).sort_values([chr_col, pos_col]).reset_index(drop = True)
-    peakdata_chrpos = peakdata[[rs_col, chr_col, pos_col]].copy()
-    # Add 'chr' to variant ID name
-    # e.g. '1:100:A:G' -> 'chr1:100:A:G'
-    rows_with_no_chr = ~peakdata_chrpos[rs_col].str.startswith('chr')
-    peakdata_chrpos.loc[rows_with_no_chr, rs_col] = 'chr'+peakdata_chrpos.loc[rows_with_no_chr, rs_col]
+    peakdata[rs_col] = _create_non_rs_to_pos_id(peakdata, chr_col, rs_col, pos_col)
+    # '1:100' -> 'chr1:100'
+    peakdata[rs_col] = _add_chr_to_id(peakdata[rs_col])
+    # 'chr1:100[b38]' -> 'chr1:100'
+    peakdata[rs_col] = _remove_build_suffix(peakdata[rs_col])
+    peakdata_chrpos = peakdata[[rs_col, chr_col, pos_col]]
     peakdata_chrpos.columns = ['snp', 'chr', 'pos']
-    
+
     peakdata_chrpos_path = outdir.joinpath('peakdata.chrpos')
     db_file = outdir.joinpath(f'{chrom}.{start}.db')
 
@@ -168,78 +150,68 @@ def process_peak(assocfile: str,
     sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --snp_pos {peakdata_chrpos_path}"))
     sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --refflat {refflat}"))
     sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --recomb_rate {recomb}"))
-    
+
     if start < 1:
         sensible_start = 1
-        print(f'\n\n\nWARNING\t Negative start position changed to {sensible_start} : {chrom} {start} (1)\n\n\n')
+        print(f'[nWARNING]\t Negative start position changed to {sensible_start} : {chrom} {start} (1)')
     else:
         sensible_start = start
 
 
-
+    mergelist = list()
     for count, bfile in enumerate(bfiles_list):
         out = outdir.joinpath(f'peak.{chrom}.{start}.{end}.{count}')
+        print(f"[DEBUG] plink.extract_genotypes('{bfile}', {chrom}, {start}, {end}, '{out}')")
         ps = plink.extract_genotypes(bfile, chrom, start, end, out)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
-
         ## Modify BIM file 
         bimfile = f'{out}.bim'
         bim = pd.read_csv(bimfile, sep = '\t', header = None, names = ['chrom', 'id', '_', 'pos', 'a1', 'a2'])
-
         # 'non_rs_id' -> 'chr1:100'
         bim['id'] = _create_non_rs_to_pos_id(bim, 'chrom', 'id', 'pos')
         # '1:100' -> 'chr1:100'
         bim['id'] = _add_chr_to_id(bim['id'])
         # 'chr1:100[b38]' -> 'chr1:100'
-        bim['id'] = [re.sub('\[b3[78]\]', '', _id) for _id in bim['id']] # This is a ITG specific problem handling
-
+        bim['id'] = _remove_build_suffix(bim['id'])
         bim.to_csv(bimfile, sep = '\t', header = False, index = False)
-        
-        
+        mergelist.append(str(out))
 
     ## Merge plink binaries if multiple present
-    mergelist = [str(f).strip('.bed') for f in outdir.glob(f'peak.{chrom}.{start}.{end}.*.bed')]
     assert len(mergelist) >= 1, f'mergelist length is {len(mergelist)}'
     print(f"[DEBUG] {mergelist}")
-    if len(mergelist)==1:
-        bfile = Path(mergelist[0])
-        out_merge = bfile.parent.joinpath('merged')
-        Path(f'{bfile}.bed').rename(f'{out_merge}.bed')
-        Path(f'{bfile}.bim').rename(f'{out_merge}.bim')
-        Path(f'{bfile}.fam').rename(f'{out_merge}.fam')
-    elif len(mergelist) > 1:
-        print(f"[INFO] Merging {mergelist}")
-        mergelist_file = str(outdir.joinpath('tmp_mergelist'))
-        out_merge = str(outdir.joinpath('merged'))
+    print(f"[INFO] Merging {mergelist}")
+    mergelist_file = str(outdir.joinpath('mergelist'))
+    out_merge = str(outdir.joinpath(f'peak.{current+1}'))
+    
+    print(f"[DEBUG] plink.merge_region({mergelist_file}, '{mergelist}', {chrom}, {start}, {end}, '{out_merge}')")
+    ps = plink.merge_region(mergelist_file, mergelist, chrom, start, end, out_merge)
+    print(ps.stdout.decode())
+    print(ps.stderr.decode())
+
+
+    if ps.returncode == 3:
+        # Exclude variants which failed merge
+        missnp_file = f'{out_merge}-merge.missnp'
+        missnp_list = pd.read_csv(missnp_file, header = None)[0].to_list()
+        peakdata = peakdata[~peakdata[rs_col].isin(missnp_list)].reset_index(drop = True)
+        new_mergelist = plink_exclude_across_bfiles(plink, mergelist, missnp_file)
         
-        ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out_merge)
+        # Make --merge-list file
+        with open(mergelist_file, 'w') as f:
+            for bfile in new_mergelist:
+                f.write(f'{bfile}\n')
+        
+        # Delete old files
+        for bfile in mergelist:
+            Path(f'{bfile}.bed').unlink()
+            Path(f'{bfile}.bim').unlink()
+            Path(f'{bfile}.fam').unlink()
+        print("[DEBUG] plink.merge('{mergelist_file}', '{out_merge}')")
+        ps = plink.merge(mergelist_file, out_merge)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
-        if ps.returncode == 3:
-            # Exclude variants which failed merge
-            missnp_file = f'{out_merge}-merge.missnp'
-            missnp_list = pd.read_csv(missnp_file, header = None)[0].to_list()
-            peakdata = peakdata[~peakdata[rs_col].isin(missnp_list)].reset_index(drop = True)
-            for bfile in mergelist:
-                ps = plink.exclude(bfile, missnp_file, f'{bfile}.tmp')
-                print(ps.stdout.decode())
-                print(ps.stderr.decode())
-                Path(f'{bfile}.tmp.bed').rename(f'{bfile}.bed')
-                Path(f'{bfile}.tmp.bim').rename(f'{bfile}.bim')
-                Path(f'{bfile}.tmp.fam').rename(f'{bfile}.fam')
-                
-            ps = plink.merge(mergelist_file, mergelist, chrom, start, end, out_merge)
-            print(ps.stdout.decode())
-            print(ps.stderr.decode())
         
-        
-        
-    peakdata[rs_col] = _create_non_rs_to_pos_id(peakdata, chr_col, rs_col, pos_col)
-    peakdata[rs_col] = _add_chr_to_id(peakdata[rs_col])
-    # TODO: NO POINT DOING THE ABOVE IF I AM DOING THE BELOW
-    peakdata[rs_col] = 'chr' + peakdata[chr_col].astype(str) + ':' + peakdata[pos_col].astype(str)
-    # TODO: FIND OUT THE CORRECT WAY TO HANDLE VAR IDS
 
     index_of_var_with_lowest_pval = peakdata[pval_col].idxmin()
     ref_snp_id = peakdata.loc[index_of_var_with_lowest_pval, rs_col]
@@ -284,6 +256,17 @@ def process_peak(assocfile: str,
         print(f"[DEBUG] interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b38')")
         interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b38')
     print(f"Done with peak {chrom} {start} {end}.")
+    print("Cleaning plink binary files")
+    to_delete = list(outdir.glob(f'peak.{chrom}.{start}.{end}.*.*'))
+    for file in to_delete:
+        file.unlink()
+
+
+def _make_done(outdir: Path):
+    with open(outdir.joinpath('done'), 'w') as f:
+        f.write('done')
+    
+
 
 def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, memory = 30000):
     # ext_flank_bp = flank_bp + 100_000
@@ -294,6 +277,10 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
     plink = Plink(memory)
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
     signals = get_signals(assoc, signif, chr_col, pos_col, pval_col)
+    if signals.empty:
+        print("No peaks found. Exiting.")
+        _make_done(outdir)
+        sys.exit(0)
     peak_collections = _peakit(signals, pval_col, chr_col, pos_col)
     peaked = bedtools_merge(peak_collections.data)
 
@@ -322,7 +309,5 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
                   plink,
                   build,
                   ext_flank_kb)
-    
-    with open(outdir.joinpath('done'), 'w') as f:
-        f.write('done')
-    print("Finished..")
+    _make_done(outdir)
+    print('Finished..')

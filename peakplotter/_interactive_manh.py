@@ -1,7 +1,10 @@
+from typing import Tuple, Union
+
 import requests
 import pandas as pd
 
 from peakplotter import helper
+from peakplotter.data import CENTROMERE_B37, CENTROMERE_B38
 
 def _query(url, headers = None):
     if headers is None:
@@ -93,9 +96,9 @@ def make_resp(snps: pd.DataFrame, pheno: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_rsid_in_region(chrom, start, end, server):
-    print("f[DEBUG] get_variants_in_region({chrom}, {start}, {end}, {server}")
+    print(f"[DEBUG] get_variants_in_region({chrom}, {start}, {end}, {server}")
     snps = get_variants_in_region(chrom, start, end, server)
-    print("f[DEBUG] get_phenos_in_region({chrom}, {start}, {end}, {server}")
+    print(f"[DEBUG] get_phenos_in_region({chrom}, {start}, {end}, {server}")
     pheno = get_phenos_in_region(chrom, start, end, server)
     
     resp = make_resp(snps, pheno)
@@ -107,4 +110,31 @@ def get_overlap_genes(chrom, start, end, server) -> pd.DataFrame:
     helper.info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
     decoded = _query(url)
     
-    return pd.DataFrame(decoded).fillna('')
+    df = pd.DataFrame(decoded).fillna('')
+    if 'external_name' not in df.columns:
+        # NOTE: get_overlap_genes(1, 104210023, 105209701, 'https://rest.ensembl.org')
+        # The above region resulted in a dataframe with no 'external_name'.
+        # Can't write a test for this case due to the way the functions are written
+        # so we modify the function without a test.
+        df['external_name'] = ''
+    return df
+
+def _get_build_centromere_file(build: Union[int, str]) -> str:
+    mapper = {
+            'b38': CENTROMERE_B38,
+            '38': CENTROMERE_B38,
+            38: CENTROMERE_B38,
+            'b37': CENTROMERE_B37,
+            '37': CENTROMERE_B37,
+            37: CENTROMERE_B37
+        }
+    return mapper[build]
+
+
+def get_centromere_region(chrom: int, build: Union[str, int]) -> Tuple[int, int]:
+    centromere = _get_build_centromere_file(build)
+
+    start = centromere.loc[centromere['chrom'] == chrom, 'start'].to_list()[0]
+    end = centromere.loc[centromere['chrom'] == chrom, 'end'].to_list()[0]
+
+    return start, end

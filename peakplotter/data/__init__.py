@@ -28,7 +28,7 @@ CENTROMERE_B37 = pd.read_csv(
 )
 
 CENTROMERE_B38 = pd.read_csv(
-            CENTROMERE_B37_PATH,
+            CENTROMERE_B38_PATH,
             sep = '\t',
             header = 0,
             dtype = {

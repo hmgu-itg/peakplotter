@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pandas import testing
 
-from peakplotter._interactive_manh import make_resp
+from peakplotter._interactive_manh import make_resp, get_centromere_region
 
 def test_make_resp_when_pheno_df_is_empty():
 
@@ -23,7 +23,7 @@ def test_make_resp_when_pheno_df_is_empty():
         )
 
     expected = pd.DataFrame([
-        ['rs100', 200, 'intergenic_variant', '']],
+        ['rs100', 200, 'intergenic_variant', 'none']],
         columns = ['rs', 'ps', 'consequence', 'pheno']
     )
 
@@ -56,3 +56,22 @@ def test_make_resp_when_phenotype_present():
         )
 
     testing.assert_frame_equal(expected, make_resp(example_snps, example_processed_phenos))
+
+
+def test_get_centromere_region_build():
+    start, end = get_centromere_region(1, build = 38)
+    assert start == 122026460
+    assert end == 125184587
+    
+    start, end = get_centromere_region(22, build = 38)
+    assert start == 12954789
+    assert end == 15054318
+
+
+    start, end = get_centromere_region(1, build = 37)
+    assert start == 121500000
+    assert end == 128900000
+    
+    start, end = get_centromere_region(22, build = 37)
+    assert start == 12200000
+    assert end == 17900000
