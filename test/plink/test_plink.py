@@ -41,6 +41,14 @@ def test_plink_exclude_across_bfiles():
 
     assert output == expected
 
+def test_plink_exclude_genotypes_from_region_with_no_variants():
+    plink = setup()
+    cohortA_bfile = base_dir.joinpath('cohortA')
+    ps = plink.extract_genotypes(cohortA_bfile, 1, 300, 400, 'test_extract_output')
+    
+    assert ps.returncode == 12, 'Exit code of extract_genotypes is not 12'
+
+    
 
 def test_plink_merge_one_cohort():
     """
