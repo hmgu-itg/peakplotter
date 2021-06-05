@@ -165,6 +165,12 @@ def process_peak(assocfile: str,
         ps = plink.extract_genotypes(bfile, chrom, start, end, out)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
+        if ps.returncode==12:
+            # TODO: Add some kind of test to ensure this part
+            # A cohort can have no variants within a peak region
+            # For example, peak was detected in chr1:200-300 driven by a variant
+            # in cohortA, but cohortB has no variants within that region.
+            continue
         ## Modify BIM file 
         bimfile = f'{out}.bim'
         bim = pd.read_csv(bimfile, sep = '\t', header = None, names = ['chrom', 'id', '_', 'pos', 'a1', 'a2'])
