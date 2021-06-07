@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 from pandas import testing
 
-from peakplotter._interactive_manh import make_resp, get_centromere_region
+from peakplotter import helper
+from peakplotter._interactive_manh import make_resp, get_centromere_region, query_vep
 
 def test_make_resp_when_pheno_df_is_empty():
 
@@ -29,7 +30,6 @@ def test_make_resp_when_pheno_df_is_empty():
 
 
     testing.assert_frame_equal(expected, make_resp(example_snps, example_empty_phenos))
-
 
 
 def test_make_resp_when_phenotype_present():
@@ -75,3 +75,13 @@ def test_get_centromere_region_build():
     start, end = get_centromere_region(22, build = 37)
     assert start == 12200000
     assert end == 17900000
+
+
+def test_query_vep():
+    chrom = pd.Series([21, 21], dtype = np.int64)
+    pos = pd.Series([26960070, 26965148], dtype = np.int64)
+    a1 = pd.Series(['G', 'G'], dtype = str)
+    a2 = pd.Series(['A', 'A'], dtype = str)
+    server = helper.get_build_server(38)
+    output = query_vep(chrom, pos, a1, a2, server)
+    assert len(output)==2
