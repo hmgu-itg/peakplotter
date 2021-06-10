@@ -4,7 +4,7 @@ import pandas as pd
 from pandas import testing
 
 from peakplotter import helper
-from peakplotter._interactive_manh import make_resp, get_centromere_region, query_vep
+from peakplotter._interactive_manh import make_resp, get_centromere_region, query_vep, _get_csq_novel_variants
 
 def test_make_resp_when_pheno_df_is_empty():
 
@@ -85,3 +85,20 @@ def test_query_vep():
     server = helper.get_build_server(38)
     output = query_vep(chrom, pos, a1, a2, server)
     assert len(output)==2
+
+
+def test__get_csq_novel_variants():
+    chrcol, pscol, a1col, a2col = "chrom", "ps", "a1", "a2"
+    server = helper.get_build_server(38)
+    e = pd.DataFrame([
+        [21, 26960070, 'G', 'A', 'novel', 0.5, ''],
+        [21, 26965148, 'G', 'A', 'novel', 0.5, '']
+    ], columns = [chrcol, pscol, a1col, a2col, 'ensembl_rs', 'ld', 'ensembl_consequence'])
+
+    expected = pd.DataFrame([
+        [21, 26960070, 'G', 'A', 'novel', 0.5, 'intron_variant'],
+        [21, 26965148, 'G', 'A', 'novel', 0.5, 'intron_variant']
+    ], columns = [chrcol, pscol, a1col, a2col, 'ensembl_rs', 'ld', 'ensembl_consequence'])
+
+    output = _get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server)
+

@@ -123,7 +123,13 @@ def query_vep(chrom: pd.Series, pos: pd.Series, a1: pd.Series, a2: pd.Series, se
     return r.json()
 
 
-def _get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server):
+def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str, a2col: str, server: str) -> pd.DataFrame:
+    """
+    This function assumes that the input DataFrame object `e` has the following columns:
+      - ps
+      - ensembl_rs
+      - ld
+    """
     copied_e = e.copy()
     copied_e.loc[(
         copied_e['ensembl_rs']=="novel")
