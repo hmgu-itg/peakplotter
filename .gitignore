@@ -1,4 +1,10 @@
-peakplotter/__pycache__
+# Python cache
+**/__pycache__
+
+# Internal data
 peakplotter/data/centromere_b37.tsv
 peakplotter/data/centromere_b38.tsv
-test/__pycache__/
+
+# Plink
+**/*.log
+**/*.nosex

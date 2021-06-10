@@ -36,7 +36,23 @@ def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2
         nan_list = list(pd.isna(chunk[pval_col]))
         if nan_list.count(True):
             print(f"[WARNING] Removing {nan_list.count(True)} rows with invalid p-value")
-        yield chunk.dropna().reset_index(drop = True)
+        chunk = chunk.dropna().reset_index(drop = True)
+
+        a1_check = chunk[a1_col].str.contains('[^ATGC]')
+        if any(a1_check):
+            invalid_strings = a1_check.to_list()
+            print(f"[WARNING] Removing {invalid_strings.count(True)} rows with invalid a1 string value")
+            print(chunk.loc[a1_check, [chr_col, rs_col, pos_col, a1_col, a2_col, maf_col, pval_col]])
+            chunk = chunk[~a1_check].reset_index(drop = True)
+
+        a2_check = chunk[a2_col].str.contains('[^ATGC]')
+        if any(a2_check):
+            invalid_strings = a2_check.to_list()
+            print(f"[WARNING] Removing {invalid_strings.count(True)} rows with invalid a2 string value")
+            print(chunk.loc[a2_check, [chr_col, rs_col, pos_col, a1_col, a2_col, maf_col, pval_col]])
+            chunk = chunk[~a2_check].reset_index(drop = True)
+
+        yield chunk
 
 
 def get_signals(assoc, signif, chr_col, pos_col, pval_col) -> pd.DataFrame:
@@ -165,6 +181,12 @@ def process_peak(assocfile: str,
         ps = plink.extract_genotypes(bfile, chrom, start, end, out)
         print(ps.stdout.decode())
         print(ps.stderr.decode())
+        if ps.returncode==12:
+            # TODO: Add some kind of test to ensure this part
+            # A cohort can have no variants within a peak region
+            # For example, peak was detected in chr1:200-300 driven by a variant
+            # in cohortA, but cohortB has no variants within that region.
+            continue
         ## Modify BIM file 
         bimfile = f'{out}.bim'
         bim = pd.read_csv(bimfile, sep = '\t', header = None, names = ['chrom', 'id', '_', 'pos', 'a1', 'a2'])
