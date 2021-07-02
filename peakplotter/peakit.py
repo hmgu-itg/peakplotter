@@ -3,7 +3,6 @@ import sys
 from io import StringIO
 
 import pandas as pd
-from pybedtools import BedTool
 
 
 class Peak:
@@ -127,15 +126,6 @@ def peakit(signals: pd.DataFrame, pval_col: str, chr_col: str, pos_col: str) -> 
         peaks.check_and_add(row[chr_col], row[pos_col])
     peaks.extend_peaks(1_000_000)
     return peaks
-
-
-def bedtools_merge(data: pd.DataFrame) -> pd.DataFrame:
-    bedtool = BedTool(data.to_string(header = False, index = False), from_string = True)
-    merged = bedtool.merge()
-    
-    peaked = pd.read_csv(StringIO(str(merged)), sep = '\t', names = ['chrom', 'start', 'end'])
-    return peaked
-
 
 
 if __name__ == '__main__':
