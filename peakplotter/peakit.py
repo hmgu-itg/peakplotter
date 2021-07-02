@@ -79,6 +79,7 @@ class PeakCollection(list):
         return d
 
     def merge(self):
+        self.sort()
         merged_collection = PeakCollection()
         curr_peak = None
         for i in range(len(self)):
@@ -105,6 +106,18 @@ class PeakCollection(list):
         
         # Replace 
         self[:] = merged_collection
+
+    def __eq__(self, other):
+        if not isinstance(other, PeakCollection):
+            return False
+        if len(self) != len(other):
+            return False
+        if str(self) != str(other):
+            return False
+        return True
+
+    def sort(self):
+        self[:] = sorted(self, key = attrgetter('chrom', 'start', 'end'))
 
         
 def peakit(signals: pd.DataFrame, pval_col: str, chr_col: str, pos_col: str) -> PeakCollection:
