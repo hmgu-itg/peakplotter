@@ -304,7 +304,8 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
         _make_done(outdir)
         sys.exit(0)
     peak_collections = peakit(signals, pval_col, chr_col, pos_col)
-    peaked = bedtools_merge(peak_collections.data)
+    peak_collections.merge()
+    peaked = peak_collections.data
 
     peaked_file = outdir.joinpath('peaked')
     peaked.to_csv(peaked_file, sep = '\t', header = True, index = False)
