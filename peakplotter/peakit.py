@@ -101,7 +101,8 @@ class PeakCollection(list):
                 merged_collection.append(curr_peak)
                 merged_collection.append(next_peak)
         else:
-            merged_collection.append(curr_peak)
+            if curr_peak is not None:
+                merged_collection.append(curr_peak)
         
         # Replace 
         self[:] = merged_collection
