@@ -31,3 +31,21 @@ def test_PeakCollection():
     assert peak2.end == 101
     
     assert len(peaks) == 2
+
+def test_PeakCollection_merge():
+    peaks = PeakCollection()
+    peaks[:] = [
+        Peak(1, 100, 200),
+        Peak(2, 100, 200),
+        Peak(1, 150, 300),
+    ]
+
+    expected = PeakCollection()
+    expected[:] = [
+        Peak(1, 100, 300),
+        Peak(2, 100, 200),
+    ]
+
+    peaks.merge()
+
+    assert peaks == expected
