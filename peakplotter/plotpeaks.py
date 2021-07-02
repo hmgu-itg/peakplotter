@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 
 from .tools import Plink, plink_exclude_across_bfiles
-from .peakit import peakit, bedtools_merge
+from .peakit import peakit
 from .interactive_manh import interactive_manh
 
 def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, chunksize = 10000) -> pd.DataFrame:
