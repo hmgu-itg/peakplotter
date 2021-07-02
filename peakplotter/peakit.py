@@ -78,7 +78,35 @@ class PeakCollection(list):
         d = pd.DataFrame(d, columns = ['chrom', 'start', 'end']).sort_values(['chrom', 'start']).reset_index(drop=True)
         return d
 
+    def merge(self):
+        merged_collection = PeakCollection()
+        curr_peak = None
+        for i in range(len(self)):
+            if curr_peak is None:
+                curr_peak = self[i]
+                continue
+            
+            next_peak = self[i]
+            if curr_peak.chrom != next_peak.chrom:
+                merged_collection.append(curr_peak)
+                curr_peak = next_peak
+                continue
+            
+            curr_peak_range = set(range(curr_peak.start, curr_peak.end + 1))
+            next_peak_range = set(range(next_peak.start, next_peak.end + 1))
+            
+            if curr_peak_range.intersection(next_peak_range):
+                curr_peak = Peak(curr_peak.chrom, min(curr_peak.start, next_peak.start), max(curr_peak.end, next_peak.end))
+            else:
+                merged_collection.append(curr_peak)
+                merged_collection.append(next_peak)
+        else:
+            merged_collection.append(curr_peak)
+        
+        # Replace 
+        self[:] = merged_collection
 
+        
 def peakit(signals: pd.DataFrame, pval_col: str, chr_col: str, pos_col: str) -> PeakCollection:
     sorted_signals = signals.sort_values(pval_col)
     peaks = PeakCollection()
