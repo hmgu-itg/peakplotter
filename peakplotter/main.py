@@ -153,7 +153,7 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
         outdir.mkdir()
     # Save run configurations in the output directory
     configs = {
-        'run_mode': 'manual'
+        'run_mode': 'manual',
         'assoc_file': assoc_file,
         'bfiles': bfiles,
         'outdir': outdir,
