@@ -125,7 +125,7 @@ def peakit(signals: pd.DataFrame, pval_col: str, chr_col: str, pos_col: str, fla
     peaks = PeakCollection()
     for index, row in sorted_signals.iterrows():
         peaks.check_and_add(row[chr_col], row[pos_col])
-    peaks.extend_peaks(flank)
+    peaks.extend_peaks(flank * 2)
     return peaks
 
 
