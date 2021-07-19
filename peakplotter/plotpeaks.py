@@ -303,7 +303,7 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
         print("No peaks found. Exiting.")
         _make_done(outdir)
         sys.exit(0)
-    peak_collections = peakit(signals, pval_col, chr_col, pos_col)
+    peak_collections = peakit(signals, pval_col, chr_col, pos_col, flank_bp)
     peak_collections.merge()
     peaked = peak_collections.data
 
