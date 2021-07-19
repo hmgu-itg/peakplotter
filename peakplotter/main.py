@@ -9,8 +9,9 @@ import click
 from . import __version__
 from ._data import get_data_path
 from .utils import check_executable, DEPENDENT_EXECUTABLES
+from .tools import Plink
 from .errors import MissingExecutableError
-from .plotpeaks import main
+from .plotpeaks import main, process_peak
 
 
 @click.command()
@@ -176,14 +177,14 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
         for key, val in configs.items():
             f.write(f'{key}: {val}\n')
 
-    # ext_flank_bp = flank_bp + 100_000
+    flank_bp = end - start
     flank_kb = flank_bp // 1000
     ext_flank_kb = flank_kb + 100
 
     bfiles_list = bfiles.split(',')
     plink = Plink(30_000)
 
-    process_peak(assocfile,
+    process_peak(assoc_file,
                   chr_col,
                   pos_col,
                   pval_col,
