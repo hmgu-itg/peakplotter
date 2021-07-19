@@ -126,7 +126,7 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
 @click.option('-s', '--start', type = click.INT, required=True, help = "Start of the peak to plot.")
 @click.option('-e', '--end', type = click.INT, required=True, help = "End of the peak to plot.")
 @click.option('-b', '--build', type = click.INT, default = 38, show_default=True, help = "Assembly build (37 or 38).")
-def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, chrom, start, end, build, overwrite):
+def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, chrom, start, end, build):
 
     ref_flat, recomb = get_data_path(build)
     if not ref_flat.exists() or not recomb.exists():
