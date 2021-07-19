@@ -126,7 +126,6 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
 @click.option('-s', '--start', type = click.INT, required=True, help = "Start of the peak to plot.")
 @click.option('-e', '--end', type = click.INT, required=True, help = "End of the peak to plot.")
 @click.option('-b', '--build', type = click.INT, default = 38, show_default=True, help = "Assembly build (37 or 38).")
-@click.option('--overwrite', is_flag=True, flag_value = True, default = False, help = 'Overwrite output directory if it already exists.')
 def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, chrom, start, end, build, overwrite):
 
     ref_flat, recomb = get_data_path(build)
@@ -149,16 +148,7 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
         raise FileNotFoundError('Need to give ref_flat and recomb option')
         # ref_flat, recomb = _get_locuszoom_data_path() 
     
-    outdir = Path(outdir)
-    if outdir.exists() and overwrite is False:
-        click.echo(f'[ERROR] Output directory ({str(outdir)}) already exists. Use --overwrite flag if you wish to overwrite.')
-        sys.exit(1)
-    if outdir.exists() and overwrite is True:
-        click.echo(f'[INFO] Overwriting output directory ({str(outdir)}).')
-        shutil.rmtree(outdir)
-        outdir.mkdir()
-    else:
-        outdir.mkdir()
+    
     # Save run configurations in the output directory
     configs = {
         'run_mode': 'manual'
@@ -178,7 +168,7 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
         'build': build,
     }
     now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
-    with open(outdir.joinpath(f'{outdir.name}.config.yaml'), 'x') as f:
+    with open(outdir.joinpath(f'{outdir.name}.{chrom}.{start}.{end}.config.yaml'), 'x') as f:
         f.write(f'peakplotter: {__version__}\n')
         f.write(f'started: {now}\n')
         for key, val in configs.items():
