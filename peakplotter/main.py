@@ -123,7 +123,7 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
 @click.option('-a1', '--a1-col', type = click.STRING, required=True, help = 'Name of the column for reference or major allele (used for predicting consequence).')
 @click.option('-a2', '--a2-col', type = click.STRING, required=True, help = 'Name of the column for alternate or minor allele.')
 @click.option('-maf', '--maf-col', type = click.STRING, required=True, help = 'Name of the column for non-reference or minor allele frequency.')
-@click.option('-c', '--chrom', type = click.STRING, required=True, help = 'Chromosome of the peak to plot')
+@click.option('-c', '--chrom', type = click.INT, required=True, help = 'Chromosome of the peak to plot')
 @click.option('-s', '--start', type = click.INT, required=True, help = "Start of the peak to plot.")
 @click.option('-e', '--end', type = click.INT, required=True, help = "End of the peak to plot.")
 @click.option('-b', '--build', type = click.INT, default = 38, show_default=True, help = "Assembly build (37 or 38).")
@@ -171,7 +171,7 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
         'build': build,
     }
     now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
-    with open(outdir.joinpath(f'{outdir.name}.config.yaml'), 'x') as f:
+    with open(outdir.joinpath(f'{chrom}.{start}.{end}.config.yaml'), 'x') as f:
         f.write(f'peakplotter: {__version__}\n')
         f.write(f'started: {now}\n')
         for key, val in configs.items():
