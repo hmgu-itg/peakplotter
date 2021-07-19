@@ -8,7 +8,6 @@ from .errors import MissingExecutableError
 
 DEPENDENT_EXECUTABLES = [
     'tabix', # HTSLib
-    'bedtools', # BedTools
     'locuszoom', # Locuszoom
     'dbmeister.py', # Locuszoom
     'plink', # Plink
