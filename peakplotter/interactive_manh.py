@@ -134,11 +134,16 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     e['gene']=e['gene'].str.replace(r'^\;', '')
 
     grouped_ff=grouped_ff.loc[grouped_ff['ensembl_assoc']!="none",] # TODO: Currently, the .fillna('none') is done inside the _interactive_manh.make_resp function. This would be very difficult to understand for others. Change this to something simpler.
-    for index, row in grouped_ff.iterrows():
-        span = Span(location=row['ps'],  line_color="firebrick", dimension='height')
-        label = Label(x=row['ps'], y=e['logp'].max()+0.2, text=row['ensembl_assoc'], angle=90, angle_units="deg",  text_align="right", text_color="firebrick", text_font_size="11pt", text_font_style="italic")
-        p.add_layout(label)
-        p.add_layout(span)
+    # for index, row in grouped_ff.iterrows():
+        # Make red line with previously associated information
+        # TODO: Re-enable this feature later possibly with different modes (all, only functional, none),
+        # or by allowing the viewer interactively enable and disable their choice of traits within the bokeh plot.
+        # https://docs.bokeh.org/en/latest/docs/user_guide/interaction/legends.html
+        # https://docs.bokeh.org/en/latest/docs/user_guide/interaction/widgets.html
+        # span = Span(location=row['ps'],  line_color="firebrick", dimension='height')
+        # label = Label(x=row['ps'], y=e['logp'].max()+0.2, text=row['ensembl_assoc'], angle=90, angle_units="deg",  text_align="right", text_color="firebrick", text_font_size="11pt", text_font_style="italic")
+        # p.add_layout(label)
+        # p.add_layout(span)
 
     
     e.to_csv(file+".csv", index=False)

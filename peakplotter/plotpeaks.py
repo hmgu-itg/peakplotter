@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 
 from .tools import Plink, plink_exclude_across_bfiles
-from .peakit import _peakit, bedtools_merge
+from .peakit import peakit
 from .interactive_manh import interactive_manh
 
 def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, chunksize = 10000) -> pd.DataFrame:
@@ -303,8 +303,9 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
         print("No peaks found. Exiting.")
         _make_done(outdir)
         sys.exit(0)
-    peak_collections = _peakit(signals, pval_col, chr_col, pos_col)
-    peaked = bedtools_merge(peak_collections.data)
+    peak_collections = peakit(signals, pval_col, chr_col, pos_col, flank_bp)
+    peak_collections.merge()
+    peaked = peak_collections.data
 
     peaked_file = outdir.joinpath('peaked')
     peaked.to_csv(peaked_file, sep = '\t', header = True, index = False)

@@ -15,8 +15,7 @@ setup(
         'numpy',
         'pandas',
         'bokeh',
-        'requests',
-        'pybedtools'
+        'requests'
     ],
     include_package_data = True,
     entry_points = {
