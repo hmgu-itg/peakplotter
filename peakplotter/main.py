@@ -148,7 +148,9 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
         raise FileNotFoundError('Need to give ref_flat and recomb option')
         # ref_flat, recomb = _get_locuszoom_data_path() 
     
-    
+    outdir = Path(outdir)
+    if not outdir.exists():
+        outdir.mkdir()
     # Save run configurations in the output directory
     configs = {
         'run_mode': 'manual'
@@ -168,7 +170,7 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
         'build': build,
     }
     now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
-    with open(outdir.joinpath(f'{outdir.name}.{chrom}.{start}.{end}.config.yaml'), 'x') as f:
+    with open(outdir.joinpath(f'{outdir.name}.config.yaml'), 'x') as f:
         f.write(f'peakplotter: {__version__}\n')
         f.write(f'started: {now}\n')
         for key, val in configs.items():
