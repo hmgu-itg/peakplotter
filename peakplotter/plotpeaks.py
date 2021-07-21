@@ -12,7 +12,7 @@ from .tools import Plink, plink_exclude_across_bfiles
 from .peakit import peakit
 from .interactive_manh import interactive_manh
 
-def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, chunksize = 10000) -> pd.DataFrame:
+def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger, chunksize = 10000) -> pd.DataFrame:
     """
     Lazily load and filter the association file.
     
@@ -35,21 +35,21 @@ def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2
         chunk[pval_col] = pd.to_numeric(chunk[pval_col], errors = 'coerce')
         nan_list = list(pd.isna(chunk[pval_col]))
         if nan_list.count(True):
-            print(f"[WARNING] Removing {nan_list.count(True)} rows with invalid p-value")
+            logger.info(f"Removing {nan_list.count(True)} rows with invalid p-value")
         chunk = chunk.dropna().reset_index(drop = True)
 
         a1_check = chunk[a1_col].str.contains('[^ATGC]')
         if any(a1_check):
             invalid_strings = a1_check.to_list()
-            print(f"[WARNING] Removing {invalid_strings.count(True)} rows with invalid a1 string value")
-            print(chunk.loc[a1_check, [chr_col, rs_col, pos_col, a1_col, a2_col, maf_col, pval_col]])
+            logger.info(f"Removing {invalid_strings.count(True)} rows with invalid a1 string value")
+            logger.debug(chunk.loc[a1_check, [chr_col, rs_col, pos_col, a1_col, a2_col, maf_col, pval_col]])
             chunk = chunk[~a1_check].reset_index(drop = True)
 
         a2_check = chunk[a2_col].str.contains('[^ATGC]')
         if any(a2_check):
             invalid_strings = a2_check.to_list()
-            print(f"[WARNING] Removing {invalid_strings.count(True)} rows with invalid a2 string value")
-            print(chunk.loc[a2_check, [chr_col, rs_col, pos_col, a1_col, a2_col, maf_col, pval_col]])
+            logger.info(f"Removing {invalid_strings.count(True)} rows with invalid a2 string value")
+            logger.debug(chunk.loc[a2_check, [chr_col, rs_col, pos_col, a1_col, a2_col, maf_col, pval_col]])
             chunk = chunk[~a2_check].reset_index(drop = True)
 
         yield chunk
@@ -141,7 +141,7 @@ def process_peak(assocfile: str,
                   ext_flank_kb: int,
                   logger):
     
-    assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
+    assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger)
     
     concat_list = list()
     for chunk in assoc:
@@ -299,7 +299,7 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
 
     bfiles_list = bfiles.split(',')
     plink = Plink(memory)
-    assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
+    assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger)
     logger.debug('Getting signals')
     signals = get_signals(assoc, signif, chr_col, pos_col, pval_col)
     if signals.empty:
