@@ -142,7 +142,7 @@ def process_peak(assocfile: str,
                   logger):
     
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger)
-    
+    logger.info('Looking for signals..')
     concat_list = list()
     for chunk in assoc:
         filtered_chunk = chunk.loc[(chunk[chr_col]==chrom) & (start < chunk[pos_col]) & (chunk[pos_col] < end)]
@@ -277,10 +277,10 @@ def process_peak(assocfile: str,
     logger.debug(ps.stderr.decode())
     if build==37:
         logger.debug(f"interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b37')")
-        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b37')
+        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b37', logger)
     elif build==38:
         logger.debug(f"interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b38')")
-        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b38')
+        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b38', logger)
     logger.info(f"Done with peak {chrom} {start} {end}.")
     logger.info("Cleaning plink binary files")
     to_delete = list(outdir.glob(f'peak.{chrom}.{start}.{end}.*.*'))

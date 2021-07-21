@@ -2,7 +2,6 @@
 import sys
 import shutil
 import logging
-from datetime import datetime
 from pathlib import Path
 
 import click

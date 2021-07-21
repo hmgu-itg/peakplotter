@@ -4,7 +4,6 @@ from typing import Tuple, Union, List, Dict
 import requests
 import pandas as pd
 
-from peakplotter import helper
 from peakplotter.data import CENTROMERE_B37, CENTROMERE_B38
 
 def _query(url, headers = None):
@@ -96,17 +95,18 @@ def make_resp(snps: pd.DataFrame, pheno: pd.DataFrame) -> pd.DataFrame:
     return resp[['rs', 'ps', 'consequence', 'pheno']]
 
 
-def get_rsid_in_region(chrom, start, end, server):
-    print(f"[DEBUG] get_variants_in_region({chrom}, {start}, {end}, {server}")
+def get_rsid_in_region(chrom, start, end, server, logger):
+
+    logger.debug(f"get_variants_in_region({chrom}, {start}, {end}, {server}")
     snps = get_variants_in_region(chrom, start, end, server)
-    print(f"[DEBUG] get_phenos_in_region({chrom}, {start}, {end}, {server}")
+    logger.debug(f"get_phenos_in_region({chrom}, {start}, {end}, {server}")
     pheno = get_phenos_in_region(chrom, start, end, server)
     
     resp = make_resp(snps, pheno)
     return resp
 
 
-def query_vep(chrom: pd.Series, pos: pd.Series, a1: pd.Series, a2: pd.Series, server: str) -> List[Dict]:
+def query_vep(chrom: pd.Series, pos: pd.Series, a1: pd.Series, a2: pd.Series, server: str, logger) -> List[Dict]:
     chrom = chrom.astype(str)
     pos = pos.astype(int).astype(str)
     a1 = a1.astype(str)
@@ -118,12 +118,12 @@ def query_vep(chrom: pd.Series, pos: pd.Series, a1: pd.Series, a2: pd.Series, se
 
     r = requests.post(server+ext, headers=headers, data=data)
     if not r.ok:
-        print(data)
+        logger.error(data)
         r.raise_for_status()
     return r.json()
 
 
-def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str, a2col: str, server: str) -> pd.DataFrame:
+def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str, a2col: str, server: str, logger) -> pd.DataFrame:
     """
     This function assumes that the input DataFrame object `e` has the following columns:
       - ps
@@ -139,7 +139,7 @@ def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str
     novelsnps=copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e['ld']>0.1) & (copied_e['ensembl_consequence']!='double allele'),]
     if novelsnps.empty:
         return copied_e
-    jData = query_vep(novelsnps[chrcol], novelsnps[pscol], novelsnps[a1col], novelsnps[a2col], server)
+    jData = query_vep(novelsnps[chrcol], novelsnps[pscol], novelsnps[a1col], novelsnps[a2col], server, logger)
 
     csq = pd.DataFrame(jData)
 
@@ -151,9 +151,9 @@ def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str
 
 
 
-def get_overlap_genes(chrom, start, end, server) -> pd.DataFrame:
+def get_overlap_genes(chrom, start, end, server, logger) -> pd.DataFrame:
     url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=gene'
-    helper.info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
+    logger.info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
     decoded = _query(url)
     
     df = pd.DataFrame(decoded).fillna('')

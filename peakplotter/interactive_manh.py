@@ -15,7 +15,7 @@ from bokeh.palettes import Spectral10
 from peakplotter import helper # TODO: Change this back to relative import after we replace plotpeaks.sh to a python equivalent.
 from peakplotter import _interactive_manh
 
-def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, build: str):
+def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, build: str, logger):
     logging.basicConfig()
     outfile=file+".html"
 
@@ -79,9 +79,9 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     end = int(e[pscol].max())
     ## We get the list of rsids and phenotype associations in the region
     server = helper.get_build_server(build)
-    print(f"[DEBUG] get_rsid_in_region({chrom}, {start}, {end}, {server}")
-    ff = _interactive_manh.get_rsid_in_region(chrom, start, end, server)
-    print(ff.head())
+    logger.debug(f"get_rsid_in_region({chrom}, {start}, {end}, {server}, logger")
+    ff = _interactive_manh.get_rsid_in_region(chrom, start, end, server, logger)
+    logger.debug(ff.head())
     columns = ['ensembl_rs', 'ps', 'ensembl_consequence', 'ensembl_assoc']
     ff.columns = columns
 
@@ -97,7 +97,7 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
                     dedup_ff[columns],
                     grouped_dup_ff[columns]
                 ]).sort_values('ps').reset_index(drop = True)
-    print(e.head())
+    logger.debug(e.head())
 
     # Merge dataframes, drop signals that are not present in the dataset
     emax=pd.merge(e, grouped_ff, on='ps', how='outer')
@@ -116,13 +116,13 @@ def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, 
     e['col_assoc']=e['col_assoc'].astype(int)
 
     # ENSEMBL consequences for variants in LD that do not have rs-ids
-    print(f"[DEBUG] e=helper.get_csq_novel_variants(e, '{chrcol}', '{pscol}', '{a1col}', '{a2col}', '{server}')")
-    e=helper.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server)
+    logger.debug(f"e=helper.get_csq_novel_variants(e, '{chrcol}', '{pscol}', '{a1col}', '{a2col}', '{server}')")
+    e = helper.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server)
 
 
     # Below gets the genes > d
     
-    d = _interactive_manh.get_overlap_genes(chrom, start, end, server)
+    d = _interactive_manh.get_overlap_genes(chrom, start, end, server, logger)
     e['gene']=""
     for index, row in d.iterrows():
         external_name = row['external_name']
