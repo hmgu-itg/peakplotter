@@ -132,15 +132,14 @@ def process_peak(assocfile: str,
                   start: int,
                   end: int,
                   current: int,
-                  total_peak_count: int,
                   outdir: Path,
                   refflat: Path,
                   recomb: Path,
                   bfiles_list: List[str],
                   plink: Plink,
                   build: int,
-                  ext_flank_kb: int):
-    print(f"Treating peak {chrom} {start} {end} (peak {current+1} / {total_peak_count} )")
+                  ext_flank_kb: int,
+                  logger):
     
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
     
@@ -149,6 +148,7 @@ def process_peak(assocfile: str,
         filtered_chunk = chunk.loc[(chunk[chr_col]==chrom) & (start < chunk[pos_col]) & (chunk[pos_col] < end)]
         if filtered_chunk.shape[0] > 0:
             concat_list.append(filtered_chunk)
+    logger.info('Generating peakdata')
     peakdata = pd.concat(concat_list).sort_values([chr_col, pos_col]).reset_index(drop = True)
     peakdata[rs_col] = _create_non_rs_to_pos_id(peakdata, chr_col, rs_col, pos_col)
     # '1:100' -> 'chr1:100'
@@ -160,7 +160,7 @@ def process_peak(assocfile: str,
 
     peakdata_chrpos_path = outdir.joinpath('peakdata.chrpos')
     db_file = outdir.joinpath(f'{chrom}.{start}.db')
-
+    logger.debug(f'Generating peakdata.chrpos to {peakdata_chrpos_path}')
     peakdata_chrpos.to_csv(peakdata_chrpos_path, sep = '\t', index = False)
 
     sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --snp_pos {peakdata_chrpos_path}"))
@@ -169,7 +169,7 @@ def process_peak(assocfile: str,
 
     if start < 1:
         sensible_start = 1
-        print(f'[nWARNING]\t Negative start position changed to {sensible_start} : {chrom} {start} (1)')
+        logger.warning(f'Negative start position changed to {sensible_start} : {chrom} {start} (1)')
     else:
         sensible_start = start
 
@@ -177,15 +177,16 @@ def process_peak(assocfile: str,
     mergelist = list()
     for count, bfile in enumerate(bfiles_list):
         out = outdir.joinpath(f'peak.{chrom}.{start}.{end}.{count}')
-        print(f"[DEBUG] plink.extract_genotypes('{bfile}', {chrom}, {start}, {end}, '{out}')")
+        logger.debug(f"plink.extract_genotypes('{bfile}', {chrom}, {start}, {end}, '{out}')")
         ps = plink.extract_genotypes(bfile, chrom, start, end, out)
-        print(ps.stdout.decode())
-        print(ps.stderr.decode())
+        logger.debug(ps.stdout.decode())
+        logger.debug(ps.stderr.decode())
         if ps.returncode==12:
             # TODO: Add some kind of test to ensure this part
             # A cohort can have no variants within a peak region
             # For example, peak was detected in chr1:200-300 driven by a variant
             # in cohortA, but cohortB has no variants within that region.
+            logger.warning('Error Code 12 for plink.extract_genotypes')
             continue
         ## Modify BIM file 
         bimfile = f'{out}.bim'
@@ -201,15 +202,15 @@ def process_peak(assocfile: str,
 
     ## Merge plink binaries if multiple present
     assert len(mergelist) >= 1, f'mergelist length is {len(mergelist)}'
-    print(f"[DEBUG] {mergelist}")
-    print(f"[INFO] Merging {mergelist}")
+    logger.debug(f"{mergelist}")
+    logger.info(f"Merging {mergelist}")
     mergelist_file = str(outdir.joinpath('mergelist'))
     out_merge = str(outdir.joinpath(f'peak.{current+1}'))
     
-    print(f"[DEBUG] plink.merge_region({mergelist_file}, '{mergelist}', {chrom}, {start}, {end}, '{out_merge}')")
+    logger.debug(f"plink.merge_region({mergelist_file}, '{mergelist}', {chrom}, {start}, {end}, '{out_merge}')")
     ps = plink.merge_region(mergelist_file, mergelist, chrom, start, end, out_merge)
-    print(ps.stdout.decode())
-    print(ps.stderr.decode())
+    logger.debug(ps.stdout.decode())
+    logger.debug(ps.stderr.decode())
 
 
     if ps.returncode == 3:
@@ -229,10 +230,10 @@ def process_peak(assocfile: str,
             Path(f'{bfile}.bed').unlink()
             Path(f'{bfile}.bim').unlink()
             Path(f'{bfile}.fam').unlink()
-        print("[DEBUG] plink.merge('{mergelist_file}', '{out_merge}')")
+        logger.debug("plink.merge('{mergelist_file}', '{out_merge}')")
         ps = plink.merge(mergelist_file, out_merge)
-        print(ps.stdout.decode())
-        print(ps.stderr.decode())
+        logger.debug(ps.stdout.decode())
+        logger.debug(ps.stderr.decode())
         
 
     index_of_var_with_lowest_pval = peakdata[pval_col].idxmin()
@@ -246,11 +247,12 @@ def process_peak(assocfile: str,
         # pos = peakdata.loc[index_of_var_with_lowest_pval, pos_col]
         # refsnp = f'chr{chrom}:{pos}'
 
-    print(f"\n\nIn region {chrom} {start} {end}, top SNP is {refsnp}\n\n")
+    logger.info(f"\n\nIn region {chrom} {start} {end}, top SNP is {refsnp}\n\n")
 
+    logger.debug(f'plink.ld("{out_merge}", "{refsnp}", "{ext_flank_kb}", "{out_merge}")')
     ps = plink.ld(out_merge, refsnp, ext_flank_kb, out_merge)
-    print(ps.stdout.decode())
-    print(ps.stderr.decode())
+    logger.debug(ps.stdout.decode())
+    logger.debug(ps.stderr.decode())
     ld_data = pd.read_csv(f'{out_merge}.ld', delim_whitespace=True)
     ld_data = ld_data[['SNP_A', 'SNP_B', 'R2', 'R2']]
     ld_data.columns = ['snp1', 'snp2', 'dprime', 'rsquare']
@@ -267,18 +269,18 @@ def process_peak(assocfile: str,
     joined_peakdata_ld_file = outdir.joinpath(f'{chrom}.{start}.{end}.500kb')
     joined_peakdata_ld.to_csv(joined_peakdata_ld_file, sep = ',', header = True, index = False)
 
-
+    logger.debug(f'ps = run_locuszoom("{build}", "{peakdata_file}", "{refsnp}", "{rs_col}", "{pval_col}", "{db_file}", "{joined_peakdata_ld_file}", "{ld_file}", "{sensible_start}", "{end}", "{chrom}")')
     ps = run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, joined_peakdata_ld_file, ld_file, sensible_start, end, chrom)
-    print(ps.stdout.decode())
-    print(ps.stderr.decode())
+    logger.debug(ps.stdout.decode())
+    logger.debug(ps.stderr.decode())
     if build==37:
-        print(f"[DEBUG] interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b37')")
+        logger.debug(f"interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b37')")
         interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b37')
     elif build==38:
-        print(f"[DEBUG] interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b38')")
+        logger.debug(f"interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {rs_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b38')")
         interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, rs_col, maf_col, chr_col, a1_col, a2_col, build = 'b38')
-    print(f"Done with peak {chrom} {start} {end}.")
-    print("Cleaning plink binary files")
+    logger.info(f"Done with peak {chrom} {start} {end}.")
+    logger.info("Cleaning plink binary files")
     to_delete = list(outdir.glob(f'peak.{chrom}.{start}.{end}.*.*'))
     for file in to_delete:
         file.unlink()
@@ -290,7 +292,7 @@ def _make_done(outdir: Path):
     
 
 
-def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, memory = 30000):
+def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, logger, memory = 30000):
     # ext_flank_bp = flank_bp + 100_000
     flank_kb = flank_bp // 1000
     ext_flank_kb = flank_kb + 100
@@ -298,20 +300,23 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
     bfiles_list = bfiles.split(',')
     plink = Plink(memory)
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
+    logger.debug('Getting signals')
     signals = get_signals(assoc, signif, chr_col, pos_col, pval_col)
     if signals.empty:
-        print("No peaks found. Exiting.")
+        logger.info("No peaks found. Exiting.")
         _make_done(outdir)
         sys.exit(0)
+    logger.debug('Making peak_collections')
     peak_collections = peakit(signals, pval_col, chr_col, pos_col, flank_bp)
     peak_collections.merge()
     peaked = peak_collections.data
-
+    logger.debug(peaked)
     peaked_file = outdir.joinpath('peaked')
     peaked.to_csv(peaked_file, sep = '\t', header = True, index = False)
 
     total_peak_count = peaked.shape[0]
     for current, (chrom, start, end) in peaked.iterrows():
+        logger.info(f"Treating peak {chrom} {start} {end} (peak {current+1} / {total_peak_count} )")
         process_peak(assocfile,
                   chr_col,
                   pos_col,
@@ -324,13 +329,13 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
                   start,
                   end,
                   current,
-                  total_peak_count,
                   outdir,
                   refflat,
                   recomb,
                   bfiles_list,
                   plink,
                   build,
-                  ext_flank_kb)
+                  ext_flank_kb,
+                  logger)
     _make_done(outdir)
-    print('Finished..')
+    logger.info('Finished')

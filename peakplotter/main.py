@@ -2,6 +2,7 @@
 import sys
 import shutil
 import logging
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -107,6 +108,7 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
             recomb,
             build,
             outdir,
+            logger,
             memory = 30000)
     except:
         logger.critical('Unexpected error occurred:', exc_info = True)
@@ -131,7 +133,8 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
 @click.option('-s', '--start', type = click.INT, required=True, help = "Start of the peak to plot.")
 @click.option('-e', '--end', type = click.INT, required=True, help = "End of the peak to plot.")
 @click.option('-b', '--build', type = click.INT, default = 38, show_default=True, help = "Assembly build (37 or 38).")
-def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, chrom, start, end, build):
+@click.option('--debug', is_flag=True, flag_value = True, default = False, help = 'Set the log level from INFO to DEBUG.')
+def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, chrom, start, end, build, debug):
 
     ref_flat, recomb = get_data_path(build)
     if not ref_flat.exists() or not recomb.exists():
@@ -174,12 +177,15 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
         'end': end,
         'build': build,
     }
-    now = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
-    with open(outdir.joinpath(f'{chrom}.{start}.{end}.config.yaml'), 'x') as f:
-        f.write(f'peakplotter: {__version__}\n')
-        f.write(f'started: {now}\n')
-        for key, val in configs.items():
-            f.write(f'{key}: {val}\n')
+
+    log_level = logging.DEBUG if debug else logging.INFO
+    logger = make_logger(outdir.joinpath(f'{outdir.name}.log'), level = log_level)
+    logger.info(f'PeakPlotter Version: {__version__}')
+    arg_string = '\nArguments: \n'
+    for k, v in configs.items():
+        arg_string += f'  {k}: {v}\n'
+    logger.info(arg_string)
+
 
     flank_bp = end - start
     flank_kb = flank_bp // 1000
@@ -187,6 +193,7 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
 
     bfiles_list = bfiles.split(',')
     plink = Plink(30_000)
+
 
     process_peak(assoc_file,
                   chr_col,
@@ -200,14 +207,14 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
                   start,
                   end,
                   1,
-                  1,
                   outdir,
                   ref_flat,
                   recomb,
                   bfiles_list,
                   plink,
                   build,
-                  ext_flank_kb)
+                  ext_flank_kb,
+                  logger)
 
 
 
