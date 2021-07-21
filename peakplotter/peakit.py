@@ -120,12 +120,12 @@ class PeakCollection(list):
         self[:] = sorted(self, key = attrgetter('chrom', 'start', 'end'))
 
         
-def peakit(signals: pd.DataFrame, pval_col: str, chr_col: str, pos_col: str) -> PeakCollection:
+def peakit(signals: pd.DataFrame, pval_col: str, chr_col: str, pos_col: str, flank: int) -> PeakCollection:
     sorted_signals = signals.sort_values(pval_col)
     peaks = PeakCollection()
     for index, row in sorted_signals.iterrows():
         peaks.check_and_add(row[chr_col], row[pos_col])
-    peaks.extend_peaks(1_000_000)
+    peaks.extend_peaks(flank * 2)
     return peaks
 
 
