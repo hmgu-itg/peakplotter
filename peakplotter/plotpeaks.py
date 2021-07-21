@@ -163,9 +163,10 @@ def process_peak(assocfile: str,
     logger.debug(f'Generating peakdata.chrpos to {peakdata_chrpos_path}')
     peakdata_chrpos.to_csv(peakdata_chrpos_path, sep = '\t', index = False)
 
-    sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --snp_pos {peakdata_chrpos_path}"))
-    sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --refflat {refflat}"))
-    sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --recomb_rate {recomb}"))
+    logger.info('Running dbmeister.py')
+    logger.debug(sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --snp_pos {peakdata_chrpos_path}")))
+    logger.debug(sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --refflat {refflat}")))
+    logger.debug(sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --recomb_rate {recomb}")))
 
     if start < 1:
         sensible_start = 1
@@ -173,7 +174,7 @@ def process_peak(assocfile: str,
     else:
         sensible_start = start
 
-
+    logger.info(f'Extract {chrom}:{start}-{end} genotypes')
     mergelist = list()
     for count, bfile in enumerate(bfiles_list):
         out = outdir.joinpath(f'peak.{chrom}.{start}.{end}.{count}')
@@ -214,6 +215,7 @@ def process_peak(assocfile: str,
 
 
     if ps.returncode == 3:
+        logger.info('Multiallelic variants detected. Excluding')
         # Exclude variants which failed merge
         missnp_file = f'{out_merge}-merge.missnp'
         missnp_list = pd.read_csv(missnp_file, header = None)[0].to_list()
@@ -269,7 +271,7 @@ def process_peak(assocfile: str,
     joined_peakdata_ld_file = outdir.joinpath(f'{chrom}.{start}.{end}.500kb')
     joined_peakdata_ld.to_csv(joined_peakdata_ld_file, sep = ',', header = True, index = False)
 
-    logger.debug(f'ps = run_locuszoom("{build}", "{peakdata_file}", "{refsnp}", "{rs_col}", "{pval_col}", "{db_file}", "{joined_peakdata_ld_file}", "{ld_file}", "{sensible_start}", "{end}", "{chrom}")')
+    logger.debug(f'run_locuszoom("{build}", "{peakdata_file}", "{refsnp}", "{rs_col}", "{pval_col}", "{db_file}", "{joined_peakdata_ld_file}", "{ld_file}", "{sensible_start}", "{end}", "{chrom}")')
     ps = run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, joined_peakdata_ld_file, ld_file, sensible_start, end, chrom)
     logger.debug(ps.stdout.decode())
     logger.debug(ps.stderr.decode())
