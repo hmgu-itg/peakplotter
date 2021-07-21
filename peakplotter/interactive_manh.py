@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*- 
 
 import sys
-import logging
 
 import numpy as np
 import pandas as pd
@@ -16,7 +15,6 @@ from peakplotter import helper # TODO: Change this back to relative import after
 from peakplotter import _interactive_manh
 
 def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, build: str, logger):
-    logging.basicConfig()
     outfile=file+".html"
 
     pd.set_option('display.max_columns', 500)
