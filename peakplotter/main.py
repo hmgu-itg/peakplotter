@@ -110,9 +110,9 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
             outdir,
             logger,
             memory = 30000)
-    except:
+    except Exception:
         logger.critical('Unexpected error occurred:', exc_info = True)
-        sys.exit(1)
+        raise
 
 
 
@@ -194,8 +194,8 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
     bfiles_list = bfiles.split(',')
     plink = Plink(30_000)
 
-
-    process_peak(assoc_file,
+    try:
+        process_peak(assoc_file,
                   chr_col,
                   pos_col,
                   pval_col,
@@ -215,6 +215,10 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
                   build,
                   ext_flank_kb,
                   logger)
+    except Exception:
+        logger.critical('Unexpected error occurred:', exc_info = True)
+        raise
+    
 
 
 
