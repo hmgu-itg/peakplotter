@@ -14,7 +14,7 @@ from bokeh.palettes import Spectral10
 from peakplotter import helper # TODO: Change this back to relative import after we replace plotpeaks.sh to a python equivalent.
 from peakplotter import _interactive_manh
 
-def interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, build: str, logger):
+def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
     outfile=file+".html"
 
     pd.set_option('display.max_columns', 500)
