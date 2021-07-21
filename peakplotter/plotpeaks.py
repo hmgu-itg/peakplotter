@@ -275,12 +275,14 @@ def process_peak(assocfile: str,
     ps = run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, joined_peakdata_ld_file, ld_file, sensible_start, end, chrom)
     logger.debug(ps.stdout.decode())
     logger.debug(ps.stderr.decode())
-    if build==37:
-        logger.debug(f"interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b37')")
-        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, maf_col, chr_col, a1_col, a2_col, build = 'b37', logger = logger)
-    elif build==38:
-        logger.debug(f"interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = 'b38')")
-        interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, maf_col, chr_col, a1_col, a2_col, build = 'b38', logger = logger)
+    if build == 38:
+        b = 'b38'
+    elif build == 37:
+        b = 'b37'
+    
+    logger.debug(f"interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = {b})")
+    interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, maf_col, chr_col, a1_col, a2_col, build = b, logger = logger)
+
     logger.info(f"Done with peak {chrom} {start} {end}.")
     logger.info("Cleaning plink binary files")
     to_delete = list(outdir.glob(f'peak.{chrom}.{start}.{end}.*.*'))
