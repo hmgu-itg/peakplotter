@@ -6,6 +6,21 @@ import pandas as pd
 
 from peakplotter.data import CENTROMERE_B37, CENTROMERE_B38
 
+
+def get_build_server(build: Union[int, str]) -> str:
+	B38_SERVER = "https://rest.ensembl.org"
+	B37_SERVER = "http://grch37.rest.ensembl.org"
+	mapper = {
+			'b38': B38_SERVER,
+			'38': B38_SERVER,
+			38: B38_SERVER,
+			'b37': B37_SERVER,
+			'37': B37_SERVER,
+			37: B37_SERVER
+		}
+	return mapper[build]
+
+
 def _query(url, headers = None):
     if headers is None:
         headers = dict()

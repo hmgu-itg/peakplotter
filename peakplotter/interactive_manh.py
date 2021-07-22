@@ -76,7 +76,7 @@ def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: 
     start = int(e[pscol].min())
     end = int(e[pscol].max())
     ## We get the list of rsids and phenotype associations in the region
-    server = helper.get_build_server(build)
+    server = _interactive_manh.get_build_server(build)
     logger.debug(f"get_rsid_in_region({chrom}, {start}, {end}, {server}, logger")
     ff = _interactive_manh.get_rsid_in_region(chrom, start, end, server, logger)
     logger.debug(ff.head())
@@ -174,12 +174,12 @@ def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: 
         p2.add_layout(labels)
         p2.xaxis.visible = False
     else:
-        helper.info("\t\t\t🌐   No genes overlap this genomic region.")
+        logger.info("\t\t\t🌐   No genes overlap this genomic region.")
 
     # TODO: Move all the centromere code down here.
     if (len(cen_overlap)>0): # Add indication of the centromeric region in the plot
         perc_overlap=int((len(cen_overlap)/len(region))*100)
-        helper.info("\t\t\t    {0}% of the genomic region overlaps a centromere".format(perc_overlap))
+        logger.info("\t\t\t    {0}% of the genomic region overlaps a centromere".format(perc_overlap))
 
         xs=min(cen_overlap)
         xe=max(cen_overlap)+1

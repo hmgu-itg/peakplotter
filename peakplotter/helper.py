@@ -49,20 +49,6 @@ class GeneCoordinates:
 		self.end+=int(margin)
 
 
-def get_build_server(build: Union[int, str]) -> str:
-	B38_SERVER = "https://rest.ensembl.org"
-	B37_SERVER = "http://grch37.rest.ensembl.org"
-	mapper = {
-			'b38': B38_SERVER,
-			'38': B38_SERVER,
-			38: B38_SERVER,
-			'b37': B37_SERVER,
-			'37': B37_SERVER,
-			37: B37_SERVER
-		}
-	return mapper[build]
-
-
 def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server):
     copied_e = e.copy()
     copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e[a1col]==copied_e[a2col]),'ensembl_consequence']='double allele'
