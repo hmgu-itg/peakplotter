@@ -138,7 +138,7 @@ def query_vep(chrom: pd.Series, pos: pd.Series, a1: pd.Series, a2: pd.Series, se
         r.raise_for_status()
     return r.json()
 
-
+# TODO: Merge with get_csq_novel_variants function
 def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str, a2col: str, server: str, logger) -> pd.DataFrame:
     """
     This function assumes that the input DataFrame object `e` has the following columns:
@@ -165,7 +165,7 @@ def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str
     copied_e['ensembl_consequence'].replace('_', ' ')
     return copied_e
 
-
+# TODO: Merge with _get_csq_novel_variants function
 def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server, logger):
     copied_e = e.copy()
     copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e[a1col]==copied_e[a2col]),'ensembl_consequence']='double allele'
