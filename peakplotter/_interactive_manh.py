@@ -1,3 +1,4 @@
+import sys
 import json
 from typing import Tuple, Union, List, Dict
 
@@ -164,6 +165,34 @@ def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str
     copied_e['ensembl_consequence'].replace('_', ' ')
     return copied_e
 
+
+def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server, logger):
+    copied_e = e.copy()
+    copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e[a1col]==copied_e[a2col]),'ensembl_consequence']='double allele'
+    novelsnps=copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e['ld']>0.1) & (copied_e['ensembl_consequence']!='double allele'),]
+    if novelsnps.empty:
+        return copied_e
+    novelsnps['query']=novelsnps[chrcol].astype(str)+" "+novelsnps[pscol].astype(int).astype(str)+" . "+novelsnps[a1col].astype(str)+" "+novelsnps[a2col].astype(str)+" . . ."
+    request='{ "variants" : ["'+'", "'.join(novelsnps['query'])+'" ] }'
+    ext = "/vep/homo_sapiens/region"
+    headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
+    logger.info("\t\t\t🌐   Querying Ensembl VEP (POST) :"+server+ext)
+    r = requests.post(server+ext, headers=headers, data=request)
+
+    if not r.ok:
+        logger.error("headers :"+request)
+        r.raise_for_status()
+        sys.exit(1)
+    
+    jData = json.loads(r.text)
+    csq=pd.DataFrame(jData)
+
+
+    for _, row in csq.iterrows():
+        copied_e.loc[copied_e['ps']==row['start'],'ensembl_consequence']=row['most_severe_consequence']
+
+    copied_e['ensembl_consequence'].replace('_', ' ')
+    return copied_e
 
 
 def get_overlap_genes(chrom, start, end, server, logger) -> pd.DataFrame:

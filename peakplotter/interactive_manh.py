@@ -11,8 +11,7 @@ from bokeh.layouts import gridplot
 from bokeh.plotting import figure, save
 from bokeh.palettes import Spectral10
 
-from peakplotter import helper # TODO: Change this back to relative import after we replace plotpeaks.sh to a python equivalent.
-from peakplotter import _interactive_manh
+from . import _interactive_manh
 
 def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
     outfile=file+".html"
@@ -114,8 +113,8 @@ def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: 
     e['col_assoc']=e['col_assoc'].astype(int)
 
     # ENSEMBL consequences for variants in LD that do not have rs-ids
-    logger.debug(f"e=helper.get_csq_novel_variants(e, '{chrcol}', '{pscol}', '{a1col}', '{a2col}', '{server}')")
-    e = helper.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server)
+    logger.debug(f"e=_interactive_manh.get_csq_novel_variants(e, '{chrcol}', '{pscol}', '{a1col}', '{a2col}', '{server}', logger)")
+    e = _interactive_manh.get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server, logger)
 
 
     # Below gets the genes > d
