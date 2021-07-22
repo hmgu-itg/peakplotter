@@ -5,6 +5,7 @@ from pandas import testing
 
 from peakplotter import helper
 from peakplotter._interactive_manh import make_resp, get_centromere_region, query_vep, _get_csq_novel_variants
+from peakplotter.test_utils import get_test_logger
 
 def test_make_resp_when_pheno_df_is_empty():
 
@@ -83,7 +84,8 @@ def test_query_vep():
     a1 = pd.Series(['G', 'G'], dtype = str)
     a2 = pd.Series(['A', 'A'], dtype = str)
     server = helper.get_build_server(38)
-    output = query_vep(chrom, pos, a1, a2, server)
+    logger = get_test_logger()
+    output = query_vep(chrom, pos, a1, a2, server, logger)
     assert len(output)==2
 
 
@@ -99,6 +101,8 @@ def test__get_csq_novel_variants():
         [21, 26960070, 'G', 'A', 'novel', 0.5, 'intron_variant'],
         [21, 26965148, 'G', 'A', 'novel', 0.5, 'intron_variant']
     ], columns = [chrcol, pscol, a1col, a2col, 'ensembl_rs', 'ld', 'ensembl_consequence'])
+    logger = get_test_logger()
+    output = _get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server, logger)
 
-    output = _get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server)
+    testing.assert_frame_equal(expected, output)
 

@@ -3,7 +3,7 @@ import io
 import pandas as pd
 
 from peakplotter import plotpeaks
-
+from peakplotter.test_utils import get_test_logger
 
 def test_read_assoc_with_METAL_output():
     """
@@ -24,7 +24,8 @@ def test_read_assoc_with_METAL_output():
     example_buff = io.StringIO()
     example.to_csv(example_buff, sep = '\t', header = True, index = False)
     example_buff.seek(0)
-    iterable = plotpeaks.read_assoc(example_buff, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
+    logger = get_test_logger()
+    iterable = plotpeaks.read_assoc(example_buff, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger)
     data = next(iterable)
 
     expected = pd.DataFrame([
@@ -49,7 +50,8 @@ def test_read_assoc_with_invalid_allele_string():
     example_buff = io.StringIO()
     example.to_csv(example_buff, sep = '\t', header = True, index = False)
     example_buff.seek(0)
-    iterable = plotpeaks.read_assoc(example_buff, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
+    logger = get_test_logger()
+    iterable = plotpeaks.read_assoc(example_buff, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger)
     data = next(iterable)
 
     expected = pd.DataFrame([
@@ -77,7 +79,8 @@ def test_get_signals_when_no_signif_signals():
     example_buff = io.StringIO()
     example.to_csv(example_buff, sep = '\t', header = True, index = False)
     example_buff.seek(0)
-    iterable = plotpeaks.read_assoc(example_buff, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col)
+    logger = get_test_logger()
+    iterable = plotpeaks.read_assoc(example_buff, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger)
 
 
     signals = plotpeaks.get_signals(iterable, 5e-8, chr_col, pos_col, pval_col)
