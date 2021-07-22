@@ -11,7 +11,6 @@ DEPENDENT_EXECUTABLES = [
     'locuszoom', # Locuszoom
     'dbmeister.py', # Locuszoom
     'plink', # Plink
-    'sponge' # Moreutils
 ]
 
 
