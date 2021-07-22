@@ -26,7 +26,6 @@ PeakPlotter has has non-python dependencies.
 In order to run PeakPlotter you need to install the following tools and add the executables to your `PATH`:
 * Plink 1.9 or newer ([available here](https://www.cog-genomics.org/plink2/index))
 * LocusZoom Standalone 1.4 or newer ([available here](http://genome.sph.umich.edu/wiki/LocusZoom_Standalone))
-* BedTools ([available here](http://bedtools.readthedocs.io/en/latest/))
 * Tabix ([available here](https://github.com/samtools/htslib))
 * Moreutils (for `sponge`)
 
