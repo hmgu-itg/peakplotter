@@ -5,12 +5,15 @@ from typing import List
 import subprocess as sp
 from pathlib import Path
 
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+from bokeh.io import output_file
+from bokeh.plotting import save
 
 from .tools import Plink, plink_exclude_across_bfiles
 from .peakit import peakit
-from .interactive_manh import interactive_manh
+from .interactive_manh import make_peakplot
 
 def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger, chunksize = 10000) -> pd.DataFrame:
     """
@@ -280,8 +283,24 @@ def process_peak(assocfile: str,
     elif build == 37:
         b = 'b37'
     
-    logger.debug(f"interactive_manh({str(joined_peakdata_ld_file)}, {pval_col}, {pos_col}, {maf_col}, {chr_col}, {a1_col}, {a2_col}, build = {b})")
-    interactive_manh(str(joined_peakdata_ld_file), pval_col, pos_col, maf_col, chr_col, a1_col, a2_col, build = b, logger = logger)
+    logger.debug(f"Running make_peakplot")
+    
+    input_file = str(joined_peakdata_ld_file)
+    peakplot = make_peakplot(
+        file = input_file,
+        chrcol = chr_col,
+        pscol = pos_col,
+        a1col = a1_col,
+        a2col = a2_col,
+        pvalcol = pval_col,
+        mafcol = maf_col,
+        build = b,
+        logger = logger
+    )
+
+    outfile = input_file+".html"
+    output_file(outfile)
+    save(peakplot)
 
     logger.info(f"Done with peak {chrom} {start} {end}.")
     logger.info("Cleaning plink binary files")
