@@ -7,7 +7,6 @@ import pandas as pd
 from bokeh.io import output_file
 from bokeh.core.properties import Int
 from bokeh.models import HoverTool, TapTool, OpenURL, LabelSet, ColumnDataSource, TapTool, OpenURL, Title, CustomJS, RangeSlider, CustomJSFilter, CDSView
-from bokeh.models.plots import Plot
 from bokeh.models.formatters import NumeralTickFormatter
 from bokeh.layouts import gridplot
 from bokeh.plotting import Figure, figure, save
@@ -18,7 +17,7 @@ from . import _interactive_manh
 
 class GenomeView(Figure):
     __subtype__ = "GenomeView"
-    __view_model__ = "Plot"
+    __view_model__ = "bokeh.models.plots.Plot"
     
     hover = HoverTool(tooltips = [
             ("name", "@rs"),
@@ -64,7 +63,7 @@ class GenomeView(Figure):
         
 class GeneView(Figure):
     __subtype__ = 'GeneView'
-    __view_model__ = "Plot"
+    __view_model__ = "bokeh.models.plots.Plot"
     
     line_width = Int(4, help="The thickness of the gene plotted.")
     
