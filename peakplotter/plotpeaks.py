@@ -8,12 +8,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from bokeh.io import output_file
-from bokeh.plotting import save
 
 from .tools import Plink, plink_exclude_across_bfiles
 from .peakit import peakit
-from .interactive_manh import make_peakplot
+from .interactive_manh import output_peakplot
 
 def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger, chunksize = 10000) -> pd.DataFrame:
     """
@@ -286,21 +284,20 @@ def process_peak(assocfile: str,
     logger.debug(f"Running make_peakplot")
     
     input_file = str(joined_peakdata_ld_file)
-    outfile = input_file+".html"
-    output_file(outfile)
-
-    peakplot = make_peakplot(
-        file = input_file,
-        chrcol = chr_col,
+    output_file = input_file+".html"
+    title = f"chr{chrom}:{start}-{end}"
+    output_peakplot(
+        input_file = input_file,
+        output_file = output_file,
+        title = title,
+        pvalcol = pval_col,
         pscol = pos_col,
+        mafcol = maf_col,
+        chrcol = chr_col,
         a1col = a1_col,
         a2col = a2_col,
-        pvalcol = pval_col,
-        mafcol = maf_col,
         build = b,
-        logger = logger
-    )
-    save(peakplot)
+        logger = logger)
 
     logger.info(f"Done with peak {chrom} {start} {end}.")
     logger.info("Cleaning plink binary files")

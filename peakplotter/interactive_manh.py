@@ -299,6 +299,22 @@ def make_peakplot(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, log
     return peakplot
 
 
+def output_peakplot(input_file, output_file, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
+    output_file(filename = output_file, title = title)
+
+    peakplot = make_peakplot(
+        file = input_file,
+        chrcol = chrcol,
+        pscol = pscol,
+        a1col = a1col,
+        a2col = a2col,
+        pvalcol = pvalcol,
+        mafcol = mafcol,
+        build = build,
+        logger = logger
+    )
+    save(peakplot)
+
 def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
     outfile=file+".html"
 
