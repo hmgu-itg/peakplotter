@@ -223,13 +223,14 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     return e, genes
 
 
-def make_peakplot(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
+def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
     ## Prepare data to create peakplot
-    e, genes = make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger)
+    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger)
     
     ## Make GenomeView plot
     genome = GenomeView()
     source = ColumnDataSource(e)
+
     # Make LD range slider
     range_slider = RangeSlider(start = 0.0, end = 1.0, value = (0.0, 1.0), step = 0.01, title = 'LD')
     range_slider.js_on_change('value', CustomJS(args=dict(source=source), code="source.change.emit()"))
@@ -299,11 +300,11 @@ def make_peakplot(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, log
     return peakplot
 
 
-def output_peakplot(input_file, output_file, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
-    output_file(filename = output_file, title = title)
+def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
+    output_file(filename = outfile, title = title)
 
     peakplot = make_peakplot(
-        file = input_file,
+        infile = infile,
         chrcol = chrcol,
         pscol = pscol,
         a1col = a1col,

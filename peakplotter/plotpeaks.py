@@ -287,8 +287,8 @@ def process_peak(assocfile: str,
     output_file = input_file+".html"
     title = f"chr{chrom}:{start}-{end}"
     output_peakplot(
-        input_file = input_file,
-        output_file = output_file,
+        infile = input_file,
+        outfile = output_file,
         title = title,
         pvalcol = pval_col,
         pscol = pos_col,
