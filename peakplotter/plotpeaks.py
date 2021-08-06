@@ -286,6 +286,9 @@ def process_peak(assocfile: str,
     logger.debug(f"Running make_peakplot")
     
     input_file = str(joined_peakdata_ld_file)
+    outfile = input_file+".html"
+    output_file(outfile)
+
     peakplot = make_peakplot(
         file = input_file,
         chrcol = chr_col,
@@ -297,9 +300,6 @@ def process_peak(assocfile: str,
         build = b,
         logger = logger
     )
-
-    outfile = input_file+".html"
-    output_file(outfile)
     save(peakplot)
 
     logger.info(f"Done with peak {chrom} {start} {end}.")
