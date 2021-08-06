@@ -17,7 +17,7 @@ from . import _interactive_manh
 
 class GenomeView(Figure):
     __subtype__ = "GenomeView"
-    __view_module__ = ''
+    __view_module__ = "bokeh" # https://github.com/bokeh/bokeh/issues/9412
     __view_model__ = "Plot"
     
     hover = HoverTool(tooltips = [
@@ -64,7 +64,7 @@ class GenomeView(Figure):
         
 class GeneView(Figure):
     __subtype__ = 'GeneView'
-    __view_module__ = ''
+    __view_module__ = "bokeh"
     __view_model__ = "Plot"
     
     line_width = Int(4, help="The thickness of the gene plotted.")
