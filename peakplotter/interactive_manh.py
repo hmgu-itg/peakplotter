@@ -56,9 +56,9 @@ class GenomeView(Figure):
             line_alpha = 'col_assoc')
         
         
-        chrom = set(e['chrom']).pop()
-        start = int(e['ps'].min())
-        end = int(e['ps'].max())
+        chrom = set(data['chrom']).pop()
+        start = int(data['ps'].min())
+        end = int(data['ps'].max())
         self.title = f'chr{chrom}:{start}-{end}'
 
         
@@ -268,8 +268,16 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
     start = e['ps'].min()
     end = e['ps'].max()
     extend = (end - start) * 0.025
-    genome.x_range.start = e['ps'].min() - extend
-    genome.x_range.end = e['ps'].max() + extend
+    genome.x_range.start = start - extend
+    genome.x_range.end = end + extend
+
+    start = e['logp'].min()
+    end = e['logp'].max()
+    extend = (end - start) * 0.025
+    genome.x_range.start = start
+    genome.x_range.end = end + extend
+
+    genome.add_layout(Title(text="logp", align="center"), "left")
     
     ## Make GeneView plot
     geneview = GeneView()
