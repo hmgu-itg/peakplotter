@@ -7,8 +7,8 @@ import pandas as pd
 from bokeh.io import output_file
 from bokeh.core.properties import Int
 from bokeh.models import HoverTool, TapTool, OpenURL, LabelSet, ColumnDataSource, TapTool, OpenURL, Title, CustomJS, RangeSlider, CustomJSFilter, CDSView
+from bokeh.models.plots import Plot
 from bokeh.models.formatters import NumeralTickFormatter
-
 from bokeh.layouts import gridplot
 from bokeh.plotting import Figure, figure, save
 from bokeh.palettes import Spectral10
