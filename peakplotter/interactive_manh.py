@@ -185,10 +185,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     d['col'] = pd.cut(d['ld'], 9, labels = Spectral10[1:])
 
     d['logp'] = -np.log10(d['p-value'])
-    # logp of variants with p-value of 1.0 is calculated as -0.0, which causes
-    # problem downstream (like during centromere overlap check in make_peakplot function)
-    d.loc[d['logp']==-0.0, 'logp'] = 0.0
-
+    
     grouped_ff = _make_grouped_ff(chrom, start, end, build, logger)
 
 
@@ -269,17 +266,17 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
     
     # Slightly extend the edges for viewability
     chrom = set(e['chrom']).pop()
-    start = e['ps'].min()
-    end = e['ps'].max()
-    extend = (end - start) * 0.025
-    genome.x_range.start = start - extend
-    genome.x_range.end = end + extend
+    x_start = e['ps'].min()
+    x_end = e['ps'].max()
+    extend = (x_end - x_start) * 0.025
+    genome.x_range.start = x_start - extend
+    genome.x_range.end = x_end + extend
 
-    start = e['logp'].min()
-    end = e['logp'].max()
-    extend = (end - start) * 0.025
-    genome.x_range.start = start
-    genome.x_range.end = end + extend
+    y_start = e['logp'].min()
+    y_end = e['logp'].max()
+    extend = (y_end - y_start) * 0.025
+    genome.y_range.start = y_start
+    genome.y_range.end = y_end + extend
 
     genome.add_layout(Title(text="logp", align="center"), "left")
     
@@ -292,7 +289,7 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
     # Add centromere region info on geneview plot
     cen_start, cen_end = _interactive_manh.get_centromere_region(chrom, build)
     cen_coordinate = set(range(cen_start, cen_end))
-    region = set(range(start, end))
+    region = set(range(x_start, x_end))
     cen_overlap = region.intersection(cen_coordinate)
 
     if (len(cen_overlap)>0): # Add indication of the centromeric region in the plot
