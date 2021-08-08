@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import functools
 
 import numpy as np
 import pandas as pd
@@ -228,21 +228,17 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
 def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
     ## Prepare data to create peakplot
     e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger)
-    
+
     ## Make GenomeView plot
     genome = GenomeView()
-    source = ColumnDataSource(e)
-
-    # Make LD range slider
     range_slider = RangeSlider(start = 0.0, end = 1.0, value = (0.0, 1.0), step = 0.01, title = 'LD')
-    range_slider.js_on_change('value', CustomJS(args=dict(source=source), code="source.change.emit()"))
 
-    js_filter = CustomJSFilter(args = dict(slider = range_slider, d = source), code="""
+    p_CustomJSFilter = functools.partial(CustomJSFilter, code="""
         const start = slider.value[0]
         const end = slider.value[1]
         const indices = []
 
-        for (var i=0; i < source.get_length(); i++) {
+        for (var i=0; i < d.get_length(); i++) {
             var ld = d.data["ld"][i]
             if (start <= ld && ld <= end) {
                 indices.push(i)
@@ -251,19 +247,35 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
         return indices
     """)
 
-    view = CDSView(source = source, filters = [js_filter])
-
-    genome.circle(
+    p_genome_circle = functools.partial(genome.circle, 
         'ps', 
         'logp', 
-        source = source,
-        view = view,
         line_width = 2, 
         size = 9, 
         fill_color = 'col', 
         line_color = "black", 
-        line_alpha = 'col_assoc')
-    
+        line_alpha = 'col_assoc',
+    )
+
+
+    no_assoc_source = ColumnDataSource(e.loc[e['col_assoc']==0])
+    no_assoc_js_filter = p_CustomJSFilter(args = dict(slider = range_slider, d = no_assoc_source))
+    no_assoc_view = CDSView(source = no_assoc_source, filters = [no_assoc_js_filter])
+    p_genome_circle(source = no_assoc_source, view = no_assoc_view, legend_label = 'no assoc')
+
+    assoc_source = ColumnDataSource(e.loc[e['col_assoc']==1])
+    assoc_js_filter = p_CustomJSFilter(args = dict(slider = range_slider, d = assoc_source))
+    assoc_view = CDSView(source = assoc_source, filters = [assoc_js_filter])
+    p_genome_circle(source = assoc_source, view = assoc_view, legend_label = 'assoc')
+
+    # Make LD range slider
+    range_slider.js_on_change('value', CustomJS(args=dict(no_assoc=no_assoc_source, assoc=assoc_source, ), code="""
+    no_assoc.change.emit(); assoc.change.emit()
+    """))
+
+    genome.legend.location = "top_left"
+    genome.legend.click_policy="hide"
+
     # Slightly extend the edges for viewability
     chrom = set(e['chrom']).pop()
     x_start = e['ps'].min()
@@ -279,13 +291,13 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
     genome.y_range.end = y_end + extend
 
     genome.add_layout(Title(text="logp", align="center"), "left")
-    
+
     ## Make GeneView plot
-    geneview = GeneView()
+    geneview = GeneView(height = 500)
     geneview.update_view(genes)
     geneview.add_layout(Title(text="base position", align="center"), "below")
     geneview.x_range = genome.x_range
-    
+
     # Add centromere region info on geneview plot
     cen_start, cen_end = _interactive_manh.get_centromere_region(chrom, build)
     cen_coordinate = set(range(cen_start, cen_end))
@@ -303,8 +315,8 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
         cen = dict(x=[cen_median], y=[0.9], text=["Centromeric_region"])
         labels = LabelSet(x="x", y="y", text="text",  source=ColumnDataSource(cen))
         geneview.add_layout(labels)
-    
-    
+
+
     ## Make peakplot
     peakplot = gridplot([[range_slider], [genome], [geneview]])
     return peakplot
@@ -504,17 +516,3 @@ def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: 
 
     q=gridplot([[p], [p2]])
     save(q)
-
-
-if __name__ == '__main__':
-    file=sys.argv[1]
-    pvalcol=sys.argv[2]
-    pscol=sys.argv[3]
-    rscol=sys.argv[4]
-    mafcol=sys.argv[5]
-    chrcol=sys.argv[6]
-    a1col=sys.argv[7]
-    a2col=sys.argv[8]
-    build=sys.argv[9]
-    
-    interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, build)
