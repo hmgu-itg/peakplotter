@@ -69,7 +69,7 @@ class GeneView(Figure):
     
     line_width = Int(4, help="The thickness of the gene plotted.")
     
-    def __init__(self, *args, height = 300, width = 1500, **kw):
+    def __init__(self, *args, height = 500, width = 1500, **kw):
         if 'tools' not in kw:
             kw['tools'] = ['tap']
             
