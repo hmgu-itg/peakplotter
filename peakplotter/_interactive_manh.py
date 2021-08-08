@@ -172,7 +172,9 @@ def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server, logger):
     novelsnps=copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e['ld']>0.1) & (copied_e['ensembl_consequence']!='double allele'),]
     if novelsnps.empty:
         return copied_e
+    pd.options.mode.chained_assignment = None # Temporarily suppress the SettingWithCopyWarning message
     novelsnps['query']=novelsnps[chrcol].astype(str)+" "+novelsnps[pscol].astype(int).astype(str)+" . "+novelsnps[a1col].astype(str)+" "+novelsnps[a2col].astype(str)+" . . ."
+    pd.options.mode.chained_assignment = 'warn' # Reactivate the SettingWithCopyWarning message
     request='{ "variants" : ["'+'", "'.join(novelsnps['query'])+'" ] }'
     ext = "/vep/homo_sapiens/region"
     headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
