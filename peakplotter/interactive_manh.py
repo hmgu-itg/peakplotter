@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import functools
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,7 @@ from bokeh.layouts import gridplot
 from bokeh.plotting import Figure, figure, save
 from bokeh.palettes import Spectral10
 
+from . import __version__
 from . import _interactive_manh
 
 
@@ -298,6 +300,11 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
     geneview.update_view(genes)
     geneview.add_layout(Title(text="base position", align="center"), "below")
     geneview.x_range = genome.x_range
+
+    timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+    timestamp_text = f'Plot generated: {timestamp}'
+    geneview.add_layout(Title(text=timestamp_text, align="right"), "below")
+    geneview.add_layout(Title(text=f'Version: {__version__}', align="right"), "below")
 
     # Add centromere region info on geneview plot
     cen_start, cen_end = _interactive_manh.get_centromere_region(chrom, build)
