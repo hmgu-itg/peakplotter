@@ -185,7 +185,9 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     d['col'] = pd.cut(d['ld'], 9, labels = Spectral10[1:])
 
     d['logp'] = -np.log10(d['p-value'])
-
+    # logp of variants with p-value of 1.0 is calculated as -0.0, which causes
+    # problem downstream (like during centromere overlap check in make_peakplot function)
+    d.loc[d['logp']==-0.0, 'logp'] = 0.0
 
     grouped_ff = _make_grouped_ff(chrom, start, end, build, logger)
 
