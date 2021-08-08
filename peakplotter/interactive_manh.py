@@ -196,6 +196,8 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
 
     d['ensembl_assoc'].replace('', np.nan, inplace = True)
     d['ensembl_assoc'].fillna("none", inplace=True)
+    # Remove duplicate entries of ensembl_assoc 
+    d['ensembl_assoc'] = [';'.join(set(i.split(';'))) for i in d['ensembl_assoc']]
 
     # Create the alpha vector for associations in LD
     d['col_assoc']=0
@@ -324,6 +326,7 @@ def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1co
         logger = logger
     )
     save(peakplot)
+
 
 def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
     outfile=file+".html"
