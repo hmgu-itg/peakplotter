@@ -301,6 +301,8 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
     geneview.add_layout(Title(text="base position", align="center"), "below")
     geneview.x_range = genome.x_range
 
+    geneview.add_layout(Title(text=f'chr{chrom}:{x_start}-{x_end}', align="right"), "below")
+
     timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
     timestamp_text = f'Plot generated: {timestamp}'
     geneview.add_layout(Title(text=timestamp_text, align="right"), "below")
