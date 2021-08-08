@@ -21,6 +21,7 @@ class GenomeView(Figure):
     __view_model__ = "Plot"
     
     hover = HoverTool(tooltips = [
+            ("==============", "=============="),
             ("name", "@rs"),
             ("RS-id", "@ensembl_rs"),
             ("ld", "@ld"),
