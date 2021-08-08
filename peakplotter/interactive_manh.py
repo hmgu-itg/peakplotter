@@ -304,7 +304,7 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
     timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
     timestamp_text = f'Plot generated: {timestamp}'
     geneview.add_layout(Title(text=timestamp_text, align="right"), "below")
-    geneview.add_layout(Title(text=f'Version: {__version__}', align="right"), "below")
+    geneview.add_layout(Title(text=f'Version: v{__version__}', align="right"), "below")
 
     # Add centromere region info on geneview plot
     cen_start, cen_end = _interactive_manh.get_centromere_region(chrom, build)
