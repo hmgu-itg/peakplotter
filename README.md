@@ -24,10 +24,9 @@ A `Singularity` definition file is also available in the repository if you wish 
 ## Prerequisites
 PeakPlotter has has non-python dependencies.  
 In order to run PeakPlotter you need to install the following tools and add the executables to your `PATH`:
-* Plink 1.9 or newer ([available here](https://www.cog-genomics.org/plink2/index))
+* Plink 1.9 or newer ([available here](https://www.cog-genomics.org/plink/1.9/))
 * LocusZoom Standalone 1.4 or newer ([available here](http://genome.sph.umich.edu/wiki/LocusZoom_Standalone))
 * Tabix ([available here](https://github.com/samtools/htslib))
-* Moreutils (for `sponge`)
 
 PeakPlotter will throw a `MissingExecutableError` if you have any of the above tools missing in your `PATH` environment variable.  
 Add the necessary tools to your `PATH` like below:  
@@ -88,4 +87,10 @@ Options:
 ## Testing
 Run `pytest` at the root of the repository to run the testsuite.
 
-There aren't a lot of tests right now, and this is a work in progress. If you encounter any bugs, please raise an issue at the [issue page](https://github.com/hmgu-itg/peakplotter/issues).
+```bash
+git clone git@github.com:hmgu-itg/peakplotter.git
+cd peakplotter
+pytest
+```
+
+If you encounter any bugs, please raise an issue at the [issue page](https://github.com/hmgu-itg/peakplotter/issues).
