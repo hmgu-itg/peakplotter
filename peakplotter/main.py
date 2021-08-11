@@ -178,7 +178,7 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
     }
 
     log_level = logging.DEBUG if debug else logging.INFO
-    logger = make_logger(outdir.joinpath(f'{outdir.name}.log'), level = log_level)
+    logger = make_logger(outdir.joinpath(f'{outdir.name}.{chrom}.{start}.{end}.log'), level = log_level)
     logger.info(f'PeakPlotter Version: {__version__}')
     arg_string = '\nArguments: \n'
     for k, v in configs.items():

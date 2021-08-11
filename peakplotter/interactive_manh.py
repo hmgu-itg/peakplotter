@@ -1,17 +1,353 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*- 
 
-import sys
+import functools
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file
-from bokeh.models import HoverTool, TapTool, OpenURL, LabelSet, Span, Label, ColumnDataSource
+from bokeh.core.properties import Int
+from bokeh.models import HoverTool, TapTool, OpenURL, LabelSet, ColumnDataSource, TapTool, OpenURL, Title, CustomJS, RangeSlider, CustomJSFilter, CDSView
+from bokeh.models.formatters import NumeralTickFormatter
 from bokeh.layouts import gridplot
-from bokeh.plotting import figure, save
+from bokeh.plotting import Figure, figure, save
 from bokeh.palettes import Spectral10
 
+from . import __version__
 from . import _interactive_manh
+
+
+class GenomeView(Figure):
+    __subtype__ = "GenomeView"
+    __view_module__ = "bokeh" # https://github.com/bokeh/bokeh/issues/9412
+    __view_model__ = "Plot"
+    
+    hover = HoverTool(tooltips = [
+            ("==============", "=============="),
+            ("name", "@rs"),
+            ("RS-id", "@ensembl_rs"),
+            ("ld", "@ld"),
+            ("M.A.F", "@maf"),
+            ("overlaps gene", "@gene"),
+            ("consequence", "@ensembl_consequence"),
+            ("known associations", "@ensembl_assoc")
+    ])
+    
+    def __init__(self, *args, width = 1500, **kw):
+        if 'tools' not in kw:
+            kw['tools'] = [self.hover, 'box_zoom,wheel_zoom,undo,redo,reset,tap']
+        
+        super().__init__(*args, width = width, **kw)
+        
+        self.xaxis.formatter = NumeralTickFormatter()
+        self.toolbar_location="above"
+        
+    def update_view(self, data, build = 38):
+        source = ColumnDataSource(data)
+        server = "http://ensembl.org" if build==38 else "http://grch37.ensembl.org"
+        url = f"{server}/Homo_sapiens/Variation/Explore?v=@ensembl_rs"
+        taptool = self.select(type=TapTool)
+        taptool.callback = OpenURL(url=url)
+        self.circle(
+            'ps', 
+            'logp', 
+            line_width = 2, 
+            source = source, 
+            size = 9, 
+            fill_color = 'col', 
+            line_color = "black", 
+            line_alpha = 'col_assoc')
+        
+        
+        chrom = set(data['chrom']).pop()
+        start = int(data['ps'].min())
+        end = int(data['ps'].max())
+        self.title = f'chr{chrom}:{start}-{end}'
+
+        
+class GeneView(Figure):
+    __subtype__ = 'GeneView'
+    __view_module__ = "bokeh"
+    __view_model__ = "Plot"
+    
+    line_width = Int(4, help="The thickness of the gene plotted.")
+    
+    def __init__(self, *args, height = 500, width = 1500, **kw):
+        if 'tools' not in kw:
+            kw['tools'] = ['tap']
+            
+        super().__init__(*args, height = height, width = width, **kw)
+        
+        self.xaxis.formatter = NumeralTickFormatter()
+        self.yaxis.visible = False
+
+    def update_view(self, data):
+        if self.renderers:
+            for seg in self.renderers:
+                seg.visible = False
+            labels = self.select(LabelSet)
+            for lab in labels:
+                lab.visible = False
+                
+            
+        genes = data.copy()
+        
+        gene_count = data.shape[0]
+        rng = np.random.default_rng()
+        ys = rng.choice(gene_count, size=gene_count, replace=False)
+
+        genes['y'] = ys
+
+        genes['color'] = "cornflowerblue"
+        genes['protein_coding'] = 'not protein coding'
+        genes.loc[genes['biotype']=="protein_coding", 'color']="goldenrod"
+        genes.loc[genes['biotype']=="protein_coding", 'protein_coding']="protein coding"
+
+        genes['sens'] = "<"
+        genes.loc[genes['strand']>0, 'sens'] = ">"
+        
+        no_names = genes['external_name'] == ''
+        genes.loc[no_names, 'external_name'] = genes.loc[no_names, 'gene_id']
+
+        genes['name'] = genes['sens'] + genes['external_name']
+        
+        # source = ColumnDataSource(genes)
+        
+        for _type in ('not protein coding', 'protein coding'):
+            subset_source = ColumnDataSource(genes.loc[genes['protein_coding']==_type])
+            segments = self.segment(
+                source = subset_source,
+                x0='start',
+                x1='end',
+                y0='y',
+                y1='y',
+                line_width=self.line_width,
+                color='color',
+                legend_label = _type
+            )
+            
+            labels = LabelSet(x='start', y='y', text='name', source = subset_source)
+            self.add_layout(labels)
+            
+            segments.js_on_change('visible', CustomJS(args={'ls': labels}, code="ls.visible = cb_obj.visible;"))
+            
+
+        # labels = LabelSet(x='start', y='y', text='name', source=source)
+        # self.add_layout(labels)
+        self.legend.location = "top_left"
+        self.legend.click_policy="hide"
+
+
+def _make_grouped_ff(chrom, start, end, build, logger):
+    server = _interactive_manh.get_build_server(build)
+    ff = _interactive_manh.get_rsid_in_region(chrom, start, end, server, logger)
+    logger.debug(ff.head())
+    columns = ['ensembl_rs', 'ps', 'ensembl_consequence', 'ensembl_assoc']
+    ff.columns = columns
+
+    dedup_ff = ff[~ff['ps'].duplicated(keep = False)]
+    dup_ff = ff[ff['ps'].duplicated(keep = False)]
+    grouped_dup_ff = dup_ff.groupby('ps').apply(lambda x: pd.Series({
+                        'ensembl_consequence': ";".join(x['ensembl_consequence'].unique()),
+                        'ensembl_rs': ";".join(x['ensembl_rs'].unique()),
+                        'ensembl_assoc': ";".join(set(x['ensembl_assoc']))}))\
+                    .reset_index()
+
+    grouped_ff = pd.concat([
+                    dedup_ff[columns],
+                    grouped_dup_ff[columns]
+                ]).sort_values('ps').reset_index(drop = True)
+    
+    grouped_ff['ps'] = grouped_ff['ps'].astype(int)
+    
+    return grouped_ff
+
+
+def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
+    d = pd.read_csv(file, sep=",",index_col=False)
+    d.replace(r'\s+', np.nan, regex=True, inplace = True)
+    d.rename(inplace = True, 
+             columns = {
+                 pvalcol: 'p-value',
+                 chrcol: 'chrom',
+                 pscol: 'ps',
+                 a1col: 'a1',
+                 a2col: 'a2',
+                 mafcol: 'maf'
+             }
+    )
+
+    chrom = set(d['chrom']) # This is for later to check whether the region window overlaps a centromere.
+    assert len(chrom)==1, "The chromosome spans across multiple chromosomes, which is impossible."
+    chrom = int(chrom.pop())
+    start = int(d['ps'].min())
+    end = int(d['ps'].max())
+    server = _interactive_manh.get_build_server(build)
+
+    # LD colour
+    d['col'] = pd.cut(d['ld'], 9, labels = Spectral10[1:])
+
+    d['logp'] = -np.log10(d['p-value'])
+    
+    grouped_ff = _make_grouped_ff(chrom, start, end, build, logger)
+
+
+    d = pd.merge(d, grouped_ff, on='ps', how='left')
+    d['ensembl_rs'].fillna('novel', inplace = True)
+    d['ensembl_consequence'].fillna('novel', inplace = True)
+
+    d['ensembl_assoc'].replace('', np.nan, inplace = True)
+    d['ensembl_assoc'].fillna("none", inplace=True)
+    # Remove duplicate entries of ensembl_assoc 
+    d['ensembl_assoc'] = [';'.join(set(i.split(';'))) for i in d['ensembl_assoc']]
+
+    # Create the alpha vector for associations in LD
+    d['col_assoc']=0
+    d.loc[(d['ensembl_assoc']!="none") & (d['ld']>0.1), 'col_assoc']=1
+    d['col_assoc'] = d['col_assoc'].astype(int)
+
+
+
+    # ENSEMBL consequences for variants in LD that do not have rs-ids
+    # logger.debug(f"e=_interactive_manh.get_csq_novel_variants(e, '{chrcol}', '{pscol}', '{a1col}', '{a2col}', '{server}', logger)")
+    e = _interactive_manh.get_csq_novel_variants(d, 'chrom', 'ps', 'a1', 'a2', server, logger)
+
+    genes = _interactive_manh.get_overlap_genes(chrom, start, end, server, logger)
+    f_genes = genes[genes['external_name']!='']
+    e['gene']=""
+    for index, row in f_genes.iterrows():
+        external_name = row['external_name']
+        if external_name=='':
+            # TODO: This case is things like pseudogenes, IncRNA, and rRNA genes.
+            # Check with Arthur whether these genes should just be removed completely
+            external_name = row['biotype']
+        overlap = (e['ps']>row['start']) & (e['ps']<row['end'])
+        e.loc[overlap, 'gene']=e.loc[overlap, 'gene']+";"+external_name
+    e['gene'] = e['gene'].str.replace(r'^\;', '')
+    
+    return e, genes
+
+
+def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
+    ## Prepare data to create peakplot
+    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger)
+
+    ## Make GenomeView plot
+    genome = GenomeView()
+    range_slider = RangeSlider(start = 0.0, end = 1.0, value = (0.0, 1.0), step = 0.01, title = 'LD')
+
+    p_CustomJSFilter = functools.partial(CustomJSFilter, code="""
+        const start = slider.value[0]
+        const end = slider.value[1]
+        const indices = []
+
+        for (var i=0; i < d.get_length(); i++) {
+            var ld = d.data["ld"][i]
+            if (start <= ld && ld <= end) {
+                indices.push(i)
+            }
+        }
+        return indices
+    """)
+
+    p_genome_circle = functools.partial(genome.circle, 
+        'ps', 
+        'logp', 
+        line_width = 2, 
+        size = 9, 
+        fill_color = 'col', 
+        line_color = "black", 
+        line_alpha = 'col_assoc',
+    )
+
+
+    no_assoc_source = ColumnDataSource(e.loc[e['col_assoc']==0])
+    no_assoc_js_filter = p_CustomJSFilter(args = dict(slider = range_slider, d = no_assoc_source))
+    no_assoc_view = CDSView(source = no_assoc_source, filters = [no_assoc_js_filter])
+    p_genome_circle(source = no_assoc_source, view = no_assoc_view, legend_label = 'no assoc')
+
+    assoc_source = ColumnDataSource(e.loc[e['col_assoc']==1])
+    assoc_js_filter = p_CustomJSFilter(args = dict(slider = range_slider, d = assoc_source))
+    assoc_view = CDSView(source = assoc_source, filters = [assoc_js_filter])
+    p_genome_circle(source = assoc_source, view = assoc_view, legend_label = 'assoc')
+
+    # Make LD range slider
+    range_slider.js_on_change('value', CustomJS(args=dict(no_assoc=no_assoc_source, assoc=assoc_source, ), code="""
+    no_assoc.change.emit(); assoc.change.emit()
+    """))
+
+    genome.legend.location = "top_left"
+    genome.legend.click_policy="hide"
+
+    # Slightly extend the edges for viewability
+    chrom = set(e['chrom']).pop()
+    x_start = e['ps'].min()
+    x_end = e['ps'].max()
+    extend = (x_end - x_start) * 0.025
+    genome.x_range.start = x_start - extend
+    genome.x_range.end = x_end + extend
+
+    y_start = e['logp'].min()
+    y_end = e['logp'].max()
+    extend = (y_end - y_start) * 0.025
+    genome.y_range.start = y_start
+    genome.y_range.end = y_end + extend
+
+    genome.add_layout(Title(text="logp", align="center"), "left")
+
+    ## Make GeneView plot
+    geneview = GeneView(height = 500)
+    geneview.update_view(genes)
+    geneview.add_layout(Title(text="base position", align="center"), "below")
+    geneview.x_range = genome.x_range
+
+    geneview.add_layout(Title(text=f'chr{chrom}:{x_start}-{x_end}', align="right"), "below")
+
+    timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+    timestamp_text = f'Plot generated: {timestamp}'
+    geneview.add_layout(Title(text=timestamp_text, align="right"), "below")
+    geneview.add_layout(Title(text=f'Version: v{__version__}', align="right"), "below")
+
+    # Add centromere region info on geneview plot
+    cen_start, cen_end = _interactive_manh.get_centromere_region(chrom, build)
+    cen_coordinate = set(range(cen_start, cen_end))
+    region = set(range(x_start, x_end))
+    cen_overlap = region.intersection(cen_coordinate)
+
+    if (len(cen_overlap)>0): # Add indication of the centromeric region in the plot
+        perc_overlap=int((len(cen_overlap)/len(region))*100)
+        logger.info("\t\t\t    {0}% of the genomic region overlaps a centromere".format(perc_overlap))
+
+        xs = min(cen_overlap)
+        xe = max(cen_overlap)+1
+        cen_median = max(cen_overlap)-int((max(cen_overlap)-min(cen_overlap))/2)
+        geneview.segment(x0=xs, x1=xe, y0=0.5, y1=0.5, line_width=100, color="grey")
+        cen = dict(x=[cen_median], y=[0.9], text=["Centromeric_region"])
+        labels = LabelSet(x="x", y="y", text="text",  source=ColumnDataSource(cen))
+        geneview.add_layout(labels)
+
+
+    ## Make peakplot
+    peakplot = gridplot([[range_slider], [genome], [geneview]])
+    return peakplot
+
+
+def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
+    output_file(filename = outfile, title = title)
+
+    peakplot = make_peakplot(
+        infile = infile,
+        chrcol = chrcol,
+        pscol = pscol,
+        a1col = a1col,
+        a2col = a2col,
+        pvalcol = pvalcol,
+        mafcol = mafcol,
+        build = build,
+        logger = logger
+    )
+    save(peakplot)
+
 
 def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
     outfile=file+".html"
@@ -190,17 +526,3 @@ def interactive_manh(file, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: 
 
     q=gridplot([[p], [p2]])
     save(q)
-
-
-if __name__ == '__main__':
-    file=sys.argv[1]
-    pvalcol=sys.argv[2]
-    pscol=sys.argv[3]
-    rscol=sys.argv[4]
-    mafcol=sys.argv[5]
-    chrcol=sys.argv[6]
-    a1col=sys.argv[7]
-    a2col=sys.argv[8]
-    build=sys.argv[9]
-    
-    interactive_manh(file, pvalcol, pscol, rscol, mafcol, chrcol, a1col, a2col, build)
