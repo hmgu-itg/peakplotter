@@ -281,14 +281,12 @@ def process_peak(assocfile: str,
     elif build == 37:
         b = 'b37'
     
-    logger.debug(f"Running make_peakplot")
-    
+    logger.debug("Running make_peakplot")
     input_file = str(joined_peakdata_ld_file)
-    output_file = input_file+".html"
     title = f"chr{chrom}:{start}-{end}"
     output_peakplot(
         infile = input_file,
-        outfile = output_file,
+        outfile = input_file, # Will output .html and .csv with this prefix
         title = title,
         pvalcol = pval_col,
         pscol = pos_col,

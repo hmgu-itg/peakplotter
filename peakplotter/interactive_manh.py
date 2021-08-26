@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from bokeh.io import output_file
 from bokeh.core.properties import Int
-from bokeh.models import HoverTool, TapTool, OpenURL, LabelSet, ColumnDataSource, TapTool, OpenURL, Title, CustomJS, RangeSlider, CustomJSFilter, CDSView
+from bokeh.models import HoverTool, TapTool, OpenURL, LabelSet, ColumnDataSource, Title, CustomJS, RangeSlider, CustomJSFilter, CDSView
 from bokeh.models.formatters import NumeralTickFormatter
 from bokeh.layouts import gridplot
 from bokeh.plotting import Figure, figure, save
@@ -228,10 +228,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     return e, genes
 
 
-def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
-    ## Prepare data to create peakplot
-    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger)
-
+def _create_peakplot(e, genes, build, logger):
     ## Make GenomeView plot
     genome = GenomeView()
     range_slider = RangeSlider(start = 0.0, end = 1.0, value = (0.0, 1.0), step = 0.01, title = 'LD')
@@ -332,20 +329,24 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
     return peakplot
 
 
-def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
-    output_file(filename = outfile, title = title)
+def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
+    ## Prepare data to create peakplot
+    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger)
+    peakplot = _create_peakplot(e, genes, build, logger)
 
-    peakplot = make_peakplot(
-        infile = infile,
-        chrcol = chrcol,
-        pscol = pscol,
-        a1col = a1col,
-        a2col = a2col,
-        pvalcol = pvalcol,
-        mafcol = mafcol,
-        build = build,
-        logger = logger
-    )
+    return peakplot
+
+
+
+def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
+    html = f'{outfile}.html'
+    csv = f'{outfile}.csv'
+    output_file(filename = html, title = title)
+
+    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger)
+    peakplot = _create_peakplot(e, genes, build, logger)
+    
+    e.to_csv(csv, header = True, index = False)
     save(peakplot)
 
 
