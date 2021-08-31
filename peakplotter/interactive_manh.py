@@ -22,7 +22,8 @@ class GenomeView(Figure):
     __view_module__ = "bokeh" # https://github.com/bokeh/bokeh/issues/9412
     __view_model__ = "Plot"
     
-    hover = HoverTool(tooltips = [
+    def __init__(self, *args, width = 1500, **kw):
+        hover = HoverTool(tooltips = [
             ("==============", "=============="),
             ("name", "@rs"),
             ("RS-id", "@ensembl_rs"),
@@ -31,11 +32,10 @@ class GenomeView(Figure):
             ("overlaps gene", "@gene"),
             ("consequence", "@ensembl_consequence"),
             ("known associations", "@ensembl_assoc")
-    ])
-    
-    def __init__(self, *args, width = 1500, **kw):
+        ])
+        
         if 'tools' not in kw:
-            kw['tools'] = [self.hover, 'box_zoom,wheel_zoom,undo,redo,reset,tap']
+            kw['tools'] = [hover, 'box_zoom,wheel_zoom,undo,redo,reset,tap']
         
         super().__init__(*args, width = width, **kw)
         
