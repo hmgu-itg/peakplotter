@@ -70,8 +70,6 @@ def test_PeakCollection_merge2_multiple_peaks_merge():
     ]
 
     peaks.merge()
-
-    print(peaks)
     assert peaks == expected
 
 def test_PeakCollection_merge3_only_one_peak():
@@ -95,7 +93,6 @@ def test_PeakCollection_merge4_no_peak():
     expected = PeakCollection()
 
     peaks.merge()
-    print(peaks)
     assert peaks == expected
 
 def test_PeakCollection_merge5_realworld_issue():
