@@ -119,6 +119,15 @@ class PeakCollection(list):
     def sort(self):
         self[:] = sorted(self, key = attrgetter('chrom', 'start', 'end'))
 
+    @classmethod
+    def from_list(cls, input: list, MARGIN = 500_000):
+        if not all([isinstance(i, Peak) for i in input]):
+            raise ValueError("Input list has object other than 'Peak'.")
+        instance = cls(MARGIN)
+        instance[:] = input
+        
+        return instance
+
         
 def peakit(signals: pd.DataFrame, pval_col: str, chr_col: str, pos_col: str, flank: int) -> PeakCollection:
     sorted_signals = signals.sort_values(pval_col)
