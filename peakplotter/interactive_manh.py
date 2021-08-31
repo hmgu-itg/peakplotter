@@ -10,7 +10,7 @@ from bokeh.core.properties import Int
 from bokeh.models import HoverTool, TapTool, OpenURL, LabelSet, ColumnDataSource, Title, CustomJS, RangeSlider, CustomJSFilter, CDSView
 from bokeh.models.formatters import NumeralTickFormatter
 from bokeh.layouts import gridplot
-from bokeh.plotting import Figure, figure, save
+from bokeh.plotting import Figure, save
 from bokeh.palettes import Spectral10
 
 from . import __version__
