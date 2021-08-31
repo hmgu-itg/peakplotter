@@ -78,34 +78,22 @@ class PeakCollection(list):
         return d
 
     def merge(self):
-        self.sort()
-        merged_collection = PeakCollection()
-        curr_peak = None
-        for i in range(len(self)):
-            if curr_peak is None:
-                curr_peak = self[i]
-                continue
+        if self.data.empty:
+            return 
+
+        data = list()
+        for chrom in set(self.data['chrom']):
+            df = self.data.loc[self.data['chrom']==chrom].copy()
+            df['group']=(df['start']>df['end'].shift()).cumsum()
+            df = df.groupby('group', as_index=False).agg({'start': min, 'end': max})
+            df.insert(0, 'chrom', chrom)
+            df.drop(columns = 'group', inplace = True)
+            data.append(df)
+        data = pd.concat(data).sort_values(['chrom', 'start']).reset_index(drop=True)
+        input_list = [Peak(*row) for _, row in data.iterrows()]
             
-            next_peak = self[i]
-            if curr_peak.chrom != next_peak.chrom:
-                merged_collection.append(curr_peak)
-                curr_peak = next_peak
-                continue
-            
-            curr_peak_range = set(range(curr_peak.start, curr_peak.end + 1))
-            next_peak_range = set(range(next_peak.start, next_peak.end + 1))
-            
-            if curr_peak_range.intersection(next_peak_range):
-                curr_peak = Peak(curr_peak.chrom, min(curr_peak.start, next_peak.start), max(curr_peak.end, next_peak.end))
-            else:
-                merged_collection.append(curr_peak)
-                merged_collection.append(next_peak)
-        else:
-            if curr_peak is not None:
-                merged_collection.append(curr_peak)
-        
         # Replace 
-        self[:] = merged_collection
+        self[:] = input_list
 
     def __eq__(self, other):
         if not isinstance(other, PeakCollection):
