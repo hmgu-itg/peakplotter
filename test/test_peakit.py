@@ -70,7 +70,6 @@ def test_PeakCollection_merge2_multiple_peaks_merge():
     ]
 
     peaks.merge()
-
     assert peaks == expected
 
 def test_PeakCollection_merge3_only_one_peak():
@@ -94,5 +93,29 @@ def test_PeakCollection_merge4_no_peak():
     expected = PeakCollection()
 
     peaks.merge()
+    assert peaks == expected
 
+def test_PeakCollection_merge5_realworld_issue():
+    peaks = PeakCollection(1_000_000)
+    peaks[:] = [
+            Peak(12, 110923854, 112923854),
+            Peak(11, 3799547, 5799547),
+            Peak(12, 111040394, 113040394),
+            Peak(15, 57969652, 59969652),
+            Peak(17, 20111317, 22111317),
+            Peak(9, 107482258, 109482258),
+            Peak(11, 46679665, 48679665),
+            Peak(7, 109250995, 111250995)
+            ]
+    expected = PeakCollection(1_000_000)
+    expected[:] = [
+            Peak(7, 109250995, 111250995),
+            Peak(9, 107482258, 109482258),
+            Peak(11, 3799547, 5799547), # For some reason, this peak had duplicated
+            Peak(11, 46679665, 48679665),
+            Peak(12, 110923854, 113040394),
+            Peak(15, 57969652, 59969652),
+            Peak(17, 20111317, 22111317)
+            ]
+    peaks.merge()
     assert peaks == expected
