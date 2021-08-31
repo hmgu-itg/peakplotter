@@ -38,12 +38,6 @@ From: ubuntu:18.04
 	LD_DB={"b38":{}}
 	EOF
 
-
-# Bedtools
-    apt install -y python-pip
-    apt-get install -y zlib1g zlib1g-dev firefox python-dev emacs
-    pip install scipy pandas numpy scikit-learn==0.14.1
-
 # PLINK
     cd /opt
     mkdir plink
