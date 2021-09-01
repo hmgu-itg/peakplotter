@@ -43,10 +43,10 @@ def _divide_query_parts(start: int, end: int) -> list:
     pos = start
     parts = list()
     while remain:
-        if remain // ensembl_max:
+        if remain // _ENSEMBL_MAX:
             parts.append((pos, pos+_ENSEMBL_MAX-1))
-            pos+=ensembl_max
-            remain-=ensembl_max
+            pos+=_ENSEMBL_MAX
+            remain-=_ENSEMBL_MAX
         else:
             parts.append((pos, pos+remain))
             break
