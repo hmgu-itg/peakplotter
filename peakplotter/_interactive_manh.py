@@ -113,9 +113,9 @@ def make_resp(snps: pd.DataFrame, pheno: pd.DataFrame) -> pd.DataFrame:
 
 def get_rsid_in_region(chrom, start, end, server, logger):
 
-    logger.debug(f"get_variants_in_region({chrom}, {start}, {end}, {server}")
+    logger.debug(f"get_variants_in_region({chrom}, {start}, {end}, '{server}')")
     snps = get_variants_in_region(chrom, start, end, server)
-    logger.debug(f"get_phenos_in_region({chrom}, {start}, {end}, {server}")
+    logger.debug(f"get_phenos_in_region({chrom}, {start}, {end}, '{server}')")
     pheno = get_phenos_in_region(chrom, start, end, server)
     
     resp = make_resp(snps, pheno)
