@@ -212,7 +212,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     # logger.debug(f"e=_interactive_manh.get_csq_novel_variants(e, '{chrcol}', '{pscol}', '{a1col}', '{a2col}', '{server}', logger)")
     e = _interactive_manh.get_csq_novel_variants(d, 'chrom', 'ps', 'a1', 'a2', server, logger)
 
-    genes = _interactive_manh.get_overlap_genes(chrom, start, end, server, logger)
+    genes = _interactive_manh.get_overlap_genes(chrom, start, end, server)
     f_genes = genes[genes['external_name']!='']
     e['gene']=""
     for index, row in f_genes.iterrows():
