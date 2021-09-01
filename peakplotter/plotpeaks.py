@@ -159,7 +159,7 @@ def process_peak(assocfile: str,
     peakdata_chrpos = peakdata[[rs_col, chr_col, pos_col]]
     peakdata_chrpos.columns = ['snp', 'chr', 'pos']
 
-    peakdata_chrpos_path = outdir.joinpath('peakdata.chrpos')
+    peakdata_chrpos_path = outdir.joinpath(f'{chrom}.{start}.{end}.peakdata.chrpos')
     db_file = outdir.joinpath(f'{chrom}.{start}.db')
     logger.debug(f'Generating peakdata.chrpos to {peakdata_chrpos_path}')
     peakdata_chrpos.to_csv(peakdata_chrpos_path, sep = '\t', index = False)
@@ -206,8 +206,8 @@ def process_peak(assocfile: str,
     assert len(mergelist) >= 1, f'mergelist length is {len(mergelist)}'
     logger.debug(f"{mergelist}")
     logger.info(f"Merging {mergelist}")
-    mergelist_file = str(outdir.joinpath('mergelist'))
-    out_merge = str(outdir.joinpath(f'peak.{current+1}'))
+    mergelist_file = str(outdir.joinpath(f'{chrom}.{start}.{end}.mergelist'))
+    out_merge = str(outdir.joinpath(f'{chrom}.{start}.{end}.peak'))
     
     logger.debug(f"plink.merge_region({mergelist_file}, '{mergelist}', {chrom}, {start}, {end}, '{out_merge}')")
     ps = plink.merge_region(mergelist_file, mergelist, chrom, start, end, out_merge)
@@ -265,7 +265,7 @@ def process_peak(assocfile: str,
     subset_ld_data = ld_data[['snp2', 'dprime']].sort_values('snp2').reset_index(drop = True)
     subset_ld_data.columns = [rs_col, 'ld']
 
-    peakdata_file = outdir.joinpath('peakdata.header')
+    peakdata_file = outdir.joinpath(f'{chrom}.{start}.{end}.peakdata.header')
     peakdata.to_csv(peakdata_file, sep = '\t', header = True, index = False)
 
     joined_peakdata_ld = peakdata.merge(subset_ld_data, on = rs_col)
