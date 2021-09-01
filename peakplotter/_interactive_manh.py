@@ -8,6 +8,10 @@ import pandas as pd
 from peakplotter.data import CENTROMERE_B37, CENTROMERE_B38
 
 
+_ENSEMBL_MAX = 5_000_000
+# Ensembl REST API GET for some region based queries limit the
+# query range to 5Mb. 
+
 def get_build_server(build: Union[int, str]) -> str:
 	B38_SERVER = "https://rest.ensembl.org"
 	B37_SERVER = "http://grch37.rest.ensembl.org"
@@ -33,10 +37,33 @@ def _query(url, headers = None):
     decoded = r.json()
     return decoded
 
+
+def _divide_query_parts(start: int, end: int) -> list:
+    remain = end - start
+    pos = start
+    parts = list()
+    while remain:
+        if remain // ensembl_max:
+            parts.append((pos, pos+_ENSEMBL_MAX-1))
+            pos+=ensembl_max
+            remain-=ensembl_max
+        else:
+            parts.append((pos, pos+remain))
+            break
+    return parts
+
+
 def get_variants_in_region(chrom, start, end, server) -> pd.DataFrame:
     # REST API Request
-    url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=variation'
-    decoded = _query(url)
+    if end - start > _ENSEMBL_MAX:
+        parts = _divide_query_parts(start, end)
+        decoded = list()
+        for (start, end) in parts:
+            url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=variation'
+            decoded.extend(_query(url))
+    else:
+        url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=variation'
+        decoded = _query(url)
     
     # Process json data to DataFrame
     snps = pd.DataFrame(decoded)
@@ -197,10 +224,16 @@ def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server, logger):
     return copied_e
 
 
-def get_overlap_genes(chrom, start, end, server, logger) -> pd.DataFrame:
-    url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=gene'
-    logger.info("\t\t\t🌐   Querying Ensembl overlap (Genes, GET) :"+url)
-    decoded = _query(url)
+def get_overlap_genes(chrom, start, end, server) -> pd.DataFrame:
+    if end - start > _ENSEMBL_MAX:
+        parts = _divide_query_parts(start, end)
+        decoded = list()
+        for (start, end) in parts:
+            url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=gene'
+            decoded.extend(_query(url))
+    else:
+        url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=gene'
+        decoded = _query(url)
     
     df = pd.DataFrame(decoded).fillna('')
     if 'external_name' not in df.columns:
@@ -210,6 +243,7 @@ def get_overlap_genes(chrom, start, end, server, logger) -> pd.DataFrame:
         # so we modify the function without a test.
         df['external_name'] = ''
     return df
+
 
 def _get_build_centromere_file(build: Union[int, str]) -> str:
     mapper = {
