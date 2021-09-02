@@ -9,6 +9,7 @@ from peakplotter.data import CENTROMERE_B37, CENTROMERE_B38
 
 
 _ENSEMBL_MAX = 5_000_000
+_ENSEMBL_PARTS = 2_000_000
 # Ensembl REST API GET for some region based queries limit the
 # query range to 5Mb. 
 
@@ -44,9 +45,9 @@ def _divide_query_parts(start: int, end: int) -> list:
     parts = list()
     while remain:
         if remain // _ENSEMBL_MAX:
-            parts.append((pos, pos+_ENSEMBL_MAX-1))
-            pos+=_ENSEMBL_MAX
-            remain-=_ENSEMBL_MAX
+            parts.append((pos, pos+_ENSEMBL_PARTS))
+            pos+=_ENSEMBL_PARTS
+            remain-=_ENSEMBL_PARTS
         else:
             parts.append((pos, pos+remain))
             break
