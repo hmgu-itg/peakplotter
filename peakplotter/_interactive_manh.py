@@ -79,8 +79,15 @@ def get_variants_in_region(chrom, start, end, server) -> pd.DataFrame:
 
 
 def get_phenos_in_region(chrom, start, end, server) -> pd.DataFrame:
-    url = f'{server}/phenotype/region/homo_sapiens/{chrom}:{start}-{end}?feature_type=Variation'
-    json_data = _query(url)
+    if end - start > _ENSEMBL_MAX:
+        parts = _divide_query_parts(start, end)
+        json_data = list()
+        for (start, end) in parts:
+            url = f'{server}/phenotype/region/homo_sapiens/{chrom}:{start}-{end}?feature_type=Variation'
+            json_data.extend(_query(url))
+    else:
+        url = f'{server}/phenotype/region/homo_sapiens/{chrom}:{start}-{end}?feature_type=Variation'
+        json_data = _query(url)
     
     pheno = _process_pheno_r(json_data)
     
