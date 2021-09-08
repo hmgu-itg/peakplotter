@@ -269,6 +269,7 @@ def process_peak(assocfile: str,
     peakdata.to_csv(peakdata_file, sep = '\t', header = True, index = False)
 
     joined_peakdata_ld = peakdata.merge(subset_ld_data, on = rs_col, how = 'left')
+    joined_peakdata_ld['ld'].fillna(-1)
     joined_peakdata_ld_file = outdir.joinpath(f'{chrom}.{start}.{end}.500kb')
     joined_peakdata_ld.to_csv(joined_peakdata_ld_file, sep = ',', header = True, index = False)
 
