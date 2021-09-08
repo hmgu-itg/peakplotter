@@ -203,7 +203,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
 
     # Create the alpha vector for associations in LD
     d['col_assoc']=0
-    d.loc[(d['ensembl_assoc']!="none") & (d['ld']>0.1), 'col_assoc']=1
+    d.loc[d['ensembl_assoc']!="none", 'col_assoc']=1
     d['col_assoc'] = d['col_assoc'].astype(int)
 
 
@@ -231,7 +231,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
 def _create_peakplot(e, genes, build, logger):
     ## Make GenomeView plot
     genome = GenomeView()
-    range_slider = RangeSlider(start = 0.0, end = 1.0, value = (0.0, 1.0), step = 0.01, title = 'LD')
+    range_slider = RangeSlider(start = -0.01, end = 1.0, value = (-0.01, 1.0), step = 0.01, title = 'LD')
 
     p_CustomJSFilter = functools.partial(CustomJSFilter, code="""
         const start = slider.value[0]
