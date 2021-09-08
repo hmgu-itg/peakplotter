@@ -267,10 +267,11 @@ def process_peak(assocfile: str,
 
     peakdata_file = outdir.joinpath(f'{chrom}.{start}.{end}.peakdata.header')
     peakdata.to_csv(peakdata_file, sep = '\t', header = True, index = False)
-
+    logger.debug('Merging LD info to main dataframe')
     joined_peakdata_ld = peakdata.merge(subset_ld_data, on = rs_col, how = 'left')
-    joined_peakdata_ld['ld'].fillna(-0.01)
+    joined_peakdata_ld['ld'].fillna(-0.01, inplace = True)
     joined_peakdata_ld['ld'] = joined_peakdata_ld['ld'].astype(float)
+    logger.debug(joined_peakdata_ld['ld'])
     joined_peakdata_ld_file = outdir.joinpath(f'{chrom}.{start}.{end}.500kb')
     joined_peakdata_ld.to_csv(joined_peakdata_ld_file, sep = ',', header = True, index = False)
 
