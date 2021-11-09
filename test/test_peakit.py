@@ -119,3 +119,36 @@ def test_PeakCollection_merge5_realworld_issue():
             ]
     peaks.merge()
     assert peaks == expected
+
+def test_PeakCollection_merge6_realworld_issue():
+    """
+    This checks something very different from the above!
+    So don't delete this thinking it's the same!
+    """
+    peaks = PeakCollection(1_000_000)
+    peaks[:] = [
+            Peak(11, 30000, 60000),
+            Peak(11, 5000000, 6000000),
+            ]
+    expected = PeakCollection(1_000_000)
+    expected[:] = [
+            Peak(11, 30000, 60000),
+            Peak(11, 5000000, 6000000),
+            ]
+    peaks.merge()
+    assert peaks == expected
+
+
+def test_PeakCollection_merge7_realworld_issue2():
+    peaks = PeakCollection(1_000_000)
+    peaks[:] = [Peak(1, 100, 200),
+                Peak(1, 150, 300), # <- You see this Peak's end position is longer than the next Peak?
+                Peak(1, 180, 200), # The above Peak should allow it to merge with the Peak below. 
+                Peak(1, 250, 400),
+                ]
+    expected = PeakCollection(1_000_000)
+    expected[:] = [
+            Peak(1, 100, 400),
+            ]
+    peaks.merge()
+    assert peaks == expected

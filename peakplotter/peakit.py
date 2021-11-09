@@ -81,19 +81,31 @@ class PeakCollection(list):
         if self.data.empty:
             return 
 
-        data = list()
+        input_list = list()
         for chrom in set(self.data['chrom']):
-            df = self.data.loc[self.data['chrom']==chrom].copy()
-            df['group']=(df['start']>df['end'].shift()).cumsum()
-            df = df.groupby('group', as_index=False).agg({'start': min, 'end': max})
-            df.insert(0, 'chrom', chrom)
-            df.drop(columns = 'group', inplace = True)
-            data.append(df)
-        data = pd.concat(data).sort_values(['chrom', 'start']).reset_index(drop=True)
-        input_list = [Peak(*row) for _, row in data.iterrows()]
+            df = self.data.loc[self.data['chrom']==chrom].reset_index(drop=True)
+            curr_peak = None
+            for i, row in df.iterrows():
+                if curr_peak is None:
+                    curr_peak = Peak(row['chrom'], row['start'], row['end'])
+                    continue
+                x = range(curr_peak.start, curr_peak.end)
+                y = range(row['start'], row['end'])
+                overlap = bool(range(max(x[0], y[0]), min(x[-1], y[-1])+1))
+                if overlap:
+                    curr_peak = Peak(chrom, min(x[0], y[0]), max(x[-1], y[-1])+1)
+                else: 
+                    input_list.append(curr_peak)
+                    curr_peak = None
+                    # We don't want to accidentally discard the last row
+                    if i == df.shape[0]-1:
+                        curr_peak = Peak(row['chrom'], row['start'], row['end'])
+            else:
+                input_list.append(curr_peak)
             
         # Replace 
         self[:] = input_list
+        self.sort()
 
     def __eq__(self, other):
         if not isinstance(other, PeakCollection):
