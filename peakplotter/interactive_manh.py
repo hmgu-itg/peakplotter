@@ -7,14 +7,17 @@ import numpy as np
 import pandas as pd
 from bokeh.io import output_file
 from bokeh.core.properties import Int
-from bokeh.models import HoverTool, TapTool, OpenURL, LabelSet, ColumnDataSource, Title, CustomJS, RangeSlider, CustomJSFilter, CDSView
+from bokeh.models import (HoverTool, TapTool, OpenURL, 
+                         LabelSet, ColumnDataSource, Title, 
+                         CustomJS, RangeSlider, CustomJSFilter, 
+                         CDSView, CheckboxButtonGroup)
 from bokeh.models.formatters import NumeralTickFormatter
 from bokeh.layouts import gridplot
 from bokeh.plotting import Figure, save
 from bokeh.palettes import Spectral10
 
 from . import __version__
-from . import _interactive_manh
+from . import _interactive_manh, _ensembl_consequence
 
 
 class GenomeView(Figure):
@@ -213,6 +216,8 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     # ENSEMBL consequences for variants in LD that do not have rs-ids
     # logger.debug(f"e=_interactive_manh.get_csq_novel_variants(e, '{chrcol}', '{pscol}', '{a1col}', '{a2col}', '{server}', logger)")
     e = _interactive_manh.get_csq_novel_variants(d, 'chrom', 'ps', 'a1', 'a2', server, logger)
+    e['ensembl_consequence_level'] = [min([_ensembl_consequence._consequences.get(i, 4) for i in v.split(';')]) for v in e['ensembl_consequence']]
+
 
     genes = _interactive_manh.get_overlap_genes(chrom, start, end, server)
     f_genes = genes[genes['external_name']!='']
@@ -235,14 +240,19 @@ def _create_peakplot(e, genes, build, logger):
     genome = GenomeView()
     range_slider = RangeSlider(start = -0.01, end = 1.0, value = (-0.01, 1.0), step = 0.01, title = 'LD')
 
+    checkbox_button = CheckboxButtonGroup(labels=["HIGH", "MODERATE", "LOW", "MODIFIER", "unknown"],
+                                                active=[0, 1, 2, 3, 4])
+
     p_CustomJSFilter = functools.partial(CustomJSFilter, code="""
-        const start = slider.value[0]
-        const end = slider.value[1]
+        const ld_start = slider.value[0]
+        const ld_end = slider.value[1]
+        const active_consq = button.active
         const indices = []
 
         for (var i=0; i < d.get_length(); i++) {
             var ld = d.data["ld"][i]
-            if (start <= ld && ld <= end) {
+            var consq = d.data["ensembl_consequence_level"][i]
+            if (ld_start <= ld && ld <= ld_end && active_consq.includes(consq)) {
                 indices.push(i)
             }
         }
@@ -261,17 +271,22 @@ def _create_peakplot(e, genes, build, logger):
 
 
     no_assoc_source = ColumnDataSource(e.loc[e['col_assoc']==0])
-    no_assoc_js_filter = p_CustomJSFilter(args = dict(slider = range_slider, d = no_assoc_source))
+    filter_args = dict(slider = range_slider, button = checkbox_button, d = no_assoc_source)
+    no_assoc_js_filter = p_CustomJSFilter(args = filter_args)
     no_assoc_view = CDSView(source = no_assoc_source, filters = [no_assoc_js_filter])
     p_genome_circle(source = no_assoc_source, view = no_assoc_view, legend_label = 'no assoc')
 
     assoc_source = ColumnDataSource(e.loc[e['col_assoc']==1])
-    assoc_js_filter = p_CustomJSFilter(args = dict(slider = range_slider, d = assoc_source))
+    filter_args = dict(slider = range_slider, button = checkbox_button, d = assoc_source)
+    assoc_js_filter = p_CustomJSFilter(args = filter_args)
     assoc_view = CDSView(source = assoc_source, filters = [assoc_js_filter])
     p_genome_circle(source = assoc_source, view = assoc_view, legend_label = 'assoc')
 
     # Make LD range slider
-    range_slider.js_on_change('value', CustomJS(args=dict(no_assoc=no_assoc_source, assoc=assoc_source, ), code="""
+    range_slider.js_on_change('value', CustomJS(args=dict(no_assoc=no_assoc_source, assoc=assoc_source), code="""
+    no_assoc.change.emit(); assoc.change.emit()
+    """))
+    checkbox_button.js_on_click(CustomJS(args=dict(no_assoc=no_assoc_source, assoc=assoc_source, ), code="""
     no_assoc.change.emit(); assoc.change.emit()
     """))
 
@@ -328,7 +343,7 @@ def _create_peakplot(e, genes, build, logger):
 
 
     ## Make peakplot
-    peakplot = gridplot([[range_slider], [genome], [geneview]])
+    peakplot = gridplot([[range_slider], [checkbox_button], [genome], [geneview]])
     return peakplot
 
 
