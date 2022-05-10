@@ -223,7 +223,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
             external_name = row['biotype']
         overlap = (e['ps']>row['start']) & (e['ps']<row['end'])
         e.loc[overlap, 'gene']=e.loc[overlap, 'gene']+";"+external_name
-    e['gene'] = e['gene'].str.replace(r'^\;', '')
+    e['gene'] = e['gene'].str.replace(r'^\;', '', regex=True)
     
     return e, genes
 
