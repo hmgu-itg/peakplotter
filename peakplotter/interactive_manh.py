@@ -25,10 +25,12 @@ class GenomeView(Figure):
     def __init__(self, *args, width = 1500, **kw):
         hover = HoverTool(tooltips = [
             ("==============", "=============="),
-            ("name", "@rs"),
             ("RS-id", "@ensembl_rs"),
-            ("ld", "@ld"),
+            ("pos", "@ps"),
+            ("(a1, a2)", "@a1, @a2"),
             ("M.A.F", "@maf"),
+            ("p-value", "@{p-value}"),
+            ("ld", "@ld"),
             ("overlaps gene", "@gene"),
             ("consequence", "@ensembl_consequence"),
             ("known associations", "@ensembl_assoc")
