@@ -166,7 +166,7 @@ def _make_grouped_ff(chrom, start, end, build, logger):
 
 
 def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
-    d = pd.read_csv(file, sep=",",index_col=False)
+    d = pd.read_csv(file, sep=",", index_col=False)
     d.replace(r'\s+', np.nan, regex=True, inplace = True)
     d.rename(inplace = True, 
              columns = {
@@ -201,8 +201,8 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     d['ensembl_assoc'].replace('', np.nan, inplace = True)
     d['ensembl_assoc'].fillna("none", inplace=True)
     # Remove duplicate entries of ensembl_assoc 
-    d['ensembl_assoc'] = [';'.join(set(i.split(';'))) for i in d['ensembl_assoc']]
-
+    d['ensembl_assoc'] = [';'.join(set(i.split(';')).difference({''})) for i in d['ensembl_assoc']]  
+    d['ensembl_assoc'] = d['ensembl_assoc'].str.replace(r'^none;', '', regex=True)  
     # Create the alpha vector for associations in LD
     d['col_assoc']=0
     d.loc[d['ensembl_assoc']!="none", 'col_assoc']=1
@@ -300,6 +300,7 @@ def _create_peakplot(e, genes, build, logger):
     geneview.add_layout(Title(text="base position", align="center"), "below")
     geneview.x_range = genome.x_range
 
+    # Add some metadata at the bottom of the plot
     geneview.add_layout(Title(text=f'chr{chrom}:{x_start}-{x_end}', align="right"), "below")
 
     timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
