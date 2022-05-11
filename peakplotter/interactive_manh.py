@@ -216,16 +216,27 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     # ENSEMBL consequences for variants in LD that do not have rs-ids
     logger.info("\t\t\t🌐   Querying Ensembl VEP (POST)")
     d.loc[(d['ensembl_rs']=="novel") & (d['a1']==d['a2']), 'ensembl_consequence'] = 'double allele'
+
+    if vep_ld<=0.0:
+        vep_ld = -1.0
+        # We do this because we sometimes assign LD=-0.01 to variants where plink can't calculate LD.
+        # See line 273 of plotpeaks.py
     unknown_csqs = d.loc[(d['ensembl_consequence']=="novel") & (d['ld']>vep_ld) & (d['ensembl_consequence']!='double allele'), ['chrom', 'ps', 'a1', 'a2']]
     csqs = _interactive_manh.get_csq(unknown_csqs, build)
     csqs['chrom'] = csqs['chrom'].astype(d['chrom'].dtype)
 
+    logger.debug(f'd.shape = {d.shape}')
+    logger.debug(f'unknown_csqs.shape = {unknown_csqs.shape}')
+    logger.debug(f'csqs.shape = {csqs.shape}')
+
     e = d.merge(csqs, how = 'left')
     e.loc[d['ensembl_consequence']=='novel', 'ensembl_consequence'] = e.loc[e['ensembl_consequence']=='novel', 'csq']
     e.drop(columns = 'csq', inplace = True)
+    e['ensembl_consequence'].fillna('unknown(needs debugging)', inplace=True)
     
     e['ensembl_consequence_level'] = [min([_ensembl_consequence._consequences.get(i, 4) for i in v.split(';')]) for v in e['ensembl_consequence']]
 
+    logger.debug(f'e.shape = {e.shape}')
 
     genes = _interactive_manh.get_overlap_genes(chrom, start, end, server)
     f_genes = genes[genes['external_name']!='']
@@ -361,7 +372,6 @@ def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, l
     peakplot = _create_peakplot(e, genes, build, logger)
 
     return peakplot
-
 
 
 def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build, logger, vep_ld=0.1):

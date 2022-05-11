@@ -270,6 +270,9 @@ def process_peak(assocfile: str,
     peakdata.to_csv(peakdata_file, sep = '\t', header = True, index = False)
     logger.debug('Merging LD info to main dataframe')
     joined_peakdata_ld = peakdata.merge(subset_ld_data, on = rs_col, how = 'left')
+    # Variants where we don't know LD value against the tophit is assigned -0.01.
+    # This happens when the input genotype data does not contain any individuals with genotype
+    # info for both tophit and the other variant.
     joined_peakdata_ld['ld'].fillna(-0.01, inplace = True)
     joined_peakdata_ld['ld'] = joined_peakdata_ld['ld'].astype(float)
     logger.debug(joined_peakdata_ld['ld'])
