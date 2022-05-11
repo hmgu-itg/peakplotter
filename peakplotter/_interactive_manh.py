@@ -1,5 +1,6 @@
 import sys
 import json
+import itertools
 from typing import Tuple, Union, List, Dict
 
 import requests

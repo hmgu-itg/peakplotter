@@ -360,6 +360,6 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
                   build,
                   ext_flank_kb,
                   logger,
-                  query_ld)
+                  vep_ld)
     _make_done(outdir)
     logger.info('Finished')
