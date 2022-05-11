@@ -1,7 +1,6 @@
-import sys
 import json
 import itertools
-from typing import Tuple, Union, List, Dict
+from typing import Tuple, Union
 
 import requests
 import pandas as pd
@@ -158,24 +157,6 @@ def get_rsid_in_region(chrom, start, end, server, logger):
     return resp
 
 
-def query_vep(chrom: pd.Series, pos: pd.Series, a1: pd.Series, a2: pd.Series, server: str, logger) -> List[Dict]:
-    chrom = chrom.astype(str)
-    pos = pos.astype(int).astype(str)
-    a1 = a1.astype(str)
-    a2 = a2.astype(str)
-    queries: pd.Series = chrom+" "+pos+" . "+a1+" "+a2+" . . ."
-    data = json.dumps({'variants': queries.to_list()})
-    ext = "/vep/homo_sapiens/region"
-    headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
-
-    r = requests.post(server+ext, headers=headers, data=data)
-    if not r.ok:
-        logger.error(data)
-        r.raise_for_status()
-    return r.json()
-
-
-
 def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
     '''
     Queries Ensembl VEP for the input variants.
@@ -204,7 +185,8 @@ def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
         json_data = {'variants': [f'{row[0]} {row[1]} . {row[2]} {row[3]} . . .' for _, row in subset.iterrows()]}
         json_data = json.dumps(json_data)
         r = requests.post(url, headers=headers, data=json_data)
-        
+        if not r.ok:
+            r.raise_for_status()
         decoded = {i['input']: i for i in r.json()}
         vep_data.update(decoded)
 
@@ -225,63 +207,7 @@ def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
     output.drop(columns = 'input', inplace = True)
     return output
 
-# TODO: Merge with get_csq_novel_variants function
-def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str, a2col: str, server: str, logger) -> pd.DataFrame:
-    """
-    This function assumes that the input DataFrame object `e` has the following columns:
-      - ps
-      - ensembl_rs
-      - ld
-    """
-    copied_e = e.copy()
-    copied_e.loc[(
-        copied_e['ensembl_rs']=="novel")
-        & (copied_e[a1col]==copied_e[a2col])
-        ,
-        'ensembl_consequence']='double allele'
-    novelsnps=copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e['ld']>0.1) & (copied_e['ensembl_consequence']!='double allele'),]
-    if novelsnps.empty:
-        return copied_e
-    jData = query_vep(novelsnps[chrcol], novelsnps[pscol], novelsnps[a1col], novelsnps[a2col], server, logger)
 
-    csq = pd.DataFrame(jData)
-
-    for _, row in csq.iterrows():
-        copied_e.loc[copied_e['ps']==row['start'], 'ensembl_consequence'] = row['most_severe_consequence']
-
-    copied_e['ensembl_consequence'].replace('_', ' ')
-    return copied_e
-
-# TODO: Merge with _get_csq_novel_variants function
-def get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server, logger):
-    copied_e = e.copy()
-    copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e[a1col]==copied_e[a2col]),'ensembl_consequence']='double allele'
-    novelsnps=copied_e.loc[(copied_e['ensembl_rs']=="novel") & (copied_e['ld']>0.1) & (copied_e['ensembl_consequence']!='double allele'),]
-    if novelsnps.empty:
-        return copied_e
-    pd.options.mode.chained_assignment = None # Temporarily suppress the SettingWithCopyWarning message
-    novelsnps['query']=novelsnps[chrcol].astype(str)+" "+novelsnps[pscol].astype(int).astype(str)+" . "+novelsnps[a1col].astype(str)+" "+novelsnps[a2col].astype(str)+" . . ."
-    pd.options.mode.chained_assignment = 'warn' # Reactivate the SettingWithCopyWarning message
-    request='{ "variants" : ["'+'", "'.join(novelsnps['query'])+'" ] }'
-    ext = "/vep/homo_sapiens/region"
-    headers={ "Content-Type" : "application/json", "Accept" : "application/json"}
-    logger.info("\t\t\t🌐   Querying Ensembl VEP (POST) :"+server+ext)
-    r = requests.post(server+ext, headers=headers, data=request)
-
-    if not r.ok:
-        logger.error("headers :"+request)
-        r.raise_for_status()
-        sys.exit(1)
-    
-    jData = json.loads(r.text)
-    csq=pd.DataFrame(jData)
-
-
-    for _, row in csq.iterrows():
-        copied_e.loc[copied_e['ps']==row['start'],'ensembl_consequence']=row['most_severe_consequence']
-
-    copied_e['ensembl_consequence'].replace('_', ' ')
-    return copied_e
 
 
 def get_overlap_genes(chrom, start, end, server) -> pd.DataFrame:

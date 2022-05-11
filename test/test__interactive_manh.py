@@ -1,10 +1,9 @@
 
-import numpy as np
 import pandas as pd
 from pandas import testing
 
-from peakplotter._interactive_manh import make_resp, get_centromere_region, query_vep, _get_csq_novel_variants, get_build_server
-from peakplotter.test_utils import get_test_logger
+from peakplotter._interactive_manh import make_resp, get_centromere_region
+
 
 def test_make_resp_when_pheno_df_is_empty():
 
@@ -75,33 +74,4 @@ def test_get_centromere_region_build():
     start, end = get_centromere_region(22, build = 37)
     assert start == 12200000
     assert end == 17900000
-
-
-def test_query_vep():
-    chrom = pd.Series([21, 21], dtype = np.int64)
-    pos = pd.Series([26960070, 26965148], dtype = np.int64)
-    a1 = pd.Series(['G', 'G'], dtype = str)
-    a2 = pd.Series(['A', 'A'], dtype = str)
-    server = get_build_server(38)
-    logger = get_test_logger()
-    output = query_vep(chrom, pos, a1, a2, server, logger)
-    assert len(output)==2
-
-
-def test__get_csq_novel_variants():
-    chrcol, pscol, a1col, a2col = "chrom", "ps", "a1", "a2"
-    server = get_build_server(38)
-    e = pd.DataFrame([
-        [21, 26960070, 'G', 'A', 'novel', 0.5, ''],
-        [21, 26965148, 'G', 'A', 'novel', 0.5, '']
-    ], columns = [chrcol, pscol, a1col, a2col, 'ensembl_rs', 'ld', 'ensembl_consequence'])
-
-    expected = pd.DataFrame([
-        [21, 26960070, 'G', 'A', 'novel', 0.5, 'intron_variant'],
-        [21, 26965148, 'G', 'A', 'novel', 0.5, 'intron_variant']
-    ], columns = [chrcol, pscol, a1col, a2col, 'ensembl_rs', 'ld', 'ensembl_consequence'])
-    logger = get_test_logger()
-    output = _get_csq_novel_variants(e, chrcol, pscol, a1col, a2col, server, logger)
-
-    testing.assert_frame_equal(expected, output)
 
