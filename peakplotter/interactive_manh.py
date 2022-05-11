@@ -168,7 +168,7 @@ def _make_grouped_ff(chrom, start, end, build, logger):
     return grouped_ff
 
 
-def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
+def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld=0.1):
     d = pd.read_csv(file, sep=",", index_col=False)
     d.replace(r'\s+', np.nan, regex=True, inplace = True)
     d.rename(inplace = True, 
@@ -214,8 +214,16 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
 
 
     # ENSEMBL consequences for variants in LD that do not have rs-ids
-    # logger.debug(f"e=_interactive_manh.get_csq_novel_variants(e, '{chrcol}', '{pscol}', '{a1col}', '{a2col}', '{server}', logger)")
-    e = _interactive_manh.get_csq_novel_variants(d, 'chrom', 'ps', 'a1', 'a2', server, logger)
+    logger.info("\t\t\t🌐   Querying Ensembl VEP (POST)")
+    d.loc[(d['ensembl_rs']=="novel") & (d['a1']==d['a2']), 'ensembl_consequence'] = 'double allele'
+    unknown_csqs = d.loc[(d['ensembl_consequence']=="novel") & (d['ld']>vep_ld) & (d['ensembl_consequence']!='double allele'), ['chrom', 'ps', 'a1', 'a2']]
+    csqs = _interactive_manh.get_csq(unknown_csqs, build)
+    csqs['chrom'] = csqs['chrom'].astype(d['chrom'].dtype)
+
+    e = d.merge(csqs, how = 'left')
+    e.loc[d['ensembl_consequence']=='novel', 'ensembl_consequence'] = e.loc[e['ensembl_consequence']=='novel', 'csq']
+    e.drop(columns = 'csq', inplace = True)
+    
     e['ensembl_consequence_level'] = [min([_ensembl_consequence._consequences.get(i, 4) for i in v.split(';')]) for v in e['ensembl_consequence']]
 
 
@@ -338,7 +346,7 @@ def _create_peakplot(e, genes, build, logger):
         cen_median = max(cen_overlap)-int((max(cen_overlap)-min(cen_overlap))/2)
         geneview.segment(x0=xs, x1=xe, y0=0.5, y1=0.5, line_width=100, color="grey")
         cen = dict(x=[cen_median], y=[0.9], text=["Centromeric_region"])
-        labels = LabelSet(x="x", y="y", text="text",  source=ColumnDataSource(cen))
+        labels = LabelSet(x="x", y="y", text="text", source=ColumnDataSource(cen))
         geneview.add_layout(labels)
 
 
@@ -347,21 +355,21 @@ def _create_peakplot(e, genes, build, logger):
     return peakplot
 
 
-def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger):
+def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld=0.1):
     ## Prepare data to create peakplot
-    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger)
+    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld)
     peakplot = _create_peakplot(e, genes, build, logger)
 
     return peakplot
 
 
 
-def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build: str, logger):
+def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build, logger, vep_ld=0.1):
     html = f'{outfile}.html'
     csv = f'{outfile}.csv'
     output_file(filename = html, title = title)
 
-    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger)
+    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld)
     peakplot = _create_peakplot(e, genes, build, logger)
     
     e.to_csv(csv, header = True, index = False)

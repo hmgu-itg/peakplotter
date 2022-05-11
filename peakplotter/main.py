@@ -29,10 +29,11 @@ from .logging import make_logger
 @click.option('-b', '--build', type = click.INT, default = 38, show_default=True, help = "Assembly build (37 or 38)")
 @click.option('-s', '--signif', type=click.FLOAT, default=5e-8, help = 'The significance level above which to declare a variant significant. Scientific notation (such as 5e-8) is fine.')
 @click.option('-bp', '--flank-bp', type = click.INT, default = 500_000, help = 'Flanking size in base pairs for drawing plots (defaults to 500kb, i.e. 1Mbp plots) around lead SNPs.')
+@click.option('-vld', '--vep-ld', type = click.FLOAT, default = 0.1, help = 'Variants with no RS-id in LD>vep-ld will be queried to Ensembl VEP to extract consequence info. May increase runtime depending on variant density in the region, and also chance of runtime error due to Ensembl REST API rate-limit (contact the dev about implementing a wait/retry functionality)')
 @click.option('--debug', is_flag=True, flag_value = True, default = False, help = 'Set the log level from INFO to DEBUG.')
 @click.option('--overwrite', is_flag=True, flag_value = True, default = False, help = 'Overwrite output directory if it already exists.')
 @click.version_option(__version__)
-def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, build, signif, flank_bp, debug, overwrite):
+def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, build, signif, flank_bp, vep_ld, debug, overwrite):
     '''PeakPlotter
     '''
 
@@ -77,7 +78,8 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
         'maf_col': maf_col,
         'build': build,
         'signif': signif,
-        'flank_bp': flank_bp
+        'flank_bp': flank_bp,
+        'vep_ld': vep_ld
     }
     log_level = logging.DEBUG if debug else logging.INFO
     logger = make_logger(outdir.joinpath(f'{outdir.name}.log'), level = log_level)
@@ -104,7 +106,8 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
             build,
             outdir,
             logger,
-            memory = 30000)
+            memory = 30000,
+            vep_ld = vep_ld)
     except Exception:
         logger.critical('Unexpected error occurred:', exc_info = True)
         raise
@@ -128,9 +131,10 @@ def cli(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, 
 @click.option('-s', '--start', type = click.INT, required=True, help = "Start of the peak to plot.")
 @click.option('-e', '--end', type = click.INT, required=True, help = "End of the peak to plot.")
 @click.option('-b', '--build', type = click.INT, default = 38, show_default=True, help = "Assembly build (37 or 38).")
+@click.option('-vld', '--vep-ld', type = click.FLOAT, default = 0.1, help = 'Variants with no RS-id in LD>vep-ld will be queried to Ensembl VEP to extract consequence info. May increase runtime depending on variant density in the region, and also chance of runtime error due to Ensembl REST API rate-limit (contact the dev about implementing a wait/retry functionality)')
 @click.option('--debug', is_flag=True, flag_value = True, default = False, help = 'Set the log level from INFO to DEBUG.')
 @click.version_option(__version__)
-def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, chrom, start, end, build, debug):
+def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, chrom, start, end, build, vep_ld, debug):
 
     ref_flat, recomb = get_data_path(build)
     if not ref_flat.exists() or not recomb.exists():
@@ -172,6 +176,7 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
         'start': start,
         'end': end,
         'build': build,
+        'vep_ld': vep_ld
     }
 
     log_level = logging.DEBUG if debug else logging.INFO
@@ -210,7 +215,8 @@ def cli_region(assoc_file, bfiles, outdir, chr_col, pos_col, rs_col, pval_col, a
                   plink,
                   build,
                   ext_flank_kb,
-                  logger)
+                  logger,
+                  vep_ld)
     except Exception:
         logger.critical('Unexpected error occurred:', exc_info = True)
         raise

@@ -140,7 +140,8 @@ def process_peak(assocfile: str,
                   plink: Plink,
                   build: int,
                   ext_flank_kb: int,
-                  logger):
+                  logger,
+                  vep_ld = 0.1):
     
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger)
     logger.info('Looking for signals..')
@@ -298,7 +299,8 @@ def process_peak(assocfile: str,
         a1col = a1_col,
         a2col = a2_col,
         build = b,
-        logger = logger)
+        logger = logger,
+        vep_ld = vep_ld)
 
     logger.info(f"Done with peak {chrom} {start} {end}.")
     logger.info("Cleaning plink binary files")
@@ -313,7 +315,7 @@ def _make_done(outdir: Path):
     
 
 
-def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, logger, memory = 30000):
+def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, logger, memory = 30000, vep_ld = 0.1):
     # ext_flank_bp = flank_bp + 100_000
     flank_kb = flank_bp // 1000
     ext_flank_kb = flank_kb + 100
@@ -357,6 +359,7 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
                   plink,
                   build,
                   ext_flank_kb,
-                  logger)
+                  logger,
+                  query_ld)
     _make_done(outdir)
     logger.info('Finished')

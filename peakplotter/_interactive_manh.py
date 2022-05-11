@@ -173,6 +173,57 @@ def query_vep(chrom: pd.Series, pos: pd.Series, a1: pd.Series, a2: pd.Series, se
         r.raise_for_status()
     return r.json()
 
+
+
+def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
+    '''
+    Queries Ensembl VEP for the input variants.
+    
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Expects the dataframe to have the following columns: chrom, pos, a1, and a2.
+    build : int
+        GRCh build number to query. Choices are 37 and 38
+
+    Returns
+    -------
+    pd.DataFrame
+    '''
+
+    server = get_build_server(build)
+    url = server + "/vep/homo_sapiens/region"
+
+    headers = {"Content-Type" : "application/json", "Accept": "application/json"}
+
+    # Query VEP in chunks of 200 variants (because Ensembl limits POST sizes to 200)
+    vep_data = dict()
+    for i in range(0, data.shape[0], 200):
+        subset = data.iloc[i:i+200]
+        json_data = {'variants': [f'{row[0]} {row[1]} . {row[2]} {row[3]} . . .' for _, row in subset.iterrows()]}
+        json_data = json.dumps(json_data)
+        r = requests.post(url, headers=headers, data=json_data)
+        
+        decoded = {i['input']: i for i in r.json()}
+        vep_data.update(decoded)
+
+    # Extract the consequence info from the query result
+    _output = list()
+    for k, v in vep_data.items():
+        if 'transcript_consequences' in v:
+            csqs = ';'.join(set(itertools.chain(*[i['consequence_terms'] for i in v['transcript_consequences']])))
+        else:
+            csqs = v['most_severe_consequence']
+        _output.append([k, csqs])
+    output = pd.DataFrame(_output, columns = ['input', 'csq'])
+    inputs = output['input'].str.split(' ')
+    output.insert(0, 'chrom', inputs.str[0])
+    output.insert(1, 'ps', inputs.str[1].astype(int))
+    output.insert(2, 'a1', inputs.str[3])
+    output.insert(3, 'a2', inputs.str[4])
+    output.drop(columns = 'input', inplace = True)
+    return output
+
 # TODO: Merge with get_csq_novel_variants function
 def _get_csq_novel_variants(e: pd.DataFrame, chrcol: str, pscol: str, a1col: str, a2col: str, server: str, logger) -> pd.DataFrame:
     """
