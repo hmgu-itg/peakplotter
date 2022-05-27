@@ -259,8 +259,8 @@ def _create_peakplot(e, genes, build, logger):
     server = "http://grch37.ensembl.org" if build==37 or build=="b37" or build=="37" else "http://ensembl.org"
     ensembl_rs_url = f"{server}/Homo_sapiens/Variation/Explore?v=@ensembl_rs"
     genome = GenomeView()
-    genome.select(type=TapTool)
-    genome.callback = OpenURL(url=ensembl_rs_url)
+    taptool = genome.select(type=TapTool)
+    taptool.callback = OpenURL(url=ensembl_rs_url)
 
     range_slider = RangeSlider(start = -0.01, end = 1.0, value = (-0.01, 1.0), step = 0.01, title = 'LD')
 
