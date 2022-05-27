@@ -288,18 +288,25 @@ def _create_peakplot(e, genes, build, logger):
         line_alpha = 'col_assoc',
     )
 
-
+    server = "http://grch37.ensembl.org" if build==37 or build=="b37" or bulid=="37" else "http://ensembl.org"
+    ensembl_rs_url = f"{server}/Homo_sapiens/Variation/Explore?v=@ensembl_rs"
+    
     no_assoc_source = ColumnDataSource(e.loc[e['col_assoc']==0])
     filter_args = dict(slider = range_slider, button = checkbox_button, d = no_assoc_source)
     no_assoc_js_filter = p_CustomJSFilter(args = filter_args)
     no_assoc_view = CDSView(source = no_assoc_source, filters = [no_assoc_js_filter])
-    p_genome_circle(source = no_assoc_source, view = no_assoc_view, legend_label = 'no assoc')
+    no_assoc_circle = p_genome_circle(source = no_assoc_source, view = no_assoc_view, legend_label = 'no assoc')
+    no_assoc_taptool = no_assoc_circle.select(type=TapTool)
+    no_assoc_taptool.callback = OpenURL(url=ensembl_rs_url)
+
 
     assoc_source = ColumnDataSource(e.loc[e['col_assoc']==1])
     filter_args = dict(slider = range_slider, button = checkbox_button, d = assoc_source)
     assoc_js_filter = p_CustomJSFilter(args = filter_args)
     assoc_view = CDSView(source = assoc_source, filters = [assoc_js_filter])
-    p_genome_circle(source = assoc_source, view = assoc_view, legend_label = 'assoc')
+    assoc_circle = p_genome_circle(source = assoc_source, view = assoc_view, legend_label = 'assoc')
+    assoc_taptool = assoc_circle.select(type=TapTool)
+    assoc_taptool.callback = OpenURL(url=ensembl_rs_url)
 
     # Make LD range slider
     range_slider.js_on_change('value', CustomJS(args=dict(no_assoc=no_assoc_source, assoc=assoc_source), code="""
