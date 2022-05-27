@@ -288,7 +288,7 @@ def _create_peakplot(e, genes, build, logger):
         line_alpha = 'col_assoc',
     )
 
-    server = "http://grch37.ensembl.org" if build==37 or build=="b37" or bulid=="37" else "http://ensembl.org"
+    server = "http://grch37.ensembl.org" if build==37 or build=="b37" or build=="37" else "http://ensembl.org"
     ensembl_rs_url = f"{server}/Homo_sapiens/Variation/Explore?v=@ensembl_rs"
     
     no_assoc_source = ColumnDataSource(e.loc[e['col_assoc']==0])
