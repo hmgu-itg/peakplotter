@@ -256,11 +256,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
 
 def _create_peakplot(e, genes, build, logger):
     ## Make GenomeView plot
-    server = "http://grch37.ensembl.org" if build==37 or build=="b37" or build=="37" else "http://ensembl.org"
-    ensembl_rs_url = f"{server}/Homo_sapiens/Variation/Explore?v=@ensembl_rs"
     genome = GenomeView()
-    taptool = genome.select(type=TapTool)
-    taptool.callback = OpenURL(url=ensembl_rs_url)
 
     range_slider = RangeSlider(start = -0.01, end = 1.0, value = (-0.01, 1.0), step = 0.01, title = 'LD')
 
@@ -306,6 +302,13 @@ def _create_peakplot(e, genes, build, logger):
     assoc_view = CDSView(source = assoc_source, filters = [assoc_js_filter])
     p_genome_circle(source = assoc_source, view = assoc_view, legend_label = 'assoc')
     
+
+    # TapTool for opening Ensembl rsID page
+    server = "http://grch37.ensembl.org" if build==37 or build=="b37" or build=="37" else "http://ensembl.org"
+    ensembl_rs_url = f"{server}/Homo_sapiens/Variation/Explore?v=@ensembl_rs"
+    taptool = genome.select(type=TapTool)
+    taptool.callback = OpenURL(url=ensembl_rs_url)
+
     # Make LD range slider
     range_slider.js_on_change('value', CustomJS(args=dict(no_assoc=no_assoc_source, assoc=assoc_source), code="""
     no_assoc.change.emit(); assoc.change.emit()
