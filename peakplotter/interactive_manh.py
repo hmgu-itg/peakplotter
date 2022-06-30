@@ -168,6 +168,67 @@ def _make_grouped_ff(chrom, start, end, build, logger):
     return grouped_ff
 
 
+def add_variant_info(d: pd.DataFrame, snps: pd.DataFrame, pheno: pd.DataFrame) -> pd.DataFrame:
+    '''
+    Processes the SNPs queried from Ensembl and adds the processed columns to the input sumstats dataframe.
+    
+    Parameters
+    ----------
+    d : pd.DataFrame
+        Input summary statistics dataframe. Must contain following columns: chrom, ps, a1, a2
+    snps : pd.DataFrame
+        Output of the _interactive_manh.get_variants_in_region function
+    pheno : pd.DataFrame
+        Output of the _interactive_manh.get_phenos_in_region function
+    '''
+    d_subset = d[['chrom', 'ps', 'a1', 'a2']].copy()
+    dbsnps = snps[snps['source']=='dbSNP'].copy()
+    d['chrom'] = d['chrom'].astype(str)
+    
+    # Merge input sumstats data.frame and Ensembl queried SNPs
+    m_snps = d_subset.merge(dbsnps, left_on = ['chrom', 'ps'], right_on = ['seq_region_name', 'start'])
+    
+    # Check which rsID variants match alleles  
+    alleles_match = list()
+    for _, row in m_snps.iterrows():
+        a1 = row['a1']
+        a2 = row['a2']
+        alleles = row['alleles']
+        if a1 in alleles and a2 in alleles:
+            alleles_match.append(True)
+        else:
+            alleles_match.append(False)
+
+    m_snps2 = pd.concat(objs=[m_snps, pd.Series(alleles_match, name='rs_match')], axis = 1)
+    m_snps3 = m_snps2.merge(pheno[['id', 'pheno']], on = 'id', how = 'left')
+    
+    # Variants with matching position and alleles, meaning we have an exact matching rsID
+    matched = m_snps3.loc[m_snps3['rs_match']==True, ['chrom', 'ps', 'a1', 'a2', 'id', 'consequence_type', 'pheno', 'clinical_significance']]
+    matched['clinical_significance'] = matched['clinical_significance'].str.join(', ')
+    matched.loc[matched['clinical_significance']=='', 'clinical_significance'] = np.nan
+    matched.rename(columns = {
+        'id': 'ensembl_rs',
+        'consequence_type': 'ensembl_consequence',
+        'pheno': 'ensembl_assoc'
+    }, inplace=True)
+    
+    # Create list of colocalised rsID variants with the variant.
+    unmatched = m_snps3[m_snps3['rs_match']==False].copy()
+    unmatched['alleles'] = unmatched['alleles'].str.join('/')
+    unmatched['clinical_significance'] = unmatched['clinical_significance'].str.join('/')
+    unmatched.loc[unmatched['clinical_significance']=='', 'clinical_significance'] = 'none'
+    unmatched['variant'] = unmatched['id'] + ':' + unmatched['alleles'] + ':' + unmatched['consequence_type'] + ':' + unmatched['clinical_significance']
+
+    unmatched['colocalised ensembl_rs'] = unmatched.groupby(by = ['chrom', 'ps'], as_index = False)['variant'].transform(lambda x: ','.join(x))
+    unmatched = unmatched[['chrom', 'ps', 'a1', 'a2', 'colocalised ensembl_rs']].drop_duplicates()
+    
+    # Merge matched and unmatched dataframe
+    dbSNPs = matched.merge(unmatched, how = 'left')
+    
+    # Merge and return the input dataframe with variant info columns added.
+    return d.merge(dbSNPs, how = 'left')
+
+
 def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld=0.1):
     d = pd.read_csv(file, sep=",", index_col=False)
     d.replace(r'\s+', np.nan, regex=True, inplace = True)
@@ -194,10 +255,14 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
 
     d['logp'] = -np.log10(d['p-value'])
     
-    grouped_ff = _make_grouped_ff(chrom, start, end, build, logger)
+    # grouped_ff = _make_grouped_ff(chrom, start, end, build, logger)
+    # d = pd.merge(d, grouped_ff, on='ps', how='left')
+    logger.debug(f"get_variants_in_region({chrom}, {start}, {end}, '{server}')")
+    snps = _interactive_manh.get_variants_in_region(chrom, start, end, server)
+    logger.debug(f"get_phenos_in_region({chrom}, {start}, {end}, '{server}')")
+    pheno = _interactive_manh.get_phenos_in_region(chrom, start, end, server)
+    d = add_variant_info(d, snps, pheno)
 
-
-    d = pd.merge(d, grouped_ff, on='ps', how='left')
     d['ensembl_rs'].fillna('novel', inplace = True)
     d['ensembl_consequence'].fillna('novel', inplace = True)
 
