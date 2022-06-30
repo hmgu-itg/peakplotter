@@ -183,7 +183,7 @@ def add_variant_info(d: pd.DataFrame, snps: pd.DataFrame, pheno: pd.DataFrame) -
     '''
     d_subset = d[['chrom', 'ps', 'a1', 'a2']].copy()
     dbsnps = snps[snps['source']=='dbSNP'].copy()
-    d['chrom'] = d['chrom'].astype(str)
+    d_subset['chrom'] = d_subset['chrom'].astype(str)
     
     # Merge input sumstats data.frame and Ensembl queried SNPs
     m_snps = d_subset.merge(dbsnps, left_on = ['chrom', 'ps'], right_on = ['seq_region_name', 'start'])
@@ -262,6 +262,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     logger.debug(f"get_phenos_in_region({chrom}, {start}, {end}, '{server}')")
     pheno = _interactive_manh.get_phenos_in_region(chrom, start, end, server)
     d = add_variant_info(d, snps, pheno)
+    d['chrom'] = d['chrom'].astype(int)
 
     d['ensembl_rs'].fillna('novel', inplace = True)
     d['ensembl_consequence'].fillna('novel', inplace = True)
