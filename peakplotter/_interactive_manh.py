@@ -55,6 +55,10 @@ def _divide_query_parts(start: int, end: int) -> list:
 
 
 def get_variants_in_region(chrom, start, end, server) -> pd.DataFrame:
+    """
+    Queries Ensembl REST API's Overlap endpoint
+    to extract variant information within the queried region. 
+    """
     # REST API Request
     if end - start > _ENSEMBL_MAX:
         parts = _divide_query_parts(start, end)
@@ -109,10 +113,10 @@ def _process_pheno_r(json_data) -> pd.DataFrame:
     for i in json_data:
         identifier = i['id']
         location = i['phenotype_associations'][0]['location']
-        pheno = list()
+        pheno = set()
         for assoc in i['phenotype_associations']:
             if assoc['source'] != 'COSMIC':
-                pheno.append(assoc['description'])
+                pheno.add(assoc['description'])
         
         pheno = ';'.join(pheno)
         data.append([identifier, location, pheno])

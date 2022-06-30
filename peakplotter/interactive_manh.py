@@ -220,16 +220,19 @@ def add_variant_info(d: pd.DataFrame, snps: pd.DataFrame, pheno: pd.DataFrame) -
     unmatched['alleles'] = unmatched['alleles'].str.join('/')
     unmatched['clinical_significance'] = unmatched['clinical_significance'].str.join('/')
     unmatched.loc[unmatched['clinical_significance']=='', 'clinical_significance'] = 'none'
-    unmatched['variant'] = unmatched['id'] + ':' + unmatched['alleles'] + ':' + unmatched['consequence_type'] + ':' + unmatched['clinical_significance']
+    unmatched['pheno'] = unmatched['pheno'].fillna('none')
+    unmatched['variant'] = unmatched['id'] + ':' + unmatched['alleles'] + ':' + unmatched['consequence_type'] + ':' + unmatched['clinical_significance'] + ':' + unmatched['pheno']
 
-    unmatched['colocalised ensembl_rs'] = unmatched.groupby(by = ['chrom', 'ps'], as_index = False)['variant'].transform(lambda x: ','.join(x))
+    unmatched['colocalised ensembl_rs'] = unmatched.groupby(by = ['chrom', 'ps'], as_index = False)['variant'].transform(lambda x: '|'.join(x))
     unmatched = unmatched[['chrom', 'ps', 'a1', 'a2', 'colocalised ensembl_rs']].drop_duplicates()
     
     # Merge matched and unmatched dataframe
     dbSNPs = matched.merge(unmatched, how = 'outer')
     
     # Merge and return the input dataframe with variant info columns added.
-    return d.merge(dbSNPs, how = 'left')
+    output = d.merge(dbSNPs, how = 'left')
+    output['colocalised ensembl_rs'].fillna('none', inplace=True)
+    return output
 
 
 def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld=0.1):
