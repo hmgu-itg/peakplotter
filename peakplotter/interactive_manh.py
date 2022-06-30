@@ -175,7 +175,9 @@ def add_variant_info(d: pd.DataFrame, snps: pd.DataFrame, pheno: pd.DataFrame) -
     Parameters
     ----------
     d : pd.DataFrame
-        Input summary statistics dataframe. Must contain following columns: chrom, ps, a1, a2
+        Input summary statistics dataframe. Must contain following columns: chrom, ps, a1, a2.
+        It's likely you'd need to coerce the `chrom` column dtype as str because freshly generated `snps`
+        dataframe would have it's `seq_region_name` column as str.
     snps : pd.DataFrame
         Output of the _interactive_manh.get_variants_in_region function
     pheno : pd.DataFrame
@@ -261,6 +263,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     snps = _interactive_manh.get_variants_in_region(chrom, start, end, server)
     logger.debug(f"get_phenos_in_region({chrom}, {start}, {end}, '{server}')")
     pheno = _interactive_manh.get_phenos_in_region(chrom, start, end, server)
+    d['chrom'] = d['chrom'].astype(str)
     d = add_variant_info(d, snps, pheno)
     d['chrom'] = d['chrom'].astype(int)
 
