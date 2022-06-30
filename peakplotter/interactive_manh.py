@@ -36,7 +36,8 @@ class GenomeView(Figure):
             ("ld", "@ld"),
             ("overlaps gene", "@gene"),
             ("consequence", "@ensembl_consequence"),
-            ("known associations", "@ensembl_assoc")
+            ("known associations", "@ensembl_assoc"),
+            ("colocalised variant(s)", "@{colocalised ensembl_rs}")
         ])
         
         if 'tools' not in kw:
@@ -225,7 +226,7 @@ def add_variant_info(d: pd.DataFrame, snps: pd.DataFrame, pheno: pd.DataFrame) -
     unmatched = unmatched[['chrom', 'ps', 'a1', 'a2', 'colocalised ensembl_rs']].drop_duplicates()
     
     # Merge matched and unmatched dataframe
-    dbSNPs = matched.merge(unmatched, how = 'left')
+    dbSNPs = matched.merge(unmatched, how = 'outer')
     
     # Merge and return the input dataframe with variant info columns added.
     return d.merge(dbSNPs, how = 'left')
