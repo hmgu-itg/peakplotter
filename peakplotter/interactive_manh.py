@@ -272,9 +272,12 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     snps = _interactive_manh.get_variants_in_region(chrom, start, end, server)
     logger.debug(f"get_phenos_in_region({chrom}, {start}, {end}, '{server}')")
     pheno = _interactive_manh.get_phenos_in_region(chrom, start, end, server)
+
+    logger.debug(f"Running add_variant_info")
     d['chrom'] = d['chrom'].astype(str)
     d = add_variant_info(d, snps, pheno)
     d['chrom'] = d['chrom'].astype(int)
+    logger.debug(d)
 
     d['ensembl_rs'].fillna('novel', inplace = True)
     d['ensembl_consequence'].fillna('novel', inplace = True)
