@@ -75,3 +75,18 @@ def test_get_centromere_region_build():
     assert start == 12200000
     assert end == 17900000
 
+
+
+def test_eval_vartype():
+    example = pd.DataFrame([
+        ['A', 'T'],
+        ['-', 'A'],
+        ['A', '-'],
+        ['I', 'D'],
+        ['D', 'I'],
+    ], columns = ['a1', 'a2'])
+
+    expected = pd.Series(['SNP', 'INDEL', 'INDEL', 'INDEL', 'INDEL'])
+
+    output = eval_vartype(example)
+    testing.assert_series_equal(output, expected)
