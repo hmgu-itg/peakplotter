@@ -82,13 +82,14 @@ def get_variants_in_region(chrom, start, end, server) -> pd.DataFrame:
     # Process json data to DataFrame
     snps = pd.DataFrame(decoded)
     snps['location'] = snps.seq_region_name.map(str)+":"+snps.start.map(str)+"-"+snps.end.map(str)
-    reordered_snps = snps[['source', 'assembly_name', 'id',
+    snps = snps[['source', 'assembly_name', 'id',
                              'seq_region_name', 'start', 'end', 'location',
                              'strand', 'alleles', 'feature_type',
                              'consequence_type', 'clinical_significance']
                          ]
-    
-    return reordered_snps
+    snps['vartype'] = 'SNP'
+    snps.loc[snps['start']!=snps['end'], 'vartype'] = 'INDEL'
+    return snps
 
 
 def get_phenos_in_region(chrom, start, end, server) -> pd.DataFrame:
