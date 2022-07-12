@@ -184,7 +184,7 @@ def add_variant_info(d: pd.DataFrame, snps: pd.DataFrame, pheno: pd.DataFrame) -
     pheno : pd.DataFrame
         Output of the _interactive_manh.get_phenos_in_region function
     '''
-    d_subset = d[['chrom', 'ps', 'a1', 'a2']].copy()
+    d_subset = d[['chrom', 'ps', 'a1', 'a2', 'vartype']].copy()
     dbsnps = snps[snps['source']=='dbSNP'].copy()
     d_subset['chrom'] = d_subset['chrom'].astype(str)
     
@@ -197,7 +197,11 @@ def add_variant_info(d: pd.DataFrame, snps: pd.DataFrame, pheno: pd.DataFrame) -
         a1 = row['a1']
         a2 = row['a2']
         alleles = row['alleles']
-        if a1 in alleles and a2 in alleles:
+        vartype = row['vartype']
+        rs_vartype = row['rs_vartype']
+        if (vartype == rs_vartype) \
+           and (a1 in alleles) \
+           and (a2 in alleles):
             alleles_match.append(True)
         else:
             alleles_match.append(False)
@@ -248,7 +252,8 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
                  mafcol: 'maf'
              }
     )
-
+    d['vartype'] = _interactive_manh.eval_vartype(d)
+    
     chrom = set(d['chrom']) # This is for later to check whether the region window overlaps a centromere.
     assert len(chrom)==1, "The chromosome spans across multiple chromosomes, which is impossible."
     chrom = int(chrom.pop())
