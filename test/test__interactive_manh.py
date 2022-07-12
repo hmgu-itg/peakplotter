@@ -2,7 +2,7 @@
 import pandas as pd
 from pandas import testing
 
-from peakplotter._interactive_manh import make_resp, get_centromere_region
+from peakplotter._interactive_manh import make_resp, get_centromere_region, eval_vartype
 
 
 def test_make_resp_when_pheno_df_is_empty():
@@ -82,11 +82,13 @@ def test_eval_vartype():
         ['A', 'T'],
         ['-', 'A'],
         ['A', '-'],
+        ['A', 'D'],
+        ['D', 'A'],
         ['I', 'D'],
         ['D', 'I'],
     ], columns = ['a1', 'a2'])
 
-    expected = pd.Series(['SNP', 'INDEL', 'INDEL', 'INDEL', 'INDEL'])
+    expected = pd.Series(['SNP'] + ['INDEL'] * 6, name = 'vartype')
 
     output = eval_vartype(example)
     testing.assert_series_equal(output, expected)

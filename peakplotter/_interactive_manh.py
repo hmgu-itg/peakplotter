@@ -54,6 +54,15 @@ def _divide_query_parts(start: int, end: int) -> list:
     return parts
 
 
+def eval_vartype(d: pd.DataFrame) -> pd.Series:
+    subset = d[['a1', 'a2']].copy()
+    subset['vartype'] = 'SNP'
+    
+    subset.loc[subset['a1'].isin(['-', 'D', 'I'])
+           | subset['a2'].isin(['-', 'D', 'I']), 'vartype'] = 'INDEL'
+    return subset['vartype']
+
+
 def get_variants_in_region(chrom, start, end, server) -> pd.DataFrame:
     """
     Queries Ensembl REST API's Overlap endpoint
