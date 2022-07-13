@@ -265,7 +265,8 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     d['col'] = pd.cut(d['ld'], 9, labels = Spectral10[1:])
 
     d['logp'] = -np.log10(d['p-value'])
-    
+    logger.debug(d)
+
     # grouped_ff = _make_grouped_ff(chrom, start, end, build, logger)
     # d = pd.merge(d, grouped_ff, on='ps', how='left')
     logger.debug(f"get_variants_in_region({chrom}, {start}, {end}, '{server}')")

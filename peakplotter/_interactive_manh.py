@@ -87,8 +87,8 @@ def get_variants_in_region(chrom, start, end, server) -> pd.DataFrame:
                              'strand', 'alleles', 'feature_type',
                              'consequence_type', 'clinical_significance']
                          ]
-    snps['vartype'] = 'SNP'
-    snps.loc[snps['start']!=snps['end'], 'vartype'] = 'INDEL'
+    snps['rs_vartype'] = 'SNP'
+    snps.loc[snps['start']!=snps['end'], 'rs_vartype'] = 'INDEL'
     return snps
 
 
