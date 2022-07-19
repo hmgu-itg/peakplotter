@@ -31,7 +31,7 @@ def _query(url, headers = None):
     if headers is None:
         headers = dict()
     headers['Content-Type'] = 'application/json'
-    r = requests.get(url, headers = headers)
+    r = requests.get(url, headers = headers, )
     if not r.ok:
         r.raise_for_status()
 
@@ -39,15 +39,15 @@ def _query(url, headers = None):
     return decoded
 
 
-def _divide_query_parts(start: int, end: int) -> list:
+def _divide_query_parts(start: int, end: int, parts: int = _ENSEMBL_PARTS) -> list:
     remain = end - start
     pos = start
     parts = list()
     while remain:
         if remain // _ENSEMBL_MAX:
-            parts.append((pos, pos+_ENSEMBL_PARTS))
-            pos+=_ENSEMBL_PARTS
-            remain-=_ENSEMBL_PARTS
+            parts.append((pos, pos+parts))
+            pos+=parts
+            remain-=parts
         else:
             parts.append((pos, pos+remain))
             break
@@ -63,14 +63,14 @@ def eval_vartype(d: pd.DataFrame) -> pd.Series:
     return subset['vartype']
 
 
-def get_variants_in_region(chrom, start, end, server) -> pd.DataFrame:
+def get_variants_in_region(chrom, start, end, server, parts: int = _ENSEMBL_PARTS) -> pd.DataFrame:
     """
     Queries Ensembl REST API's Overlap endpoint
     to extract variant information within the queried region. 
     """
     # REST API Request
     if end - start > _ENSEMBL_MAX:
-        parts = _divide_query_parts(start, end)
+        parts = _divide_query_parts(start, end, parts)
         decoded = list()
         for (start, end) in parts:
             url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=variation'
@@ -92,9 +92,9 @@ def get_variants_in_region(chrom, start, end, server) -> pd.DataFrame:
     return snps
 
 
-def get_phenos_in_region(chrom, start, end, server) -> pd.DataFrame:
+def get_phenos_in_region(chrom, start, end, server, parts: int = _ENSEMBL_PARTS) -> pd.DataFrame:
     if end - start > _ENSEMBL_MAX:
-        parts = _divide_query_parts(start, end)
+        parts = _divide_query_parts(start, end, parts)
         json_data = list()
         for (start, end) in parts:
             url = f'{server}/phenotype/region/homo_sapiens/{chrom}:{start}-{end}?feature_type=Variation'
@@ -224,9 +224,9 @@ def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
 
 
 
-def get_overlap_genes(chrom, start, end, server) -> pd.DataFrame:
+def get_overlap_genes(chrom, start, end, server, parts: int = _ENSEMBL_PARTS) -> pd.DataFrame:
     if end - start > _ENSEMBL_MAX:
-        parts = _divide_query_parts(start, end)
+        parts = _divide_query_parts(start, end, parts)
         decoded = list()
         for (start, end) in parts:
             url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=gene'

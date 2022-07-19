@@ -239,7 +239,7 @@ def add_variant_info(d: pd.DataFrame, snps: pd.DataFrame, pheno: pd.DataFrame) -
     return output
 
 
-def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld=0.1):
+def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld=0.1, parts=_interactive_manh._ENSEMBL_PARTS):
     d = pd.read_csv(file, sep=",", index_col=False)
     d.replace(r'\s+', np.nan, regex=True, inplace = True)
     d.rename(inplace = True, 
@@ -269,12 +269,12 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
 
     # grouped_ff = _make_grouped_ff(chrom, start, end, build, logger)
     # d = pd.merge(d, grouped_ff, on='ps', how='left')
-    logger.debug(f"get_variants_in_region({chrom}, {start}, {end}, '{server}')")
-    snps = _interactive_manh.get_variants_in_region(chrom, start, end, server)
-    logger.debug(f"get_phenos_in_region({chrom}, {start}, {end}, '{server}')")
-    pheno = _interactive_manh.get_phenos_in_region(chrom, start, end, server)
+    logger.debug(f"get_variants_in_region({chrom}, {start}, {end}, '{server}', {parts})")
+    snps = _interactive_manh.get_variants_in_region(chrom, start, end, server, parts)
+    logger.debug(f"get_phenos_in_region({chrom}, {start}, {end}, '{server}', {parts})")
+    pheno = _interactive_manh.get_phenos_in_region(chrom, start, end, server, parts)
 
-    logger.debug(f"Running add_variant_info")
+    logger.debug("Running add_variant_info")
     d['chrom'] = d['chrom'].astype(str)
     d = add_variant_info(d, snps, pheno)
     d['chrom'] = d['chrom'].astype(int)
@@ -456,20 +456,20 @@ def _create_peakplot(e, genes, build, logger):
     return peakplot
 
 
-def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld=0.1):
+def make_peakplot(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld=0.1, parts=_interactive_manh._ENSEMBL_PARTS):
     ## Prepare data to create peakplot
-    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld)
+    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld, parts)
     peakplot = _create_peakplot(e, genes, build, logger)
 
     return peakplot
 
 
-def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build, logger, vep_ld=0.1):
+def output_peakplot(infile, outfile, title, pvalcol, pscol, mafcol, chrcol, a1col, a2col, build, logger, vep_ld=0.1, parts=_interactive_manh._ENSEMBL_PARTS):
     html = f'{outfile}.html'
     csv = f'{outfile}.csv'
     output_file(filename = html, title = title)
 
-    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld)
+    e, genes = make_view_data(infile, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, logger, vep_ld, parts)
     peakplot = _create_peakplot(e, genes, build, logger)
     
     e.to_csv(csv, header = True, index = False)

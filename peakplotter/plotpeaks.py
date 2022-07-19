@@ -9,9 +9,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from . import _interactive_manh
 from .tools import Plink, plink_exclude_across_bfiles
 from .peakit import peakit
 from .interactive_manh import output_peakplot
+
 
 def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger, chunksize = 10000) -> pd.DataFrame:
     """
@@ -141,7 +143,8 @@ def process_peak(assocfile: str,
                   build: int,
                   ext_flank_kb: int,
                   logger,
-                  vep_ld = 0.1):
+                  vep_ld = 0.1,
+                  parts = _interactive_manh._ENSEMBL_PARTS):
     
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger)
     logger.info('Looking for signals..')
@@ -303,7 +306,8 @@ def process_peak(assocfile: str,
         a2col = a2_col,
         build = b,
         logger = logger,
-        vep_ld = vep_ld)
+        vep_ld = vep_ld,
+        parts = parts)
 
     logger.info(f"Done with peak {chrom} {start} {end}.")
     logger.info("Cleaning plink binary files")
@@ -318,7 +322,7 @@ def _make_done(outdir: Path):
     
 
 
-def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, logger, memory = 30000, vep_ld = 0.1):
+def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, logger, memory = 30000, vep_ld = 0.1, parts = _interactive_manh._ENSEMBL_PARTS):
     # ext_flank_bp = flank_bp + 100_000
     flank_kb = flank_bp // 1000
     ext_flank_kb = flank_kb + 100
@@ -363,6 +367,7 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
                   build,
                   ext_flank_kb,
                   logger,
-                  vep_ld)
+                  vep_ld,
+                  parts)
     _make_done(outdir)
     logger.info('Finished')
