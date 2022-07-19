@@ -39,15 +39,15 @@ def _query(url, headers = None):
     return decoded
 
 
-def _divide_query_parts(start: int, end: int, parts: int = _ENSEMBL_PARTS) -> list:
+def _divide_query_parts(start: int, end: int, partsize: int = _ENSEMBL_PARTS) -> list:
     remain = end - start
     pos = start
     parts = list()
     while remain:
         if remain // _ENSEMBL_MAX:
-            parts.append((pos, pos+parts))
-            pos+=parts
-            remain-=parts
+            parts.append((pos, pos+partsize))
+            pos+=partsize
+            remain-=partsize
         else:
             parts.append((pos, pos+remain))
             break
