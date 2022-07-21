@@ -63,14 +63,14 @@ def eval_vartype(d: pd.DataFrame) -> pd.Series:
     return subset['vartype']
 
 
-def get_variants_in_region(chrom, start, end, server, parts: int = _ENSEMBL_PARTS, logger = None) -> pd.DataFrame:
+def get_variants_in_region(chrom, start, end, server, partsize: int = _ENSEMBL_PARTS, logger = None) -> pd.DataFrame:
     """
     Queries Ensembl REST API's Overlap endpoint
     to extract variant information within the queried region. 
     """
     # REST API Request
-    if end - start > _ENSEMBL_MAX or parts != _ENSEMBL_PARTS:
-        parts = _divide_query_parts(start, end, parts)
+    if end - start > _ENSEMBL_MAX or partsize != _ENSEMBL_PARTS:
+        parts = _divide_query_parts(start, end, partsize)
         decoded = list()
         for (start, end) in parts:
             url = f'{server}/overlap/region/human/{chrom}:{start}-{end}?feature=variation'
@@ -96,9 +96,9 @@ def get_variants_in_region(chrom, start, end, server, parts: int = _ENSEMBL_PART
     return snps
 
 
-def get_phenos_in_region(chrom, start, end, server, parts: int = _ENSEMBL_PARTS, logger = None) -> pd.DataFrame:
-    if end - start > _ENSEMBL_MAX or parts != _ENSEMBL_PARTS:
-        parts = _divide_query_parts(start, end, parts)
+def get_phenos_in_region(chrom, start, end, server, partsize: int = _ENSEMBL_PARTS, logger = None) -> pd.DataFrame:
+    if end - start > _ENSEMBL_MAX or partsize != _ENSEMBL_PARTS:
+        parts = _divide_query_parts(start, end, partsize)
         json_data = list()
         for (start, end) in parts:
             url = f'{server}/phenotype/region/homo_sapiens/{chrom}:{start}-{end}?feature_type=Variation'

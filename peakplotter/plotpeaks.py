@@ -144,7 +144,7 @@ def process_peak(assocfile: str,
                   ext_flank_kb: int,
                   logger,
                   vep_ld = 0.1,
-                  parts = _interactive_manh._ENSEMBL_PARTS):
+                  partsize = _interactive_manh._ENSEMBL_PARTS):
     
     assoc = read_assoc(assocfile, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2_col, logger)
     logger.info('Looking for signals..')
@@ -307,7 +307,7 @@ def process_peak(assocfile: str,
         build = b,
         logger = logger,
         vep_ld = vep_ld,
-        parts = parts)
+        partsize = partsize)
 
     logger.info(f"Done with peak {chrom} {start} {end}.")
     logger.info("Cleaning plink binary files")
@@ -322,7 +322,7 @@ def _make_done(outdir: Path):
     
 
 
-def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, logger, memory = 30000, vep_ld = 0.1, parts = _interactive_manh._ENSEMBL_PARTS):
+def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, maf_col, bfiles, flank_bp, refflat, recomb, build, outdir, logger, memory = 30000, vep_ld = 0.1, partsize = _interactive_manh._ENSEMBL_PARTS):
     # ext_flank_bp = flank_bp + 100_000
     flank_kb = flank_bp // 1000
     ext_flank_kb = flank_kb + 100
@@ -368,6 +368,6 @@ def main(signif, assocfile, chr_col, pos_col, rs_col, pval_col, a1_col, a2_col, 
                   ext_flank_kb,
                   logger,
                   vep_ld,
-                  parts)
+                  partsize)
     _make_done(outdir)
     logger.info('Finished')
