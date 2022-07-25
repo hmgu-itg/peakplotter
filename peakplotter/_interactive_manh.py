@@ -44,7 +44,7 @@ def _divide_query_parts(start: int, end: int, partsize: int = _ENSEMBL_PARTS) ->
     pos = start
     parts = list()
     while remain:
-        if remain // _ENSEMBL_MAX:
+        if remain // partsize:
             parts.append((pos, pos+partsize))
             pos+=partsize
             remain-=partsize
@@ -97,12 +97,7 @@ def get_variants_in_region(chrom, start, end, server, partsize: int = _ENSEMBL_P
 
 
 def get_phenos_in_region(chrom, start, end, server, partsize: int = _ENSEMBL_PARTS, logger = None) -> pd.DataFrame:
-    logger.debug(f'{end} - {start} > {_ENSEMBL_MAX}')
-    logger.debug(end - start > _ENSEMBL_MAX)
-    logger.debug(f'{partsize} != {_ENSEMBL_PARTS}')
-    logger.debug(partsize != _ENSEMBL_PARTS)
     if (end - start > _ENSEMBL_MAX) or (partsize != _ENSEMBL_PARTS):
-        logger.debug('splitting query')
         parts = _divide_query_parts(start, end, partsize)
         json_data = list()
         for (start, end) in parts:
