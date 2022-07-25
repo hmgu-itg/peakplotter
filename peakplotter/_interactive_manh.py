@@ -69,7 +69,7 @@ def get_variants_in_region(chrom, start, end, server, partsize: int = _ENSEMBL_P
     to extract variant information within the queried region. 
     """
     # REST API Request
-    if end - start > _ENSEMBL_MAX or partsize != _ENSEMBL_PARTS:
+    if (end - start > _ENSEMBL_MAX) or (partsize != _ENSEMBL_PARTS):
         parts = _divide_query_parts(start, end, partsize)
         decoded = list()
         for (start, end) in parts:
@@ -97,7 +97,7 @@ def get_variants_in_region(chrom, start, end, server, partsize: int = _ENSEMBL_P
 
 
 def get_phenos_in_region(chrom, start, end, server, partsize: int = _ENSEMBL_PARTS, logger = None) -> pd.DataFrame:
-    if end - start > _ENSEMBL_MAX or partsize != _ENSEMBL_PARTS:
+    if (end - start > _ENSEMBL_MAX) or (partsize != _ENSEMBL_PARTS):
         parts = _divide_query_parts(start, end, partsize)
         json_data = list()
         for (start, end) in parts:
