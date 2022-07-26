@@ -314,6 +314,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     e = d.merge(csqs, how = 'left')
     e.loc[d['ensembl_consequence']=='novel', 'ensembl_consequence'] = e.loc[e['ensembl_consequence']=='novel', 'csq']
     e.drop(columns = 'csq', inplace = True)
+    e.rename(columns = {'transcript_info': 'ensembl_vep_transcripts'}, inplace=True)
     e['ensembl_consequence'].fillna('unknown(needs debugging)', inplace=True)
     
     e['ensembl_consequence_level'] = [min([_ensembl_consequence._consequences.get(i, 4) for i in v.split(';')]) for v in e['ensembl_consequence']]

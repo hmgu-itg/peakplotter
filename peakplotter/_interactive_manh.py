@@ -224,11 +224,17 @@ def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
     _output = list()
     for k, v in vep_data.items():
         if 'transcript_consequences' in v:
-            csqs = ';'.join(set(itertools.chain(*[i['consequence_terms'] for i in v['transcript_consequences']])))
+            csqs = ';'.join(sorted(list(set(itertools.chain(*[i['consequence_terms'] for i in v['transcript_consequences']])))))
+            transcript_info = list()
+            for transcript in v['transcript_consequences']:
+                csq = ':'.join(transcript['consequence_terms'])
+                transcript_info.append(f'{csq}={transcript["transcript_id"]}={transcript["gene_symbol"]}')
+            transcript_info = ','.join(transcript_info)
         else:
             csqs = v['most_severe_consequence']
-        _output.append([k, csqs])
-    output = pd.DataFrame(_output, columns = ['input', 'csq'])
+            transcript_info = ''
+        _output.append([k, csqs, transcript_info])
+    output = pd.DataFrame(_output, columns = ['input', 'csq', 'transcript_info'])
     inputs = output['input'].str.split(' ')
     output.insert(0, 'chrom', inputs.str[0])
     output.insert(1, 'ps', inputs.str[1].astype(int))
