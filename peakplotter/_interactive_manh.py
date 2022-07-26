@@ -56,10 +56,18 @@ def _divide_query_parts(start: int, end: int, partsize: int = _ENSEMBL_PARTS) ->
 
 def eval_vartype(d: pd.DataFrame) -> pd.Series:
     subset = d[['a1', 'a2']].copy()
-    subset['vartype'] = 'SNP'
+    subset['vartype'] = '?'
     
-    subset.loc[subset['a1'].isin(['-', 'D', 'I'])
-           | subset['a2'].isin(['-', 'D', 'I']), 'vartype'] = 'INDEL'
+    subset.loc[(subset['a1'].isin(['A', 'T', 'G', 'C']))
+                & (subset['a2'].isin(['A', 'T', 'G', 'C'])), 'vartype'] = 'SNP'
+
+    subset.loc[
+           (subset['a1'].isin(['-', 'D', 'I']))
+           | (subset['a2'].isin(['-', 'D', 'I']))
+           | ((~subset['a1'].str.contains('[^ATGC]')) & (subset['a1'].str.len()>1))
+           | ((~subset['a2'].str.contains('[^ATGC]')) & (subset['a2'].str.len()>1)), 'vartype'] = 'INDEL'
+
+    
     return subset['vartype']
 
 
