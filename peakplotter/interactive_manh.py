@@ -304,7 +304,7 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
         # We do this because we sometimes assign LD=-0.01 to variants where plink can't calculate LD.
         # See line 273 of plotpeaks.py
     unknown_csqs = d.loc[(d['ensembl_consequence']=="novel") & (d['ld']>vep_ld) & (d['ensembl_consequence']!='double allele'), ['chrom', 'ps', 'a1', 'a2']]
-    csqs = _interactive_manh.get_csq(unknown_csqs, build)
+    csqs = _interactive_manh.get_csq(unknown_csqs, build, logger)
     csqs['chrom'] = csqs['chrom'].astype(d['chrom'].dtype)
 
     logger.debug(f'd.shape = {d.shape}')

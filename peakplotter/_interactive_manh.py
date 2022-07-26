@@ -187,7 +187,7 @@ def get_rsid_in_region(chrom, start, end, server, logger):
     return resp
 
 
-def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
+def get_csq(data: pd.DataFrame, build: int = 38, logger = None) -> pd.DataFrame:
     '''
     Queries Ensembl VEP for the input variants.
     
@@ -202,7 +202,6 @@ def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
     -------
     pd.DataFrame
     '''
-
     server = get_build_server(build)
     url = server + "/vep/homo_sapiens/region"
 
@@ -228,7 +227,11 @@ def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
             transcript_info = list()
             for transcript in v['transcript_consequences']:
                 csq = ':'.join(transcript['consequence_terms'])
-                transcript_info.append(f'{csq}={transcript["transcript_id"]}={transcript["gene_symbol"]}')
+                try:
+                    transcript_info.append(f'{csq}={transcript["transcript_id"]}={transcript["gene_symbol"]}')
+                except KeyError:
+                    logger.debug(transcript)
+                    raise
             transcript_info = ','.join(transcript_info)
         else:
             csqs = v['most_severe_consequence']
