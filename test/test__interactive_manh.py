@@ -79,6 +79,7 @@ def test_get_centromere_region_build():
 
 def test_eval_vartype():
     example = pd.DataFrame([
+        ['?', '?'],
         ['A', 'T'],
         ['-', 'A'],
         ['A', '-'],
@@ -86,9 +87,11 @@ def test_eval_vartype():
         ['D', 'A'],
         ['I', 'D'],
         ['D', 'I'],
+        ['AA', 'T'],
+        ['T', 'AA']
     ], columns = ['a1', 'a2'])
 
-    expected = pd.Series(['SNP'] + ['INDEL'] * 6, name = 'vartype')
+    expected = pd.Series(['?'] + ['SNP'] + ['INDEL'] * 8, name = 'vartype')
 
     output = eval_vartype(example)
     testing.assert_series_equal(output, expected)
