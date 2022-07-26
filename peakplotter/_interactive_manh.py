@@ -227,13 +227,12 @@ def get_csq(data: pd.DataFrame, build: int = 38, logger = None) -> pd.DataFrame:
             transcript_info = list()
             for transcript in v['transcript_consequences']:
                 csq = ':'.join(transcript['consequence_terms'])
-                try:
-                    transcript_info.append(f'{csq}={transcript["transcript_id"]}={transcript["gene_symbol"]}')
-                except KeyError:
-                    logger.debug(transcript)
-                    raise
+                gene = transcript.get("gene_symbol", transcript['gene_id'])
+                transcript_info.append(f'{csq}={transcript["transcript_id"]}={gene}')
             transcript_info = ','.join(transcript_info)
         else:
+            logger.debug('no transcript_consequences')
+            logger.debug(v)
             csqs = v['most_severe_consequence']
             transcript_info = ''
         _output.append([k, csqs, transcript_info])
