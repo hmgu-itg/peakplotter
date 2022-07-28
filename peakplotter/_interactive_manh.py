@@ -148,6 +148,7 @@ def _process_pheno_r(json_data) -> pd.DataFrame:
         data.append([identifier, location, pheno])
     
     data = pd.DataFrame(data, columns = ['id', 'location', 'pheno'])
+    data.drop_duplicates(inplace=True)
     assert not any(data.duplicated()), 'Duplicated data found'
     return data
 
