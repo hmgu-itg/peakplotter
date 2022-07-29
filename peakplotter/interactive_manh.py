@@ -299,6 +299,9 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     logger.info("\t\t\t🌐   Querying Ensembl VEP (POST)")
     d.loc[(d['ensembl_rs']=="novel") & (d['a1']==d['a2']), 'ensembl_consequence'] = 'double allele'
 
+    to_query = d.loc[(d['ensembl_rs']!='novel') & (d['ensembl_consequence']!='novel'), ['ensembl_rs', 'ensembl_consequence']].copy()
+    rs_vep = _interactive_manh._get_csq_from_rsid(to_query, build)
+
     if vep_ld<=0.0:
         vep_ld = -1.0
         # We do this because we sometimes assign LD=-0.01 to variants where plink can't calculate LD.
@@ -312,9 +315,12 @@ def make_view_data(file, chrcol, pscol, a1col, a2col, pvalcol, mafcol, build, lo
     logger.debug(f'csqs.shape = {csqs.shape}')
 
     e = d.merge(csqs, how = 'left')
-    e.loc[d['ensembl_consequence']=='novel', 'ensembl_consequence'] = e.loc[e['ensembl_consequence']=='novel', 'csq']
+    e.loc[e['ensembl_consequence']=='novel', 'ensembl_consequence'] = e.loc[e['ensembl_consequence']=='novel', 'csq']
     e.drop(columns = 'csq', inplace = True)
-    e.rename(columns = {'transcript_info': 'ensembl_vep_transcripts'}, inplace=True)
+    e = e.merge(rs_vep, on = 'ensembl_rs', how = 'left')
+    e.loc[e['transcript_info_x'].isna(), 'transcript_info_x'] = e.loc[e['transcript_info_x'].isna(), 'transcript_info_y']
+    e.drop(columns = 'transcript_info_y', inplace = True)
+    e.rename(columns = {'transcript_info_x': 'ensembl_vep_transcripts'}, inplace=True)
     e['ensembl_consequence'].fillna('unknown(needs debugging)', inplace=True)
     
     e['ensembl_consequence_level'] = [min([_ensembl_consequence._consequences.get(i, 4) for i in v.split(';')]) for v in e['ensembl_consequence']]
