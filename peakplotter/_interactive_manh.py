@@ -245,6 +245,66 @@ def get_csq(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
     return output
 
 
+def _get_csq_from_rsid(data: pd.DataFrame, build: int = 38) -> pd.DataFrame:
+    '''
+    Queries Ensembl VEP for the input variants.
+    
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Expects a pandas dataframe with first column as rsIDs and second as it's consequence value.
+    build : int
+        GRCh build number to query. Choices are 37 and 38
+
+    Returns
+    -------
+    pd.DataFrame
+    
+    Example
+    -------
+    >>> import pandas as pd
+    >>> data = pd.DataFrame([
+    ...     ['rs12075', 'missense_variant'],
+    ...     ['rs76438938', 'stop_gained']
+    ... ], columns = ['ensembl_rs', 'ensembl_consequence'])
+    >>> output = get_csq_from_rsid(data, 38)
+    '''
+    inputs = {rs: csq for _, (rs, csq) in data.iterrows()}
+    server = get_build_server(build)
+    url = server + "/vep/human/id"
+
+    headers = {"Content-Type" : "application/json", "Accept": "application/json"}
+
+    # Query VEP in chunks of 200 variants (because Ensembl limits POST sizes to 200)
+    vep_data = list()
+    for i in range(0, data.shape[0], 200):
+        subset = data.iloc[i:i+200, 0].to_list()
+        json_data = {'ids': subset}
+        json_data = json.dumps(json_data)
+        r = requests.post(url, headers=headers, data=json_data)
+        if not r.ok:
+            r.raise_for_status()
+        vep_data.extend(r.json())
+
+    # Extract the consequence info from the query result
+    _output = list()
+    for v in vep_data:
+        rsid = v['id']
+        assigned_csq = inputs[rsid]
+        if 'transcript_consequences' in v:
+            transcript_info = list()
+            for transcript in v['transcript_consequences']:
+                if assigned_csq not in transcript['consequence_terms']:
+                    continue
+                csq = ':'.join(transcript['consequence_terms'])
+                gene = transcript.get("gene_symbol", transcript['gene_id'])
+                transcript_info.append(f'{csq}={transcript["transcript_id"]}={gene}')
+            transcript_info = ','.join(transcript_info)
+        else:
+            transcript_info = ''
+        _output.append([rsid, transcript_info])
+    output = pd.DataFrame(_output, columns = ['ensembl_rs', 'transcript_info'])
+    return output
 
 
 def get_overlap_genes(chrom, start, end, server, parts: int = _ENSEMBL_PARTS) -> pd.DataFrame:
