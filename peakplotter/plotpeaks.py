@@ -39,7 +39,7 @@ def read_assoc(filepath, chr_col, pos_col, pval_col, maf_col, rs_col, a1_col, a2
         nan_list = list(pd.isna(chunk[pval_col]))
         if nan_list.count(True):
             logger.debug(f"Removing {nan_list.count(True)} rows with invalid p-value")
-        chunk = chunk.dropna().reset_index(drop = True)
+            chunk = chunk.dropna(subset=[pval_col]).reset_index(drop = True)
 
         a1_check = chunk[a1_col].str.contains('[^ATGC]')
         if any(a1_check):
