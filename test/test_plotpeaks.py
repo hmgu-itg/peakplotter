@@ -141,4 +141,5 @@ def test_read_asoc_for_extra_columns():
         , columns = [chr_col, rs_col, pos_col, a1_col, a2_col, maf_col, pval_col]
     )
 
-    assert len(expected.columns) < len(data.columns)
+    assert len(expected.columns) == len(data.columns)
+    pd.testing.assert_frame_equal(expected, data)
