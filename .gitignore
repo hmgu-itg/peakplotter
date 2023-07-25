@@ -8,3 +8,7 @@ peakplotter/data/centromere_b38.tsv
 # Plink
 **/*.log
 **/*.nosex
+
+
+build
+*.egg-info
