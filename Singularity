@@ -8,6 +8,9 @@ From: ubuntu:18.04
     export LC_ALL=C.UTF-8
     export LANG=C.UTF-8
 
+%files
+    . /opt/peakplotter
+
 %post
     apt update
     export TZ=Europe/Berlin
@@ -16,27 +19,27 @@ From: ubuntu:18.04
     apt install -y tabix moreutils git wget zip unzip python3-pip r-base sqlite3 python-dev python-pip
 
 
-# locuszoom    
-    cd /opt
-	wget https://statgen.sph.umich.edu/locuszoom/download/locuszoom_1.4_srconly.tgz
-	tar -zxf locuszoom_1.4_srconly.tgz
-	rm locuszoom_1.4_srconly.tgz
+# # locuszoom    
+#     cd /opt
+# 	wget --no-check-certificate https://statgen.sph.umich.edu/locuszoom/download/locuszoom_1.4_srconly.tgz
+# 	tar -zxf locuszoom_1.4_srconly.tgz
+# 	rm locuszoom_1.4_srconly.tgz
 	
-	mkdir locuszoom/conf
-	touch locuszoom/conf/m2zfast.conf
-	cat <<-EOF >locuszoom/conf/m2zfast.conf
-	METAL2ZOOM_PATH="bin/locuszoom.R"
-	NEWFUGUE_PATH=""
-	PLINK_PATH="plink"
-	RSCRIPT_PATH="Rscript"
-	TABIX_PATH="tabix"
-	SQLITE_DB={"b38":""}
-	DEFAULT_BUILD="b38"
-	DEFAULT_POP="EUR"
-	DEFAULT_SOURCE="b38"
-	GWAS_CATS={"b38":{}}
-	LD_DB={"b38":{}}
-	EOF
+# 	mkdir locuszoom/conf
+# 	touch locuszoom/conf/m2zfast.conf
+# 	cat <<-EOF >locuszoom/conf/m2zfast.conf
+# 	METAL2ZOOM_PATH="bin/locuszoom.R"
+# 	NEWFUGUE_PATH=""
+# 	PLINK_PATH="plink"
+# 	RSCRIPT_PATH="Rscript"
+# 	TABIX_PATH="tabix"
+# 	SQLITE_DB={"b38":""}
+# 	DEFAULT_BUILD="b38"
+# 	DEFAULT_POP="EUR"
+# 	DEFAULT_SOURCE="b38"
+# 	GWAS_CATS={"b38":{}}
+# 	LD_DB={"b38":{}}
+# 	EOF
 
 # PLINK
     cd /opt
@@ -48,9 +51,7 @@ From: ubuntu:18.04
 
 
 # PeakPlotter
-    cd /opt
-    git clone https://github.com/hmgu-itg/peakplotter.git
-    cd peakplotter
+    cd /opt/peakplotter
     python3 -m pip install .
     
     export LC_ALL=C.UTF-8

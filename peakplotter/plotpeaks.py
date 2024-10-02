@@ -100,7 +100,7 @@ def _create_non_rs_to_pos_id(data: pd.DataFrame, chr_col, rs_col, pos_col) -> pd
     new_column = list()
     for chrom, _id, pos in data[[chr_col, rs_col, pos_col]].itertuples(index = False):
         if not _id.startswith('rs') and ':' not in _id:
-            chrom = chrom.strip('chr')
+            chrom = str(chrom).strip('chr')
             new_column.append(f'chr{chrom}:{pos}')
         else:
             new_column.append(_id)
@@ -169,10 +169,10 @@ def process_peak(assocfile: str,
     logger.debug(f'Generating peakdata.chrpos to {peakdata_chrpos_path}')
     peakdata_chrpos.to_csv(peakdata_chrpos_path, sep = '\t', index = False)
 
-    logger.info('Running dbmeister.py')
-    logger.debug(sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --snp_pos {peakdata_chrpos_path}")))
-    logger.debug(sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --refflat {refflat}")))
-    logger.debug(sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --recomb_rate {recomb}")))
+    # logger.info('Running dbmeister.py')
+    # logger.debug(sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --snp_pos {peakdata_chrpos_path}")))
+    # logger.debug(sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --refflat {refflat}")))
+    # logger.debug(sp.check_output(shlex.split(f"dbmeister.py --db {db_file} --recomb_rate {recomb}")))
 
     if start < 1:
         sensible_start = 1
@@ -283,8 +283,8 @@ def process_peak(assocfile: str,
     joined_peakdata_ld_file = outdir.joinpath(f'{chrom}.{start}.{end}.500kb')
     joined_peakdata_ld.to_csv(joined_peakdata_ld_file, sep = ',', header = True, index = False)
 
-    logger.debug(f'run_locuszoom("{build}", "{peakdata_file}", "{refsnp}", "{rs_col}", "{pval_col}", "{db_file}", "{joined_peakdata_ld_file}", "{ld_file}", "{sensible_start}", "{end}", "{chrom}")')
-    ps = run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, joined_peakdata_ld_file, ld_file, sensible_start, end, chrom)
+    # logger.debug(f'run_locuszoom("{build}", "{peakdata_file}", "{refsnp}", "{rs_col}", "{pval_col}", "{db_file}", "{joined_peakdata_ld_file}", "{ld_file}", "{sensible_start}", "{end}", "{chrom}")')
+    # ps = run_locuszoom(build, peakdata_file, refsnp, rs_col, pval_col, db_file, joined_peakdata_ld_file, ld_file, sensible_start, end, chrom)
     logger.debug(ps.stdout.decode())
     logger.debug(ps.stderr.decode())
     if build == 38:

@@ -8,8 +8,8 @@ from .errors import MissingExecutableError
 
 DEPENDENT_EXECUTABLES = [
     'tabix', # HTSLib
-    'locuszoom', # Locuszoom
-    'dbmeister.py', # Locuszoom
+    # 'locuszoom', # Locuszoom
+    # 'dbmeister.py', # Locuszoom
     'plink', # Plink
 ]
 
